@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   {
     name: "Kanban Board",
     icon: <ListIcon />,
-    path: "/blank",
+    path: "/kanban",
     // subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {

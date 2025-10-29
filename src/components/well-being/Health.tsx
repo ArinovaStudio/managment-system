@@ -1,5 +1,7 @@
 import React from 'react'
 import WellCard from './WellCard'
+import WellBeingGrid from './cards'
+import WellBeingSection from './cards'
 
 function Health() {
   return (
@@ -7,12 +9,8 @@ function Health() {
           <div className="w-3/5 h-auto lex justify-start items-start flex-col gap-6">
         <WellCard />
         <WellCard />
-
         </div>
-        <div className="w-2/5 mt-4 h-full flex flex-wrap justify-between items-start gap-4">
-          <div className="w-[48%] h-48 rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03]"></div>
-          <div className="w-[48%] h-48 rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03]"></div>
-        </div>
+        <WellBeingSection />  
     </div>
   )
 }

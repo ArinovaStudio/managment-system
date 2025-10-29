@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 
+
 export default function Banner() {
   
   const [weekDates, setWeekDates] = useState<{ day: string; date: number; fullDate: Date }[]>([]);
@@ -39,11 +40,11 @@ export default function Banner() {
   return (
     <>
     <div className="w-full h-56 bg-gradient-to-br from-blue-700 to-blue-300 dark:to-blue-900 rounded-3xl p-6 py-8 relative">
-      <div className="absolute right-4 top-0 h-full w-1/3">
+      <div className="hidden sm:block right-4 -top-6 h-[120%] w-1/3 absolute">
       <img 
-      src={"https://picsum.photos/1080/1080"}
+      src={"/images/brand/well-being.png"}
       alt="Illustration"
-      className="w-full h-full object-cover"
+      className="w-full h-full object-contain"
       />
       </div>
       <h1 className="text-4xl text-white font-bold">We Care For Your Health</h1>
