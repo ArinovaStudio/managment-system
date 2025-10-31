@@ -65,7 +65,7 @@ const othersItems: NavItem[] = [
     {
     icon: <AlbumIcon strokeWidth={1.5} />,
     name: "Leave Requests",
-    path: "/blank",
+    path: "/leave-requests",
     // subItems: [
     //   { name: "Sign In", path: "/signin", pro: false },
     //   { name: "Sign Up", path: "/signup", pro: false },
@@ -74,7 +74,7 @@ const othersItems: NavItem[] = [
   {
     icon: <Handshake strokeWidth={1.5} />,
     name: "Feedbacks",
-    path: "/blank",
+    path: "/feedbacks",
     // subItems: [
     //   { name: "Alerts", path: "/alerts", pro: false },
     //   { name: "Avatar", path: "/avatars", pro: false },
@@ -87,7 +87,7 @@ const othersItems: NavItem[] = [
     {
     icon: <GraduationCapIcon strokeWidth={1.5} />,
     name: "Certifications",
-    path: "/blank"
+    path: "/certificates"
     // subItems: [
     //   { name: "Line Chart", path: "/line-chart", pro: false },
     //   { name: "Bar Chart", path: "/bar-chart", pro: false },
