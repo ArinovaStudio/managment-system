@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
   {
     icon: <Clock10Icon strokeWidth={1.5}/>,
     name: "Check-in",
-    path: "/blank",
+    path: "/clock",
   },
   {
     icon: <FolderGit2 strokeWidth={1.5} />,
