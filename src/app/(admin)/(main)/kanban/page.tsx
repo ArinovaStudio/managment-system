@@ -1,278 +1,718 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Check, Play, Undo2, Plus } from "lucide-react";
-import Wrapper from "@/layout/Wrapper";
 
-// ---------------------- Types ----------------------
+import React, { useState } from 'react';
+import {
+  CheckCircle2,
+  Clock,
+  MessageSquare,
+  Paperclip,
+  User,
+  Calendar,
+  Flag,
+  X,
+  Plus,
+  Search,
+  MoreVertical,
+  Send,
+  AlertCircle,
+  Tag,
+  Users
+} from 'lucide-react';
+
+interface Comment {
+  id: string;
+  author: string;
+  avatar: string;
+  content: string;
+  timestamp: Date;
+}
+
 interface Task {
   id: string;
   title: string;
   description: string;
-  status: "assigned" | "inprogress" | "completed";
+  assignee: string;
+  assigneeAvatar: string;
+  priority: 'low' | 'medium' | 'high';
+  dueDate: string;
+  tags: string[];
+  comments: Comment[];
+  attachments: Array<{ id: string; name: string; size: string; type: string }>;
+  status: 'assigned' | 'in-progress' | 'completed';
 }
 
-// ---------------------- Add Task Modal ----------------------
-function AddTaskForm({
-  isOpen,
-  onClose,
-  onAdd,
-}: {
+// Helper classes that include both light and dark variants
+const priorityClasses = {
+  low:
+    'dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 bg-blue-50 text-blue-700 border-blue-200',
+  medium:
+    'dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30 bg-yellow-50 text-yellow-700 border-yellow-200',
+  high:
+    'dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30 bg-red-50 text-red-700 border-red-200'
+} as const;
+
+type NewTaskShape = {
+  title: string;
+  description: string;
+  assignee: string;
+  priority: 'low' | 'medium' | 'high';
+  dueDate: string;
+  tags: string[];
+  status: Task['status'];
+};
+
+const NewTaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (task: Task) => void;
-}) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title,
-      description,
-      status: "assigned",
-    };
-    onAdd(newTask);
-    setTitle("");
-    setDescription("");
-    onClose();
-  };
+  newTask: NewTaskShape;
+  setNewTask: (t: NewTaskShape) => void;
+  handleCreateTask: () => void;
+  handleAddTag: (tag: string) => void;
+  handleRemoveTag: (tag: string) => void;
+}> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag }) => {
+  if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-neutral-900 rounded-xl p-6 w-[90%] sm:w-[400px] border border-gray-200 dark:border-gray-700"
-          >
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Assign Task to Yourself
-            </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Title
-                </label>
+    <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0a0a0a]">
+        {/* Modal Header */}
+        <div className="sticky top-0 z-10 border-b px-6 py-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Task</h2>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Task Title *</label>
+            <input
+              type="text"
+              value={newTask.title}
+              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              placeholder="Enter task title..."
+              className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</label>
+            <textarea
+              value={newTask.description}
+              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              placeholder="Describe the task..."
+              rows={4}
+              className="w-full px-4 py-3 rounded-lg border resize-none bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Grid Layout for Details */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Assignee */}
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Assignee</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter task title"
-                  className="w-full mt-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  value={newTask.assignee}
+                  onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                  placeholder="Assign to..."
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe the task..."
-                  rows={3}
-                  className="w-full mt-1 px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-neutral-800 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-gray-400"
+            {/* Due Date */}
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Due Date</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <input
+                  type="date"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+            </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-1.5 text-sm border border-gray-400 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-white/10 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 text-sm border border-gray-600 dark:border-gray-500 rounded-md bg-gray-800 text-white hover:bg-gray-700 dark:hover:bg-gray-700 transition"
-                >
-                  Add Task
-                </button>
+            {/* Priority */}
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Priority</label>
+              <div className="flex gap-2">
+                {(['low', 'medium', 'high'] as const).map((priority) => (
+                  <button
+                    key={priority}
+                    onClick={() => setNewTask({ ...newTask, priority })}
+                    className={`flex-1 px-4 py-3 rounded-lg border font-medium capitalize transition-all ${
+                      newTask.priority === priority
+                        ? priority === 'low'
+                          ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/50'
+                          : priority === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/50'
+                          : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/50'
+                        : 'bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-700'
+                    }`}
+                  >
+                    {priority}
+                  </button>
+                ))}
               </div>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+            </div>
 
-// ---------------------- Main Kanban ----------------------
-export default function KanbanBoard() {
-  const [assigned, setAssigned] = useState<Task[]>([]);
-  const [inProgress, setInProgress] = useState<Task[]>([]);
-  const [completed, setCompleted] = useState<Task[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // ---- Mock API Calls ----
-  async function fetchAssigned(): Promise<Task[]> {
-    return [
-      { id: "1", title: "Code Review", description: "Review frontend PRs", status: "assigned" },
-      { id: "2", title: "Fix UI Bug", description: "Resolve navbar flicker", status: "assigned" },
-    ];
-  }
-
-  async function fetchInProgress(): Promise<Task[]> {
-    return [
-      { id: "3", title: "Build Analytics Page", description: "Design and build analytics UI", status: "inprogress" },
-    ];
-  }
-
-  async function fetchCompleted(): Promise<Task[]> {
-    return [
-      { id: "4", title: "Setup API Layer", description: "Integrated backend with frontend", status: "completed" },
-    ];
-  }
-
-  useEffect(() => {
-    (async () => {
-      const a = await fetchAssigned();
-      const b = await fetchInProgress();
-      const c = await fetchCompleted();
-      setAssigned(a);
-      setInProgress(b);
-      setCompleted(c);
-    })();
-  }, []);
-
-  // ---- Handlers ----
-  const moveToProgress = (task: Task) => {
-    setAssigned((prev) => prev.filter((t) => t.id !== task.id));
-    setInProgress((prev) => [...prev, { ...task, status: "inprogress" }]);
-  };
-
-  const moveToCompleted = (task: Task) => {
-    if (task.status === "assigned") setAssigned((prev) => prev.filter((t) => t.id !== task.id));
-    if (task.status === "inprogress") setInProgress((prev) => prev.filter((t) => t.id !== task.id));
-    setCompleted((prev) => [...prev, { ...task, status: "completed" }]);
-  };
-
-  const reopenTask = (task: Task) => {
-    setCompleted((prev) => prev.filter((t) => t.id !== task.id));
-    setAssigned((prev) => [...prev, { ...task, status: "assigned" }]);
-  };
-
-  const addTask = (task: Task) => setAssigned((prev) => [...prev, task]);
-
-  // ---- Animation ----
-  const fadeIn = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
-  const renderTaskCard = (task: Task, type: "assigned" | "inprogress" | "completed") => (
-    <motion.div
-      key={task.id}
-      variants={fadeIn}
-      initial="hidden"
-      animate="visible"
-      whileHover={{ scale: 1.01 }}
-      className={`rounded-xl border ${type==="assigned" ? "border-blue-600" : type === "inprogress" ? "border-yellow-500" : "border-green-500"} bg-white dark:bg-white/[0.05] p-4 transition-all`}
-    >
-      <div className="flex flex-col justify-between h-full">
-        <div>
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</h4>
-          <p className="text-xs text-gray-500 dark:text-gray-200 mt-1">{task.description}</p>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-4">
-          {type === "assigned" && (
-            <>
-              <button
-                onClick={() => moveToProgress(task)}
-                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md text-yellow-500 border border-yellow-500 hover:bg-gray-100 dark:hover:bg-white/10 transition"
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Status</label>
+              <select
+                value={newTask.status}
+                onChange={(e) => setNewTask({ ...newTask, status: e.target.value as Task['status'] })}
+                className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <Play size={12} /> Progress
-              </button>
-              <button
-                onClick={() => moveToCompleted(task)}
-                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-              >
-                <Check size={12} /> Complete
-              </button>
-            </>
-          )}
-          {type === "inprogress" && (
-            <button
-              onClick={() => moveToCompleted(task)}
-              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-            >
-              <Check size={12} /> Mark Done
+                <option value="assigned">Assigned</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Tags</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {newTask.tags.map(tag => (
+                <span key={tag} className="px-3 py-1 rounded-lg text-sm font-medium flex items-center gap-2 bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
+                  {tag}
+                  <button onClick={() => handleRemoveTag(tag)} className="hover:opacity-70">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="Add tags (press Enter)..."
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddTag(e.currentTarget.value);
+                  e.currentTarget.value = '';
+                }
+              }}
+              className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Attachments */}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Attachments</label>
+            <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 bg-gray-50 dark:border-gray-800 dark:bg-[#111]">
+              <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+              <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+              <p className="text-xs text-gray-500 dark:text-gray-600">PDF, DOC, Images up to 10MB</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              Cancel
             </button>
-          )}
-          {type === "completed" && (
-            <button
-              onClick={() => reopenTask(task)}
-              className="flex items-center gap-1 text-xs px-3 py-1.5 text-blue-500 rounded-md border border-blue-400 dark:hover:bg-white/10 transition"
-            >
-              <Undo2 size={12} /> Reopen
+            <button onClick={handleCreateTask} disabled={!newTask.title.trim()} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
+              Create Task
             </button>
-          )}
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
+};
+
+const SidePanel: React.FC<{
+  selectedTask: Task | null;
+  onClose: () => void;
+  commentText: string;
+  setCommentText: (v: string) => void;
+  handleAddComment: () => void;
+}> = ({ selectedTask, onClose, commentText, setCommentText, handleAddComment }) => {
+  if (!selectedTask) return null;
+
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'pdf':
+        return '📄';
+      case 'image':
+        return '🖼️';
+      case 'figma':
+        return '🎨';
+      case 'zip':
+        return '📦';
+      case 'json':
+        return '📋';
+      default:
+        return '📎';
+    }
+  };
 
   return (
-    <Wrapper>
-      <div className="flex flex-col w-full h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Kanban Board</h2>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 text-sm font-medium text-white px-3 py-1.5 rounded-full bg-gradient-to-br from-blue-700 to-blue-300 transition"
-          >
-            <Plus size={16} /> Add Task
-          </button>
+    <div className="fixed inset-0 z-9999 flex justify-end">
+      <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="w-[600px] h-full bg-white dark:bg-[#0a0a0a] shadow-2xl overflow-y-auto">
+        <div className="sticky top-0 z-10 border-b px-6 py-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Task Details</h2>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 h-full gap-6 relative">
-          {/* Vertical separator lines */}
-          <div className="hidden sm:block absolute top-0 left-1/3 w-px h-full bg-gray-200 dark:bg-gray-600" />
-          <div className="hidden sm:block absolute top-0 left-2/3 w-px h-full bg-gray-200 dark:bg-gray-600" />
+        <div className="p-6 space-y-6">
+          {/* Title and Status */}
+          <div>
+            <div className="flex items-start justify-between mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTask.title}</h1>
+              <span className={`px-3 py-1 rounded-lg text-sm font-medium border ${priorityClasses[selectedTask.priority]}`}>
+                <Flag className="w-3 h-3 inline mr-1" />
+                {selectedTask.priority}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Task ID: #{selectedTask.id}</p>
+          </div>
 
-          {/* Assigned */}
-          <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex flex-col pr-4">
-            <h3 className="text-sm font-semibold text-blue-500 mb-4 uppercase tracking-wide">
-              Assigned
-            </h3>
-            <div className="space-y-3">{assigned.map((t) => renderTaskCard(t, "assigned"))}</div>
-          </motion.div>
+          {/* Description */}
+          <div>
+            <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</h3>
+            <p className="text-gray-600 dark:text-gray-400">{selectedTask.description}</p>
+          </div>
 
-          {/* In Progress */}
-          <motion.div variants={fadeIn} initial="hidden" animate="visible" transition={{ delay: 0.2 }} className="flex flex-col px-4">
-            <h3 className="text-sm font-semibold text-yellow-500 mb-4 uppercase tracking-wide">
-              In Progress
-            </h3>
-            <div className="space-y-3">{inProgress.map((t) => renderTaskCard(t, "inprogress"))}</div>
-          </motion.div>
+          {/* Details Grid */}
+          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gray-50 dark:bg-[#111]">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Assignee</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-purple-400 text-white dark:from-blue-500 dark:to-purple-500">
+                  {selectedTask.assigneeAvatar}
+                </div>
+                <span className="font-medium text-gray-900 dark:text-white">{selectedTask.assignee}</span>
+              </div>
+            </div>
 
-          {/* Completed */}
-          <motion.div variants={fadeIn} initial="hidden" animate="visible" transition={{ delay: 0.4 }} className="flex flex-col pl-4">
-            <h3 className="text-sm font-semibold text-green-500 mb-4 uppercase tracking-wide">
-              Completed
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Due Date</span>
+              </div>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {new Date(selectedTask.dueDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Tag className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Tags</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {selectedTask.tags.map(tag => (
+                  <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Paperclip className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Attachments</span>
+              </div>
+              <span className="font-medium text-gray-900 dark:text-white">{selectedTask.attachments.length} files</span>
+            </div>
+          </div>
+
+          {/* Issue Report */}
+          <div className="p-4 rounded-xl border bg-red-50 border-red-200 dark:bg-red-500/5 dark:border-red-500/20">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1 text-red-700 dark:text-red-400">Report an Issue</h3>
+                <p className="text-sm mb-3 text-red-600/70 dark:text-red-300/70">Found a problem? Let us know and we'll help resolve it.</p>
+                <button className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300">Report Issue</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Attachments Section */}
+          {selectedTask.attachments.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
+                  <Paperclip className="w-5 h-5" />
+                  Attachments ({selectedTask.attachments.length})
+                </h3>
+                <button className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">+ Add file</button>
+              </div>
+
+              <div className="space-y-2">
+                {selectedTask.attachments.map(file => (
+                  <div key={file.id} className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-[#111] dark:border-gray-800 dark:hover:border-gray-700 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-2xl">{getFileIcon(file.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate text-gray-900 dark:text-white">{file.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500">{file.size}</p>
+                      </div>
+                    </div>
+                    <button className="px-3 py-1 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">Download</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
+              <MessageSquare className="w-5 h-5" />
+              Comments ({selectedTask.comments.length})
             </h3>
-            <div className="space-y-3">{completed.map((t) => renderTaskCard(t, "completed"))}</div>
-          </motion.div>
+
+            <div className="space-y-4 mb-4">
+              {selectedTask.comments.map(comment => (
+                <div key={comment.id} className="p-4 rounded-xl bg-gray-50 dark:bg-[#111]">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-green-400 to-teal-400 text-white dark:from-green-500 dark:to-teal-500">{comment.avatar}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900 dark:text-white">{comment.author}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-500">{comment.timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Comment */}
+            <div className="p-4 rounded-xl border bg-gray-50 border-gray-200 dark:bg-[#111] dark:border-gray-800">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className="w-full px-3 py-2 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#0a0a0a] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
+                rows={3}
+              />
+              <div className="flex justify-end mt-3">
+                <button onClick={handleAddComment} disabled={!commentText.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center gap-2">
+                  <Send className="w-4 h-4" />
+                  Comment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const KanbanBoard: React.FC = () => {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTask, setNewTask] = useState<NewTaskShape>({
+    title: '',
+    description: '',
+    assignee: '',
+    priority: 'medium',
+    dueDate: '',
+    tags: [],
+    status: 'assigned'
+  });
+
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Redesign Homepage UI',
+      description: 'Create a modern, responsive design for the homepage with improved UX',
+      assignee: 'Sarah Chen',
+      assigneeAvatar: 'SC',
+      priority: 'high',
+      dueDate: '2025-11-15',
+      tags: ['Design', 'Frontend'],
+      comments: [
+        {
+          id: 'c1',
+          author: 'John Doe',
+          avatar: 'JD',
+          content: 'Please focus on mobile responsiveness',
+          timestamp: new Date('2025-11-05')
+        }
+      ],
+      attachments: [
+        { id: 'a1', name: 'design-mockup.fig', size: '2.4 MB', type: 'figma' },
+        { id: 'a2', name: 'requirements.pdf', size: '856 KB', type: 'pdf' },
+        { id: 'a3', name: 'assets.zip', size: '12.3 MB', type: 'zip' }
+      ],
+      status: 'assigned'
+    },
+    {
+      id: '2',
+      title: 'API Integration',
+      description: 'Integrate payment gateway API with the checkout system',
+      assignee: 'Mike Johnson',
+      assigneeAvatar: 'MJ',
+      priority: 'high',
+      dueDate: '2025-11-12',
+      tags: ['Backend', 'API'],
+      comments: [],
+      attachments: [
+        { id: 'a4', name: 'api-specs.json', size: '124 KB', type: 'json' }
+      ],
+      status: 'in-progress'
+    },
+    {
+      id: '3',
+      title: 'Database Optimization',
+      description: 'Optimize database queries for better performance',
+      assignee: 'Emma Davis',
+      assigneeAvatar: 'ED',
+      priority: 'medium',
+      dueDate: '2025-11-20',
+      tags: ['Backend', 'Performance'],
+      comments: [],
+      attachments: [],
+      status: 'in-progress'
+    },
+    {
+      id: '4',
+      title: 'User Authentication',
+      description: 'Implement OAuth 2.0 authentication system',
+      assignee: 'Alex Kim',
+      assigneeAvatar: 'AK',
+      priority: 'high',
+      dueDate: '2025-11-08',
+      tags: ['Security', 'Backend'],
+      comments: [],
+      attachments: [
+        { id: 'a5', name: 'auth-flow.png', size: '456 KB', type: 'image' },
+        { id: 'a6', name: 'security-audit.pdf', size: '1.2 MB', type: 'pdf' }
+      ],
+      status: 'completed'
+    },
+    {
+      id: '5',
+      title: 'Write Documentation',
+      description: 'Create comprehensive API documentation',
+      assignee: 'Lisa Wong',
+      assigneeAvatar: 'LW',
+      priority: 'low',
+      dueDate: '2025-11-18',
+      tags: ['Documentation'],
+      comments: [],
+      attachments: [],
+      status: 'assigned'
+    }
+  ]);
+
+  const columns = [
+    { id: 'assigned', title: 'Assigned', icon: User, color: 'blue' },
+    { id: 'in-progress', title: 'In Progress', icon: Clock, color: 'yellow' },
+    { id: 'completed', title: 'Completed', icon: CheckCircle2, color: 'green' }
+  ];
+
+  const handleDragStart = (task: Task) => {
+    setDraggedTask(task);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (status: Task['status']) => {
+    if (draggedTask) {
+      setTasks(tasks.map(task => (task.id === draggedTask.id ? { ...task, status } : task)));
+      setDraggedTask(null);
+    }
+  };
+
+  const handleAddComment = () => {
+    if (commentText.trim() && selectedTask) {
+      const newComment: Comment = {
+        id: `c${Date.now()}`,
+        author: 'You',
+        avatar: 'YO',
+        content: commentText,
+        timestamp: new Date()
+      };
+
+      setTasks(tasks.map(task => (task.id === selectedTask.id ? { ...task, comments: [...task.comments, newComment] } : task)));
+
+      setSelectedTask({ ...selectedTask, comments: [...selectedTask.comments, newComment] });
+
+      setCommentText('');
+    }
+  };
+
+  const handleCreateTask = () => {
+    if (newTask.title.trim()) {
+      const task: Task = {
+        id: `${Date.now()}`,
+        title: newTask.title,
+        description: newTask.description,
+        assignee: newTask.assignee || 'Unassigned',
+        assigneeAvatar: newTask.assignee ? newTask.assignee.split(' ').map(n => n[0]).join('').toUpperCase() : 'UN',
+        priority: newTask.priority,
+        dueDate: newTask.dueDate,
+        tags: newTask.tags,
+        comments: [],
+        attachments: [],
+        status: newTask.status
+      };
+
+      setTasks([...tasks, task]);
+      setShowNewTaskModal(false);
+      setNewTask({ title: '', description: '', assignee: '', priority: 'medium', dueDate: '', tags: [], status: 'assigned' });
+    }
+  };
+
+  const handleAddTag = (tag: string) => {
+    if (tag.trim() && !newTask.tags.includes(tag.trim())) {
+      setNewTask({ ...newTask, tags: [...newTask.tags, tag.trim()] });
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setNewTask({ ...newTask, tags: newTask.tags.filter(tag => tag !== tagToRemove) });
+  };
+
+  const filteredTasks = tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()) || task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const getTasksByStatus = (status: Task['status']) => filteredTasks.filter(task => task.status === status);
+
+  return (
+    <div className={`min-h-screen transition-colors duration-200`}> {/* toggles tailwind dark mode */}
+      {/* Header */}
+      <div className="border-b sticky top-0 z-10">
+        <div className="max-w-[1600px] mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Kanban Board</h1>
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-80"
+                />
+              </div>
+
+              <button onClick={() => setShowNewTaskModal(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+                <Plus className="w-4 h-4" />
+                New Task
+              </button>
+
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Modal */}
-      <AddTaskForm isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={addTask} />
-    </Wrapper>
+      {/* Kanban Board */}
+      <div className="max-w-[1600px] mx-auto px-6 py-6">
+        <div className="grid grid-cols-3 gap-6">
+          {columns.map(column => {
+            const Icon = column.icon;
+            const columnTasks = getTasksByStatus(column.id as Task['status']);
+
+            return (
+              <div key={column.id} className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <div className={`p-2 rounded-lg ${
+                      column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
+                      column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
+                      'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                    }`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
+                  </div>
+                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
+
+                </div>
+
+                <div onDragOver={handleDragOver} onDrop={() => handleDrop(column.id as Task['status'])} className={`flex-1 space-y-3 min-h-[200px] p-1 rounded-lg ${draggedTask && draggedTask.status !== column.id ? 'bg-gray-100/50 dark:bg-gray-800/30' : ''}`}>
+                  {columnTasks.map(task => (
+                    <div key={task.id} draggable onDragStart={() => handleDragStart(task)} onClick={() => setSelectedTask(task)} className={`p-4 rounded-xl border cursor-pointer transition-all bg-white dark:bg-gray-800/[0.5] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 ${draggedTask?.id === task.id ? 'opacity-50' : ''}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-600 dark:text-white line-clamp-2">{task.title}</h3>
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium border ${priorityClasses[task.priority]} flex-shrink-0 ml-2`}>{task.priority}</span>
+                      </div>
+
+                      <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{task.description}</p>
+
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {task.tags.map(tag => (
+                          <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">{tag}</span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{task.comments.length}</span>
+                          </div>
+                          {task.attachments.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Paperclip className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">{task.attachments.length}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-blue-500 to-green-500 text-white">{task.assigneeAvatar}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Side Panel */}
+      <SidePanel selectedTask={selectedTask} onClose={() => setSelectedTask(null)} commentText={commentText} setCommentText={setCommentText} handleAddComment={handleAddComment} />
+
+      {/* New Task Modal */}
+      <NewTaskModal isOpen={showNewTaskModal} onClose={() => setShowNewTaskModal(false)} newTask={newTask} setNewTask={setNewTask} handleCreateTask={handleCreateTask} handleAddTag={handleAddTag} handleRemoveTag={handleRemoveTag} />
+    </div>
   );
-}
+};
+
+export default KanbanBoard;
