@@ -1,0 +1,86 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DB_URI")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum ROLES {
+    ADMIN
+    CLIENT
+    EMPLOYEE
+}
+
+enum STATUS {
+    Requested
+    Pending
+    Rejected
+    Approved
+}
+
+
+model Users {
+    id          String      @id @default(nanoid())
+}
+
+
+model User {
+  id            String          @id @default(cuid())
+  employeeId    String?         @unique
+  email         String          @unique
+  name          String
+  password      String
+  role          ROLES            @default(CLIENT)
+  Documents     Docs[]          @relation("UserDocuments")
+  workingAs     String?
+  department    String?
+  phone         String?
+  bio           String?
+  image         String?
+  dob           String?
+  isLogin       Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Docs {
+  id        String    @id @default(cuid())
+  title     String
+  fileUrl   String
+  createdAt DateTime  @default(now())
+  userId    String?
+  User      User?     @relation("UserDocuments", fields: [userId], references: [id])
+}
+
+
+model well {
+    id          String      @id @default(cuid())
+    title       String
+    answer      String
+    likes       Int        @default(0)
+    dislikes    Int        @default(0)
+}
+
+model feedback {
+    id         String     @id @default(cuid())
+    type       String
+    rating     Int        @default(0)
+    desc       String
+    isAnynonyms Boolean   @default(false)
+    byName      String
+    byEmpId     String
+}
+
+model leaveReq {
+        id         String     @id @default(cuid())
+        status     STATUS     @default(Pending)
+        empName    String
+        empId      String
+        department String
+        leaveType  String
+        startDate  DateTime
+        endDate    DateTime
+        reason     String
+}

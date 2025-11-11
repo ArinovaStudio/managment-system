@@ -233,7 +233,18 @@ function AddLeaveForm({
                   />
                 </div>
               </div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 dark:text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Your department"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                   Leave Type *
@@ -258,7 +269,7 @@ function AddLeaveForm({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
                     Start Date *
                   </label>
                   <input
@@ -266,11 +277,11 @@ function AddLeaveForm({
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
                     End Date *
                   </label>
                   <input
@@ -278,13 +289,13 @@ function AddLeaveForm({
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
                   Reason / Comments *
                 </label>
                 <textarea
@@ -297,24 +308,13 @@ function AddLeaveForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Your department"
-                />
-              </div>
+
 
               <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-white/10 transition"
+                  className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/10 transition"
                 >
                   Cancel
                 </button>
