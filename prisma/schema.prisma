@@ -84,3 +84,19 @@ model leaveReq {
         endDate    DateTime
         reason     String
 }
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  assignee    String
+  assigneeAvatar String? 
+  priority    String
+  dueDate     DateTime
+  tags        String[]
+  comments    Json[]   @default([])   
+  attachments Json[]   @default([])   
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
