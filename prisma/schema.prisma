@@ -1,6 +1,5 @@
 datasource db {
     provider = "postgresql"
-    url      = env("DB_URI")
 }
 
 generator client {
@@ -27,23 +26,25 @@ model Users {
 
 
 model User {
-  id            String          @id @default(cuid())
-  employeeId    String?         @unique
-  email         String          @unique
+  id            String        @id @default(cuid())
+  employeeId    String?       @unique
+  email         String        @unique
   name          String
   password      String
-  role          ROLES            @default(CLIENT)
-  Documents     Docs[]          @relation("UserDocuments")
+  role          ROLES         @default(CLIENT)
+  Documents     Docs[]        @relation("UserDocuments")
   workingAs     String?
   department    String?
   phone         String?
   bio           String?
   image         String?
   dob           String?
-  isLogin       Boolean         @default(false)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  isLogin       Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
 }
+
 
 model Docs {
   id        String    @id @default(cuid())
@@ -86,17 +87,36 @@ model leaveReq {
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String
   assignee    String
-  assigneeAvatar String? 
+  assigneeAvatar String?
   priority    String
   dueDate     DateTime
   tags        String[]
-  comments    Json[]   @default([])   
-  attachments Json[]   @default([])   
+  comments    Json[]     @default([])
+  attachments Json[]     @default([])
   status      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+}
+
+
+model Report {
+  id         String   @id @default(cuid())
+  message    String
+  taskId     String?
+  reportedBy String?
+  createdAt  DateTime @default(now())
+
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String?
+  userId    String?
+  createdAt DateTime @default(now())
 }

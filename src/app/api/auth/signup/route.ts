@@ -24,21 +24,26 @@ export async function POST(req: Request) {
     let employeeId: string | null = null;
 
     if (finalRole === "EMPLOYEE") {
-      const lastEmployee = await db.user.findFirst({
-        where: { role: "EMPLOYEE" },
-        orderBy: { createdAt: "desc" },
-        select: { employeeId: true },
-      });
+  // Find last employee with a valid employeeId
+  const lastEmployee = await db.user.findFirst({
+    where: {
+      role: "EMPLOYEE",
+      employeeId: { not: null },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { employeeId: true },
+  });
 
-      let nextNumber = 1;
-      if (lastEmployee?.employeeId) {
-        const parts = lastEmployee.employeeId.split("-");
-        const lastNumber = parseInt(parts[1], 10);
-        nextNumber = lastNumber + 1;
-      }
+  let nextNumber = 1;
 
-      employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
-    }
+  if (lastEmployee?.employeeId) {
+    const num = parseInt(lastEmployee.employeeId.split("-")[1], 10);
+    if (!isNaN(num)) nextNumber = num + 1;
+  }
+
+  employeeId = `emp-${String(nextNumber).padStart(3, "0")}`;
+}
+
 
     const user = await db.user.create({
       data: {
@@ -70,3 +75,52 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+
+//get all user
+export async function GET() {
+  try {
+    const users = await db.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        employeeId: true,
+        department: true,
+        phone: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json({ users }, { status: 200 });
+  } catch (err) {
+    console.error("GET_USERS_ERROR:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+//delete all user
+export async function DELETE() {
+  try {
+    await db.user.deleteMany({});
+
+    return NextResponse.json(
+      { message: "All users deleted successfully" },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("DELETE_USERS_ERROR:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+

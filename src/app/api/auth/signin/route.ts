@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/client";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken"
 
 export async function POST(req: Request) {
   try {
@@ -20,9 +21,19 @@ export async function POST(req: Request) {
     if (!isPasswordValid) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
+    // Create JWT payload
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,       
+    };
 
-    // Success
-    return NextResponse.json({
+    // JWT token
+    const token = jwt.sign(payload, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+
+    const res = NextResponse.json({
       message: "Login successful",
       user: {
         id: user.id,
@@ -30,6 +41,17 @@ export async function POST(req: Request) {
         name: user.name,
       },
     });
+
+      // Set cookie
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
+    // Success
+    return res
   } catch (err) {
     console.error("SIGNIN ERROR:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

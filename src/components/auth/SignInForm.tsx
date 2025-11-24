@@ -6,6 +6,7 @@ import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +14,8 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const router = useRouter()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +34,7 @@ export default function SignInForm() {
 
       alert("Sign in successful!");
       console.log("User:", data.user);
-
+      router.push("/")
       
     } catch (err) {
       setError(err.message);

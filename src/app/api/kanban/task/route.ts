@@ -1,4 +1,4 @@
-import { NextResponse,NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import db from "@/lib/client";
 import cloudinary from "@/lib/cloudinary";
 
@@ -41,40 +41,40 @@ export async function POST(req: NextRequest) {
       }
 
       // Upload file to Cloudinary using STREAM
-    if (attachmentFile && attachmentFile.size > 0) {
-      if (attachmentFile.size > 10 * 1024 * 1024) {
-        return NextResponse.json(
-          { error: "File must be under 10MB" },
-          { status: 400 }
-        );
+      if (attachmentFile && attachmentFile.size > 0) {
+        if (attachmentFile.size > 10 * 1024 * 1024) {
+          return NextResponse.json(
+            { error: "File must be under 10MB" },
+            { status: 400 }
+          );
+        }
+
+        const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+
+        const uploadResult: any = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: "kanban_attachments",
+              resource_type: "auto", // allows PDF, DOC, ZIP, IMAGE, etc.
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+
+          uploadStream.end(buffer);
+        });
+
+        attachments.push({
+          url: uploadResult.secure_url,
+          public_id: uploadResult.public_id,
+          size: attachmentFile.size,
+          contentType: attachmentFile.type,
+          originalName: attachmentFile.name,
+        });
       }
-
-      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
-
-      const uploadResult: any = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "kanban_attachments",
-            resource_type: "auto", // allows PDF, DOC, ZIP, IMAGE, etc.
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-
-        uploadStream.end(buffer);
-      });
-
-      attachments.push({
-        url: uploadResult.secure_url,
-        public_id: uploadResult.public_id,
-        size: attachmentFile.size,
-        contentType: attachmentFile.type,
-        originalName: attachmentFile.name,
-      });
     }
-  }
 
     // Tags
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()) : [];
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  
+
   try {
     const tasks = await db.task.findMany({
       orderBy: { createdAt: "desc" },
@@ -117,9 +117,9 @@ export async function GET() {
 
     const formatted = tasks.map((task) => ({
       ...task,
-     
-      comments: task.comments ?? [], 
-      attachments: task.attachments ?? [], 
+
+      comments: task.comments ?? [],
+      attachments: task.attachments ?? [],
       dueDate: task.dueDate.toISOString().split("T")[0],
     }));
 
@@ -127,5 +127,23 @@ export async function GET() {
   } catch (error) {
     console.error("ERROR FETCHING TASKS:", error);
     return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const deleted = await db.task.deleteMany({});
+
+    return NextResponse.json(
+      { message: "Task deleted successfully", deletedTask: deleted },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting task:", error);
+
+    return NextResponse.json(
+      { error: "Failed to delete task" },
+      { status: 500 }
+    );
   }
 }

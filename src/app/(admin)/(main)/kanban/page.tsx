@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle2,
   Clock,
@@ -58,7 +59,8 @@ type NewTaskShape = {
   priority: 'low' | 'medium' | 'high';
   dueDate: string;
   tags: string[];
-  status: Task['status'];
+  status: 'assigned' | 'in-progress' | 'completed';
+  attachmentFile: File | null;
 };
 
 const NewTaskModal: React.FC<{
@@ -152,15 +154,14 @@ const NewTaskModal: React.FC<{
                   <button
                     key={priority}
                     onClick={() => setNewTask({ ...newTask, priority })}
-                    className={`flex-1 px-4 py-3 rounded-lg border font-medium capitalize transition-all ${
-                      newTask.priority === priority
-                        ? priority === 'low'
-                          ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/50'
-                          : priority === 'medium'
+                    className={`flex-1 px-4 py-3 rounded-lg border font-medium capitalize transition-all ${newTask.priority === priority
+                      ? priority === 'low'
+                        ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/50'
+                        : priority === 'medium'
                           ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/50'
                           : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/50'
-                        : 'bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-700'
-                    }`}
+                      : 'bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-700'
+                      }`}
                   >
                     {priority}
                   </button>
@@ -211,14 +212,46 @@ const NewTaskModal: React.FC<{
           </div>
 
           {/* Attachments */}
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Attachments</label>
-            <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 bg-gray-50 dark:border-gray-800 dark:bg-[#111]">
-              <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-              <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-500 dark:text-gray-600">PDF, DOC, Images up to 10MB</p>
-            </div>
+          <div
+            className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 bg-gray-50 dark:border-gray-800 dark:bg-[#111]"
+
+            // DRAG EVENTS
+            onDragOver={(e) => {
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files?.[0];
+              if (file) {
+                setNewTask({ ...newTask, attachmentFile: file });
+              }
+            }}
+
+            // CLICK TO OPEN FILE PICKER
+            onClick={() => document.getElementById("task-file-input")?.click()}
+          >
+            <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+            <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+            <p className="text-xs text-gray-500 dark:text-gray-600">PDF, DOC, Images up to 10MB</p>
+
+            {/* Hidden File Input */}
+            <input
+              id="task-file-input"
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setNewTask({ ...newTask, attachmentFile: file });
+              }}
+            />
+            {newTask.attachmentFile && (
+              <p className="text-sm mt-2 text-green-600 dark:text-green-400">
+                Selected: {newTask.attachmentFile.name}
+              </p>
+            )}
+
           </div>
+
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
@@ -241,7 +274,15 @@ const SidePanel: React.FC<{
   commentText: string;
   setCommentText: (v: string) => void;
   handleAddComment: () => void;
-}> = ({ selectedTask, onClose, commentText, setCommentText, handleAddComment }) => {
+  handleReport: () => void;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  message: string;
+  setMessage: (v: string) => void;
+  loading: boolean;
+  submitReport: () => void;
+reportCount:number;
+}> = ({ selectedTask, onClose, commentText, setCommentText, handleAddComment, loading, open, setOpen, message, setMessage, handleReport,reportCount }) => {
   if (!selectedTask) return null;
 
   const getFileIcon = (type: string) => {
@@ -260,6 +301,9 @@ const SidePanel: React.FC<{
         return '📎';
     }
   };
+
+
+
 
   return (
     <div className="fixed inset-0 z-9999 flex justify-end">
@@ -351,12 +395,76 @@ const SidePanel: React.FC<{
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <div className="flex-1">
-                <h3 className="font-semibold mb-1 text-red-700 dark:text-red-400">Report an Issue</h3>
-                <p className="text-sm mb-3 text-red-600/70 dark:text-red-300/70">Found a problem? Let us know and we'll help resolve it.</p>
-                <button className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300">Report Issue</button>
+
+                <h3 className="font-semibold mb-1 text-red-700 dark:text-red-400">
+                  {reportCount === 0
+                    ? "Report an Issue"
+                    : `${reportCount} issue${reportCount > 1 ? "s" : ""} reported`}
+                </h3>
+
+                <p className="text-sm mb-3 text-red-600/70 dark:text-red-300/70">
+                  {reportCount === 0
+                    ? "Found a problem? Let us know and we'll help resolve it."
+                    : "Issue reported. Team will review soon."}
+                </p>
+
+                {reportCount === 0 && (
+                  <button
+                    onClick={() => setOpen(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300"
+                  >
+                    Report Issue
+                  </button>
+                )}
               </div>
             </div>
           </div>
+
+
+          {/* Modal */}
+          {open && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="bg-white dark:bg-[#111] w-full max-w-md p-6 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800">
+
+                {/* Modal Header */}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Report an Issue</h2>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Textarea */}
+                <textarea
+                  className="w-full h-32 p-3 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-black outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Describe the issue here..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleReport}
+                    disabled={loading}
+                    className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {loading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Attachments Section */}
           {selectedTask.attachments.length > 0 && (
@@ -434,6 +542,11 @@ const SidePanel: React.FC<{
 };
 
 const KanbanBoard: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [reportCount, setReportCount] = useState(0);
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState('');
@@ -446,10 +559,11 @@ const KanbanBoard: React.FC = () => {
     priority: 'medium',
     dueDate: '',
     tags: [],
-    status: 'assigned'
+    status: 'assigned',
+    attachmentFile: null
   });
-
-  const [tasks, setTasks] = useState<Task[]>([
+  const [tasks, setTasks] = useState<Task[]>([])
+  /*const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
       title: 'Redesign Homepage UI',
@@ -532,7 +646,27 @@ const KanbanBoard: React.FC = () => {
       attachments: [],
       status: 'assigned'
     }
-  ]);
+  ]);*/
+
+  useEffect(() => {
+    async function fetchTasks() {
+      try {
+        const res = await fetch("/api/kanban/task", {
+          method: "GET"
+        });
+
+        const data = await res.json();
+        // console.log("data = ", data.tasks)
+        if (data.tasks) {
+          setTasks(data.tasks);
+        }
+      } catch (err) {
+        console.error("Kanban Fetch Error:", err);
+      }
+    }
+
+    fetchTasks();
+  }, []);
 
   const columns = [
     { id: 'assigned', title: 'Assigned', icon: User, color: 'blue' },
@@ -573,7 +707,7 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
-  const handleCreateTask = () => {
+  /*const handleCreateTask = () => {
     if (newTask.title.trim()) {
       const task: Task = {
         id: `${Date.now()}`,
@@ -593,6 +727,72 @@ const KanbanBoard: React.FC = () => {
       setShowNewTaskModal(false);
       setNewTask({ title: '', description: '', assignee: '', priority: 'medium', dueDate: '', tags: [], status: 'assigned' });
     }
+  };*/
+
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("title", newTask.title.trim());
+      formData.append("description", newTask.description.trim());
+      formData.append("assignee", newTask.assignee || "Unassigned");
+
+      formData.append(
+        "assigneeAvatar",
+        newTask.assignee
+          ? newTask.assignee
+            .split(" ")
+            .map(n => n[0])
+            .join("")
+            .toUpperCase()
+          : ""
+      );
+
+      formData.append("priority", newTask.priority);
+      formData.append("dueDate", newTask.dueDate);
+      formData.append("status", newTask.status);
+
+      // Tag array → convert to comma string
+      formData.append("tags", newTask.tags.join(","));
+
+      // OPTIONAL FILE
+      if (newTask.attachmentFile) {
+        formData.append("attachment", newTask.attachmentFile);
+      }
+
+      const res = await fetch("/api/kanban/task", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Create Task Error:", data);
+        return;
+      }
+
+      // Add task to UI
+      setTasks(prev => [...prev, data.task]);
+
+      // Reset UI
+      setShowNewTaskModal(false);
+      setNewTask({
+        title: "",
+        description: "",
+        assignee: "",
+        priority: "medium",
+        dueDate: "",
+        tags: [],
+        status: "assigned",
+        attachmentFile: null,
+      });
+
+    } catch (error) {
+      console.error("Create Task Exception:", error);
+    }
   };
 
   const handleAddTag = (tag: string) => {
@@ -605,9 +805,47 @@ const KanbanBoard: React.FC = () => {
     setNewTask({ ...newTask, tags: newTask.tags.filter(tag => tag !== tagToRemove) });
   };
 
+  async function handleReport() {
+    if (!message.trim()) {
+      alert("Message cannot be empty");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/kanban/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = await res.json();
+        setReportCount(prev => prev + 1);
+
+      if (!res.ok) {
+        alert(data.error || "Failed to send report");
+        return;
+      }
+
+      alert("Report submitted successfully");
+      setMessage("");
+      setOpen(false);
+
+    } catch (err) {
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const filteredTasks = tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase()) || task.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const getTasksByStatus = (status: Task['status']) => filteredTasks.filter(task => task.status === status);
+
+
 
   return (
     <div className={`min-h-screen transition-colors duration-200`}> {/* toggles tailwind dark mode */}
@@ -650,16 +888,15 @@ const KanbanBoard: React.FC = () => {
               <div key={column.id} className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-800">
                   <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-lg ${
-                      column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
+                    <div className={`p-2 rounded-lg ${column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
                       column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
-                      'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
-                    }`}>
+                        'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                      }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
                   </div>
-                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
+                  <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
 
                 </div>
 
@@ -707,7 +944,11 @@ const KanbanBoard: React.FC = () => {
       </div>
 
       {/* Side Panel */}
-      <SidePanel selectedTask={selectedTask} onClose={() => setSelectedTask(null)} commentText={commentText} setCommentText={setCommentText} handleAddComment={handleAddComment} />
+      <SidePanel selectedTask={selectedTask} onClose={() => setSelectedTask(null)} commentText={commentText} setCommentText={setCommentText} handleAddComment={handleAddComment} handleReport={handleReport} open={open}
+        setOpen={setOpen}
+        message={message}
+        setMessage={setMessage}
+        loading={loading} reportCount={reportCount}/>
 
       {/* New Task Modal */}
       <NewTaskModal isOpen={showNewTaskModal} onClose={() => setShowNewTaskModal(false)} newTask={newTask} setNewTask={setNewTask} handleCreateTask={handleCreateTask} handleAddTag={handleAddTag} handleRemoveTag={handleRemoveTag} />
