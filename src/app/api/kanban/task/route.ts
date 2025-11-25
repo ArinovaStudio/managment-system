@@ -89,7 +89,6 @@ export async function POST(req: NextRequest) {
         priority,
         dueDate: new Date(dueDate),
         tags,
-        comments: [],
         attachments,
         status,
       },
@@ -102,33 +101,38 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("ERROR CREATING TASK:", error);
     return NextResponse.json(
-      { error: "Failed to create task" },
+      { message: "Failed to create task", error },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
-
   try {
     const tasks = await db.task.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        comments: {
+          orderBy: { createdAt: "asc" },
+        }
+      }
     });
 
     const formatted = tasks.map((task) => ({
       ...task,
-
-      comments: task.comments ?? [],
       attachments: task.attachments ?? [],
-      dueDate: task.dueDate.toISOString().split("T")[0],
+      comments: task.comments ?? [],
+      dueDate: task.dueDate?.toISOString().split("T")[0],
     }));
 
     return NextResponse.json({ tasks: formatted }, { status: 200 });
   } catch (error) {
     console.error("ERROR FETCHING TASKS:", error);
-    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to fetch tasks", error }, { status: 500 });
   }
 }
+
+
 
 export async function DELETE() {
   try {
@@ -142,7 +146,7 @@ export async function DELETE() {
     console.error("Error deleting task:", error);
 
     return NextResponse.json(
-      { error: "Failed to delete task" },
+      { message: "Failed to delete task", error },
       { status: 500 }
     );
   }

@@ -1,33 +1,11 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/client";
-import jwt from "jsonwebtoken"; // npm install jsonwebtoken
-import { cookies } from "next/headers";
+import { getUserIdFromCookies } from "@/lib/getCookies";
 
 export async function POST(req: Request) {
   try {
-    // Get token from cookies
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
 
-    if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized: No token found" },
-        { status: 401 }
-      );
-    }
-
-    // Verify token
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = decoded.id; // extract user ID from token
+    const userId = await getUserIdFromCookies();// extract user ID from token
 
     // Parse body input
     const { message, taskId } = await req.json();
@@ -58,20 +36,64 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const reports = await db.report.findMany({
-      orderBy: {
-        createdAt: "desc",
-      }
+    const userId = await getUserIdFromCookies();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid user" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const taskId = searchParams.get("taskId");
+
+    if (!taskId) {
+      return NextResponse.json(
+        { error: "taskId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Count reports by this user for this task
+    const count = await db.report.count({
+      where: {
+        taskId,
+        reportedBy: userId,
+      },
     });
 
-    return NextResponse.json({ success: true, reports });
+      const messages = await db.report.findMany({
+      where: {
+        taskId,
+        reportedBy: userId,
+      },
+      select: {
+        id: true,
+        message: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      userId,
+      taskId,
+      count,
+      messages,
+    });
+
   } catch (error) {
-    console.error("Get Reports Error:", error);
+    console.error(error);
     return NextResponse.json(
-      { success: false, error: "Internal Server Error" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
+
