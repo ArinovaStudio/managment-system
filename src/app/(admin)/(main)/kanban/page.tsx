@@ -728,12 +728,40 @@ const KanbanBoard: React.FC = () => {
     e.preventDefault();
   };
 
-  const handleDrop = (status: Task['status']) => {
-    if (draggedTask) {
-      setTasks(tasks.map(task => (task.id === draggedTask.id ? { ...task, status } : task)));
-      setDraggedTask(null);
+  const handleDrop = async (newStatus: Task["status"]) => {
+  if (!draggedTask) return;
+
+  const prevTasks = [...tasks]; 
+
+  
+  setTasks(prev =>
+    prev.map(task =>
+      task.id === draggedTask.id ? { ...task, status: newStatus } : task
+    )
+  );
+
+  // Update in DB
+  try {
+    const res = await fetch("/api/kanban/task", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: draggedTask.id,
+        status: newStatus,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to update");
     }
-  };
+  } catch (err) {
+    console.error("API Update Failed:", err);
+
+    setTasks(prevTasks);
+  }
+
+  setDraggedTask(null);
+};
 
   const handleAddComment = async () => {
     if (!commentText.trim() || !selectedTask) return;

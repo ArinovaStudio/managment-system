@@ -132,7 +132,31 @@ export async function GET() {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  try {
+    const { id, status } = await req.json();
 
+    if (!id || !status) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const updatedTask = await db.task.update({
+      where: { id },
+      data: { status },
+    });
+
+    return NextResponse.json({ success: true, task: updatedTask });
+  } catch (error) {
+    console.error("Error updating task:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function DELETE() {
   try {
