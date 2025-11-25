@@ -1,108 +1,103 @@
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
 }
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 enum ROLES {
-    ADMIN
-    CLIENT
-    EMPLOYEE
+  ADMIN
+  CLIENT
+  EMPLOYEE
 }
 
 enum STATUS {
-    Requested
-    Pending
-    Rejected
-    Approved
+  Requested
+  Pending
+  Rejected
+  Approved
 }
-
 
 model Users {
-    id          String      @id @default(nanoid())
+  id String @id @default(nanoid())
 }
-
 
 model User {
-  id            String        @id @default(cuid())
-  employeeId    String?       @unique
-  email         String        @unique
-  name          String
-  password      String
-  role          ROLES         @default(CLIENT)
-  Documents     Docs[]        @relation("UserDocuments")
-  workingAs     String?
-  department    String?
-  phone         String?
-  bio           String?
-  image         String?
-  dob           String?
-  isLogin       Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id         String   @id @default(cuid())
+  employeeId String?  @unique
+  email      String   @unique
+  name       String
+  password   String
+  role       ROLES    @default(CLIENT)
+  Documents  Docs[]   @relation("UserDocuments")
+  workingAs  String?
+  department String?
+  phone      String?
+  bio        String?
+  image      String?
+  dob        String?
+  isLogin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
+  projectMembers ProjectMember[]
 }
-
 
 model Docs {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
   fileUrl   String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
   userId    String?
-  User      User?     @relation("UserDocuments", fields: [userId], references: [id])
+  User      User?    @relation("UserDocuments", fields: [userId], references: [id])
 }
 
-
 model well {
-    id          String      @id @default(cuid())
-    title       String
-    answer      String
-    likes       Int        @default(0)
-    dislikes    Int        @default(0)
+  id       String @id @default(cuid())
+  title    String
+  answer   String
+  likes    Int    @default(0)
+  dislikes Int    @default(0)
 }
 
 model feedback {
-    id         String     @id @default(cuid())
-    type       String
-    rating     Int        @default(0)
-    desc       String
-    isAnynonyms Boolean   @default(false)
-    byName      String
-    byEmpId     String
+  id          String  @id @default(cuid())
+  type        String
+  rating      Int     @default(0)
+  desc        String
+  isAnynonyms Boolean @default(false)
+  byName      String
+  byEmpId     String
 }
 
 model leaveReq {
-        id         String     @id @default(cuid())
-        status     STATUS     @default(Pending)
-        empName    String
-        empId      String
-        department String
-        leaveType  String
-        startDate  DateTime
-        endDate    DateTime
-        reason     String
+  id         String   @id @default(cuid())
+  status     STATUS   @default(Pending)
+  empName    String
+  empId      String
+  department String
+  leaveType  String
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
 }
 
 model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String
-  assignee    String
+  id             String    @id @default(cuid())
+  title          String
+  description    String
+  assignee       String
   assigneeAvatar String?
-  priority    String
-  dueDate     DateTime
-  tags        String[]
-  comments    Comment[]
-  attachments Json[]     @default([])
-  status      String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
+  priority       String
+  dueDate        DateTime
+  tags           String[]
+  comments       Comment[]
+  attachments    Json[]    @default([])
+  status         String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
-
 
 model Report {
   id         String   @id @default(cuid())
@@ -119,4 +114,23 @@ model Comment {
   userId    String?
   createdAt DateTime @default(now())
   task      Task     @relation(fields: [taskId], references: [id])
+}
+
+model Project {
+  id           String          @id @default(cuid())
+  name         String
+  summary      String?
+  priority     String?
+  basicDetails String?
+  createdAt    DateTime        @default(now())
+  members      ProjectMember[]
+}
+
+model ProjectMember {
+  id        String @id @default(cuid())
+  projectId String
+  userId    String
+
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 }
