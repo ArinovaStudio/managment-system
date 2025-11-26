@@ -1,0 +1,127 @@
+import db from "@/lib/client";
+import cloudinary from "@/lib/cloudinary";
+
+export async function POST(req: Request) {
+    try {
+        const formData = await req.formData();
+        const file = formData.get("file") as File;
+        const projectId = formData.get("projectId") as string;
+        const type = formData.get("type") as string;
+        const title = formData.get("title") as string | null;
+
+        if (!file || !projectId || !type) {
+            return Response.json(
+                { success: false, message: "file, projectId, type are required" },
+                { status: 400 }
+            );
+        }
+
+        const allowedTypes = ["image", "zip", "document"];
+
+        if (!allowedTypes.includes(type)) {
+            return Response.json(
+                { success: false, message: "Invalid type" },
+                { status: 400 }
+            );
+        }
+
+
+        // Convert File -> Buffer
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        // Cloudinary Upload
+        const uploadResult = await new Promise((resolve, reject) => {
+            cloudinary.uploader
+                .upload_stream({ resource_type: "auto" }, (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                })
+                .end(buffer);
+        });
+
+        // Save in database
+        const asset = await db.asset.create({
+            data: {
+                projectId,
+                type,
+                url: (uploadResult as any).secure_url,
+                publicId: (uploadResult as any).public_id,
+                title: title || file.name,
+            },
+        });
+
+        return Response.json({ success: true, asset });
+    } catch (err) {
+        console.error(err);
+        return Response.json(
+            { success: false, message: "Upload failed", err },
+            { status: 500 }
+        );
+    }
+}
+
+export async function GET(req: Request) {
+    try {
+        const url = new URL(req.url);
+        const projectId = url.searchParams.get("projectId");
+
+        if (!projectId) {
+            return Response.json(
+                { success: false, message: "projectId is required" },
+                { status: 400 }
+            );
+        }
+
+        const assets = await db.asset.findMany({
+            where: { projectId },
+            orderBy: { createdAt: "desc" }
+        });
+
+        return Response.json({ success: true, assets });
+
+    } catch (error) {
+        console.error(error);
+        return Response.json(
+            { success: false, message: "Failed to fetch assets", error },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        const { assetId } = await req.json();
+
+        if (!assetId) {
+            return Response.json(
+                { success: false, message: "assetId is required" },
+                { status: 400 }
+            );
+        }
+
+        const asset = await db.asset.findUnique({
+            where: { id: assetId }
+        });
+
+        if (!asset) {
+            return Response.json(
+                { success: false, message: "Asset not found" },
+                { status: 404 }
+            );
+        }
+
+        await cloudinary.uploader.destroy(asset.publicId);
+
+        await db.asset.delete({ where: { id: assetId } });
+
+        return Response.json({ success: true, message: "Asset deleted",asset });
+
+    } catch (error) {
+        console.error(error);
+        return Response.json(
+            { success: false, message: "Failed to delete asset", error },
+            { status: 500 }
+        );
+    }
+}
