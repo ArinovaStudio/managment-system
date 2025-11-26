@@ -5,6 +5,7 @@ import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function SignInForm() {
@@ -29,8 +30,7 @@ export default function SignInForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign in failed");
 
-      alert("Sign in successful!");
-      console.log("User:", data.user);
+      window.location.href = "/";
 
       
     } catch (err) {
@@ -106,6 +106,17 @@ export default function SignInForm() {
             </div>
           </form>
 
+        </div>
+        <div className="mt-6">
+          <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+            Don&#39;t have an account?
+            <Link
+              href="/signup"
+              className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+            >
+              {" "}Sign Up
+            </Link>
+          </p>
         </div>
       </div>
     </div>

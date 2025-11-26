@@ -1,7 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-// import Wrapper from "./Wrapper";
 import { User, IdCard } from "lucide-react";
 import Wrapper from "@/layout/Wrapper";
 
@@ -10,25 +9,59 @@ export default function FeedbackForm() {
   const [feedbackType, setFeedbackType] = useState("");
   const [rating, setRating] = useState<number | null>(null);
   const [description, setDescription] = useState("");
+  const [user, setUser] = useState<any>(null);
 
-  // Mock employee info (in real use, fetch from context/session)
-  const employeeName = "John Doe";
-  const employeeId = "EMP-2025";
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/user', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    }
+    fetchUser();
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      name: anonymous ? "Anonymous" : employeeName,
-      id: anonymous ? "Hidden" : employeeId,
-      feedbackType,
-      rating,
-      description,
-    };
-    console.log("Submitted Feedback:", payload);
+    try {
+      const response = await fetch('/api/feedbacks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: feedbackType,
+          rating,
+          desc: description,
+          isAnynonyms: anonymous,
+          byName: anonymous ? "Anonymous" : user?.name || "Unknown",
+          byEmpId: anonymous ? "Hidden" : user?.employeeId || "Unknown",
+        })
+      });
+      
+      if (response.ok) {
+        alert('Feedback submitted successfully!');
+        setFeedbackType('');
+        setRating(null);
+        setDescription('');
+      } else {
+        alert('Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Error submitting feedback');
+    }
   };
 
   return (
-    <div className={`min-h-[75vh] rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-8 xl:py-6`}>
+    <Wrapper>
+      <div className={`min-h-[75vh] rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-8 xl:py-6`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
           Employee Feedback
@@ -132,7 +165,7 @@ export default function FeedbackForm() {
               <input
                 type="text"
                 disabled
-                value={anonymous ? "Anonymous" : employeeName}
+                value={anonymous ? "Anonymous" : user?.name || "Loading..."}
                 className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
               />
             </div>
@@ -148,7 +181,7 @@ export default function FeedbackForm() {
               <input
                 type="text"
                 disabled
-                value={anonymous ? "Hidden" : employeeId}
+                value={anonymous ? "Hidden" : user?.employeeId || "Loading..."}
                 className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
               />
             </div>
@@ -167,6 +200,7 @@ export default function FeedbackForm() {
           </motion.button>
         </div>
       </form>
-    </div>
+      </div>
+    </Wrapper>
   );
 }

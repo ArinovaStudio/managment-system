@@ -5,20 +5,12 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
-  GridIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
 } from "../icons/index";
 
-import {AlbumIcon, Clock10Icon, FolderGit2, GraduationCapIcon, HammerIcon, Handshake, HeartPulseIcon, LayoutDashboard, MessagesSquare, WorkflowIcon} from "lucide-react"
+import {AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, Handshake, HeartPulseIcon} from "lucide-react"
 
 type NavItem = {
   name: string;
@@ -29,8 +21,8 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <LayoutDashboard strokeWidth={1.5} />,
-    name: "Dashboard",
+    icon: <AlignHorizontalJustifyStart strokeWidth={1.5} />,
+    name: "Analytics",
     path: "/"
   },
   {

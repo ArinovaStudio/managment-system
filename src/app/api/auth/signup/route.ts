@@ -1,10 +1,29 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/client";
 import bcrypt from "bcryptjs";
+import { createToken } from "@/lib/jwt";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, role, department, phone } = await req.json();
+    const formData = await req.formData();
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const department = formData.get('department') as string;
+    const phone = formData.get('phone') as string;
+    const workingAs = formData.get('workingAs') as string;
+    const bio = formData.get('bio') as string;
+    const dob = formData.get('dob') as string;
+    const role = formData.get('role') as string;
+    const image = formData.get('image') as File;
+    
+    let imageUrl = null;
+    if (image && image.size > 0) {
+      // Convert image to base64 string for storage
+      const bytes = await image.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      imageUrl = `data:${image.type};base64,${buffer.toString('base64')}`;
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -18,27 +37,24 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Determine final role (default to EMPLOYEE)
-    const finalRole = role === "ADMIN" ? "ADMIN" : "EMPLOYEE";
+    // Determine final role (default to CLIENT if not provided)
+    const finalRole = role && ['CLIENT', 'EMPLOYEE', 'ADMIN'].includes(role) ? role : 'CLIENT';
 
-    let employeeId: string | null = null;
+    // Generate employeeId for all users
+    const lastEmployee = await db.user.findFirst({
+      where: { employeeId: { not: null } },
+      orderBy: { createdAt: "desc" },
+      select: { employeeId: true },
+    });
 
-    if (finalRole === "EMPLOYEE") {
-      const lastEmployee = await db.user.findFirst({
-        where: { role: "EMPLOYEE" },
-        orderBy: { createdAt: "desc" },
-        select: { employeeId: true },
-      });
-
-      let nextNumber = 1;
-      if (lastEmployee?.employeeId) {
-        const parts = lastEmployee.employeeId.split("-");
-        const lastNumber = parseInt(parts[1], 10);
-        nextNumber = lastNumber + 1;
-      }
-
-      employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
+    let nextNumber = 1;
+    if (lastEmployee?.employeeId) {
+      const parts = lastEmployee.employeeId.split("-");
+      const lastNumber = parseInt(parts[1], 10);
+      nextNumber = lastNumber + 1;
     }
+
+    const employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
 
     const user = await db.user.create({
       data: {
@@ -48,11 +64,21 @@ export async function POST(req: Request) {
         role: finalRole,
         department,
         phone,
-        employeeId,
+        workingAs,
+        bio,
+        dob,
+        image: imageUrl,
+        employeeId: employeeId,
       },
     });
 
-    return NextResponse.json(
+    const token = createToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    const response = NextResponse.json(
       {
         message: "User created successfully",
         user: {
@@ -65,6 +91,15 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    return response;
   } catch (err) {
     console.error("SIGNUP_ERROR:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

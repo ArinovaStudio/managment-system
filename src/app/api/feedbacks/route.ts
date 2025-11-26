@@ -4,11 +4,11 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const get_data = await db.feedback.findMany();
 
-    if (get_data.length > 0) {
-        return NextResponse.json({ "error": "no data found" }, { status: 401 })
+    if (get_data.length === 0) {
+        return NextResponse.json({ "feedbacks": [] }, { status: 200 })
     }
 
-    return NextResponse.json({ data: get_data }, { status: 200 })
+    return NextResponse.json({ feedbacks: get_data }, { status: 200 })
 }
 
 export async function DELETE(req: Request, res: Response) {
@@ -31,7 +31,7 @@ export async function POST(req: Request, res: Response) {
             }
         })
         if (save) {
-            return NextResponse.json({ "message": "success", "data": save }, { status: 200 })
+            return NextResponse.json({ "message": "success", "feedback": save }, { status: 200 })
         }
     }
     catch (e) {

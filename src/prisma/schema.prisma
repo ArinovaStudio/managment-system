@@ -1,30 +1,41 @@
 datasource db {
-    provider = "postgresql"
-    url      = env("DB_URI")
+  provider = "postgresql"
+  url      = env("DB_URI")
 }
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 enum ROLES {
-    ADMIN
-    CLIENT
-    EMPLOYEE
+  ADMIN
+  CLIENT
+  EMPLOYEE
 }
 
 enum STATUS {
-    Requested
-    Pending
-    Rejected
-    Approved
+  Requested
+  Pending
+  Rejected
+  Approved
 }
 
+enum CLOCK_STATUS {
+  NOT_LOGGED_IN
+  CLOCKED_IN
+  CLOCKED_OUT
+  ON_BREAK
+}
+
+enum BREAK_TYPE {
+  COFFEE
+  MEAL
+  EMERGENCY
+}
 
 model Users {
-    id          String      @id @default(nanoid())
+  id String @id @default(nanoid())
 }
-
 
 model User {
   id            String          @id @default(cuid())
@@ -32,7 +43,7 @@ model User {
   email         String          @unique
   name          String
   password      String
-  role          ROLES            @default(CLIENT)
+  role          ROLES           @default(CLIENT)
   Documents     Docs[]          @relation("UserDocuments")
   workingAs     String?
   department    String?
@@ -41,46 +52,150 @@ model User {
   image         String?
   dob           String?
   isLogin       Boolean         @default(false)
+  faceDescriptor String?        // Face recognition data
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  
+  // Clock System Relations
+  timezone      UserTimezone?
+  leaves        UserLeaves?
+  clockRecords  ClockRecord[]
+  workHours     WorkHours[]
+  breaks        Break[]
 }
 
 model Docs {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   title     String
   fileUrl   String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
   userId    String?
-  User      User?     @relation("UserDocuments", fields: [userId], references: [id])
+  User      User?    @relation("UserDocuments", fields: [userId], references: [id])
 }
 
-
 model well {
-    id          String      @id @default(cuid())
-    title       String
-    answer      String
-    likes       Int        @default(0)
-    dislikes    Int        @default(0)
+  id       String @id @default(cuid())
+  title    String
+  answer   String
+  likes    Int    @default(0)
+  dislikes Int    @default(0)
 }
 
 model feedback {
-    id         String     @id @default(cuid())
-    type       String
-    rating     Int        @default(0)
-    desc       String
-    isAnynonyms Boolean   @default(false)
-    byName      String
-    byEmpId     String
+  id          String  @id @default(cuid())
+  type        String
+  rating      Int     @default(0)
+  desc        String
+  isAnynonyms Boolean @default(false)
+  byName      String
+  byEmpId     String
 }
 
 model leaveReq {
-        id         String     @id @default(cuid())
-        status     STATUS     @default(Pending)
-        empName    String
-        empId      String
-        department String
-        leaveType  String
-        startDate  DateTime
-        endDate    DateTime
-        reason     String
+  id         String   @id @default(cuid())
+  status     STATUS   @default(Pending)
+  empName    String
+  empId      String
+  department String
+  leaveType  String
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
+}
+
+model Analytics {
+  id            String   @id @default(cuid())
+  quoteText     String?
+  quoteAuthor   String?
+  totalProjects Int      @default(0)
+  pendingTasks  Int      @default(0)
+  design        Int      @default(0)
+  development   Int      @default(0)
+  marketing     Int      @default(0)
+  sales         Int      @default(0)
+  support       Int      @default(0)
+  analytics     Int      @default(0)
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+}
+
+// ============ CLOCK SYSTEM MODELS ============
+
+model UserTimezone {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  code      String   // IND, USA, UK, etc.
+  name      String   // India Standard Time
+  hours     String   // 10AM-5PM
+  offset    String   // +05:30
+  startTime String   // 10:00
+  endTime   String   // 17:00
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLeaves {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  remaining Int      @default(10)
+  emergency Int      @default(10)
+  sick      Int      @default(10)
+  total     Int      @default(30)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClockRecord {
+  id       String        @id @default(cuid())
+  userId   String
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clockIn  DateTime?
+  clockOut DateTime?
+  date     DateTime      @default(now())
+  status   CLOCK_STATUS  @default(NOT_LOGGED_IN)
+  
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  @@index([userId, date])
+}
+
+model WorkHours {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date     DateTime
+  hours    Float    // Total hours worked
+  clockIn  String   // Time as string "09:05 AM"
+  clockOut String   // Time as string "05:10 PM"
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId, date])
+}
+
+model Break {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      BREAK_TYPE
+  startTime DateTime
+  endTime   DateTime?
+  duration  Int?       // in minutes
+  isActive  Boolean    @default(true)
+  
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@index([userId, startTime])
 }

@@ -2,58 +2,52 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Wrapper from "@/layout/Wrapper";
-// import Wrapper from "./Wrapper";
 
 interface LeaveRequest {
   id: string;
   leaveType: string;
   startDate: string;
   endDate: string;
-  totalDays: number;
   reason: string;
   department?: string;
   status: "Pending" | "Approved" | "Rejected";
+  empName?: string;
+  empId?: string;
 }
 
 export default function LeaveRequestModule() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<LeaveRequest | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   async function fetchRequests(): Promise<LeaveRequest[]> {
-    return [
-      {
-        id: "LR-001",
-        leaveType: "Annual Leave",
-        startDate: "2025-11-10",
-        endDate: "2025-11-14",
-        totalDays: 5,
-        reason: "Family vacation trip to hometown",
-        department: "Engineering",
-        status: "Approved",
-      },
-      {
-        id: "LR-002",
-        leaveType: "Sick Leave",
-        startDate: "2025-10-25",
-        endDate: "2025-10-26",
-        totalDays: 2,
-        reason: "High fever and rest advised by doctor",
-        department: "IT Support",
-        status: "Rejected",
-      },
-      {
-        id: "LR-003",
-        leaveType: "Personal Leave",
-        startDate: "2025-12-01",
-        endDate: "2025-12-03",
-        totalDays: 3,
-        reason: "Personal commitments",
-        department: "HR",
-        status: "Pending",
-      },
-    ];
+    try {
+      const response = await fetch('/api/leaves', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch leave requests:', error);
+    }
+    return [];
   }
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/user', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    }
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -62,8 +56,21 @@ export default function LeaveRequestModule() {
     })();
   }, []);
 
-  function handleAddRequest(newReq: LeaveRequest) {
-    setRequests((prev) => [newReq, ...prev]);
+  async function handleAddRequest(newReq: Omit<LeaveRequest, 'id'>) {
+    try {
+      const response = await fetch('/api/leaves', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newReq)
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRequests((prev) => [data, ...prev]);
+      }
+    } catch (error) {
+      console.error('Failed to create leave request:', error);
+    }
   }
 
   const openCardDetails = (req: LeaveRequest) => {
@@ -85,7 +92,7 @@ export default function LeaveRequestModule() {
             {req.leaveType}
           </h4>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {req.startDate} → {req.endDate} ({req.totalDays} days)
+            {new Date(req.startDate).toLocaleDateString()} → {new Date(req.endDate).toLocaleDateString()}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-300 mt-2 line-clamp-2">
             {req.reason}
@@ -133,6 +140,7 @@ export default function LeaveRequestModule() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleAddRequest}
+        user={user}
       />
 
       {/* Card Details Modal */}
@@ -149,10 +157,12 @@ function AddLeaveForm({
   isOpen,
   onClose,
   onSubmit,
+  user,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (req: LeaveRequest) => void;
+  onSubmit: (req: any) => void;
+  user: any;
 }) {
   const [leaveType, setLeaveType] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -160,25 +170,25 @@ function AddLeaveForm({
   const [reason, setReason] = useState("");
   const [department, setDepartment] = useState("");
 
-  const employeeName = "John Doe";
-  const employeeId = "EMP-2025";
+  const employeeName = user?.name;
+  const employeeId = user?.employeeId;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalDays =
-      Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    if (!employeeName || !employeeId) {
+      alert('User data not loaded. Please wait and try again.');
+      return;
+    }
 
-    const newReq: LeaveRequest = {
-      id: `LR-${Date.now()}`,
+    const newReq = {
+      empName: employeeName,
+      empId: employeeId,
       leaveType,
       startDate,
       endDate,
-      totalDays,
       reason,
-      department,
-      status: "Pending",
+      department: department || user?.department || 'Not specified',
     };
     onSubmit(newReq);
     onClose();
@@ -364,8 +374,7 @@ function CardDetailsModal({
           </h3>
           <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <p><strong>Leave Type:</strong> {selected.leaveType}</p>
-            <p><strong>Duration:</strong> {selected.startDate} → {selected.endDate}</p>
-            <p><strong>Total Days:</strong> {selected.totalDays}</p>
+            <p><strong>Duration:</strong> {new Date(selected.startDate).toLocaleDateString()} → {new Date(selected.endDate).toLocaleDateString()}</p>
             <p><strong>Department:</strong> {selected.department || "—"}</p>
             <p><strong>Status:</strong> {selected.status}</p>
             <p><strong>Reason:</strong></p>

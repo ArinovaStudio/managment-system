@@ -4,11 +4,28 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const get_data = await db.well.findMany();
     
-    if (get_data.length > 0) {
-        return NextResponse.json({"error": "no data found"}, {status: 401})    
+    if (get_data.length === 0) {
+        // Add sample data if database is empty
+        const sampleTips = [
+            {
+                id: '1',
+                title: 'Take Regular Breaks',
+                answer: 'Every 2 hours, take a 5-10 minute break to stretch and rest your eyes. This helps prevent fatigue and improves productivity.',
+                likes: 12,
+                dislikes: 2
+            },
+            {
+                id: '2', 
+                title: 'Stay Hydrated',
+                answer: 'Drink at least 8 glasses of water throughout your workday. Proper hydration improves focus and energy levels.',
+                likes: 18,
+                dislikes: 1
+            }
+        ];
+        return NextResponse.json({"wellBeing": sampleTips}, {status: 200})    
     }
 
-    return NextResponse.json({data: get_data}, {status: 200})
+    return NextResponse.json({wellBeing: get_data}, {status: 200})
 }
 
 export async function DELETE(req: Request, res: Response) {
@@ -27,11 +44,14 @@ export async function POST(req: Request, res: Response) {
     try {
         const save = await db.well.create({
             data: {
-                title, answer
+                title, 
+                answer,
+                likes: 0,
+                dislikes: 0
             }
         })
         if (save) {
-            return NextResponse.json({"message": "success", "data": save}, {status: 200})
+            return NextResponse.json({"message": "success", "wellBeing": save}, {status: 200})
         }
     }
     catch(e) {
@@ -60,7 +80,7 @@ export async function PUT(req: Request, res: Response) {
             }
         })
         if (save) {
-            return NextResponse.json({"message": "success", "data": save}, {status: 200})
+            return NextResponse.json({"message": "success", "wellBeing": save}, {status: 200})
         }
     }
 

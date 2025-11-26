@@ -1,41 +1,62 @@
-import type { Metadata } from "next";
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
-import React from "react";
-import MonthlyTarget from "@/components/ecommerce/MonthlyTarget";
-import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
-import StatisticsChart from "@/components/ecommerce/StatisticsChart";
-import RecentOrders from "@/components/ecommerce/RecentOrders";
-import DemographicCard from "@/components/ecommerce/DemographicCard";
+'use client';
+import EmployeeProfile from "@/components/analytics/EmployeeProfile";
+import Feedback from "@/components/analytics/Feedback";
+import QuoteOfTheDay from "@/components/analytics/OuoteOfTheDay";
+import PerformanceRadial from "@/components/analytics/PerformanceRadial";
+import ProjectStats from "@/components/analytics/ProjectStats";
+import SkillsDevelopment from "@/components/analytics/SkillsDevelopment";
+import StatusCard from "@/components/analytics/StatusCard";
+import ToDoTask from "@/components/analytics/ToDoTask";
+import UpcomingMeetings from "@/components/analytics/UpcomingMeetings";
+import React, { useEffect, useState } from "react";
 
-export const metadata: Metadata = {
-  title:
-    "Welcome - Arinova Studio",
-};
+export default function EmployeeDashboard() {
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
 
-export default function Ecommerce() {
+  useEffect(() => {
+    async function fetchAnalyticsData() {
+      try {
+        const response = await fetch('/api/analytics', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setAnalyticsData(data.analytics);
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics data:', error);
+      }
+    }
+    fetchAnalyticsData();
+  }, []);
+
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">
-      <div className="col-span-12 space-y-6 xl:col-span-7">
-        <EcommerceMetrics />
-
-        <MonthlySalesChart />
+      <div className="col-span-12 md:col-span-5">
+        <EmployeeProfile />
       </div>
-
-      <div className="col-span-12 xl:col-span-5">
-        <MonthlyTarget />
+      <div className="col-span-12 md:col-span-7">
+        <QuoteOfTheDay analyticsData={analyticsData} />
       </div>
-
-      <div className="col-span-12">
-        <StatisticsChart />
+      <div className="col-span-12 md:col-span-7">
+        <ProjectStats analyticsData={analyticsData} />
       </div>
-{/* 
-      <div className="col-span-12 xl:col-span-5">
-        <DemographicCard />
+      <div className="col-span-12 md:col-span-5">
+        <StatusCard />
       </div>
-
-      <div className="col-span-12 xl:col-span-7">
-        <RecentOrders />
-      </div> */}
+      <div className="col-span-12 md:col-span-7">
+        <SkillsDevelopment analyticsData={analyticsData} />
+      </div>
+      <div className="col-span-12 md:col-span-5">
+        <PerformanceRadial analyticsData={analyticsData} />
+      </div>
+      <div className="col-span-12 md:col-span-4">
+        <Feedback />
+      </div>
+      <div className="col-span-12 md:col-span-4">
+        <UpcomingMeetings analyticsData={analyticsData} />
+      </div>
+      <div className="col-span-12 md:col-span-4">
+        <ToDoTask analyticsData={analyticsData} />
+      </div>
     </div>
   );
 }
