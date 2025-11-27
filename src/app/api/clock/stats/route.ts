@@ -32,6 +32,9 @@ export async function GET(req: Request) {
       });
     }
 
+    // Filter out incomplete records (clockOut = '-')
+    const completedWorkHours = workHours.filter(wh => wh.clockOut !== '-');
+    
     // Calculate averages
     const clockInTimes = workHours.map(wh => {
       const time = wh.clockIn.split(' ');
@@ -40,7 +43,7 @@ export async function GET(req: Request) {
       return (isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours) * 60 + minutes;
     });
 
-    const clockOutTimes = workHours.map(wh => {
+    const clockOutTimes = completedWorkHours.map(wh => {
       const time = wh.clockOut.split(' ');
       const [hours, minutes] = time[0].split(':').map(Number);
       const isPM = time[1] === 'PM';
@@ -48,7 +51,9 @@ export async function GET(req: Request) {
     });
 
     const avgClockInMinutes = Math.round(clockInTimes.reduce((a, b) => a + b, 0) / clockInTimes.length);
-    const avgClockOutMinutes = Math.round(clockOutTimes.reduce((a, b) => a + b, 0) / clockOutTimes.length);
+    const avgClockOutMinutes = clockOutTimes.length > 0 
+      ? Math.round(clockOutTimes.reduce((a, b) => a + b, 0) / clockOutTimes.length)
+      : 17 * 60; // Default to 5:00 PM if no completed records
     const avgHours = workHours.reduce((sum, wh) => sum + wh.hours, 0) / workHours.length;
     const totalHours = workHours.reduce((sum, wh) => sum + wh.hours, 0);
 

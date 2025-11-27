@@ -51,7 +51,8 @@ export async function POST(req: Request) {
         select: {
           id: true,
           name: true,
-          faceDescriptor: true
+          faceDescriptor: true,
+          role: true
         }
       });
 
@@ -118,16 +119,49 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Already clocked in' }, { status: 400 });
       }
 
-      await db.user.update({
-        where: { id: authenticatedUser.id },
-        data: { isLogin: true }
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // Check if already has work hours for today
+      const existingWorkHours = await db.workHours.findFirst({
+        where: {
+          userId: authenticatedUser.id,
+          date: {
+            gte: today,
+            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          }
+        }
       });
+
+      if (existingWorkHours) {
+        return NextResponse.json({ error: 'Already clocked in today' }, { status: 400 });
+      }
+
+      // Update user login status and create work hours record
+      const clockInTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      
+      await Promise.all([
+        db.user.update({
+          where: { id: authenticatedUser.id },
+          data: { isLogin: true }
+        }),
+        db.workHours.create({
+          data: {
+            userId: authenticatedUser.id,
+            date: today,
+            clockIn: clockInTime,
+            clockOut: '-',
+            hours: 0
+          }
+        })
+      ]);
 
       return NextResponse.json({ 
         success: true, 
-        message: `Welcome ${authenticatedUser.name}! Clock-in successful`,
+        message: `Welcome ${authenticatedUser.name}! Clock-in successful at ${clockInTime}`,
         userId: authenticatedUser.id,
-        timestamp: new Date().toISOString()
+        timestamp: now.toISOString(),
+        action: 'clock-in'
       });
 
     } else if (action === 'clock-out') {
@@ -161,16 +195,63 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Not clocked in' }, { status: 400 });
       }
 
-      await db.user.update({
-        where: { id: authenticatedUser.id },
-        data: { isLogin: false }
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // Find today's work hours record
+      const workHours = await db.workHours.findFirst({
+        where: {
+          userId: authenticatedUser.id,
+          date: {
+            gte: today,
+            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          }
+        }
       });
+
+      if (!workHours) {
+        return NextResponse.json({ error: 'No clock-in record found for today' }, { status: 400 });
+      }
+
+      if (workHours.clockOut !== '-') {
+        return NextResponse.json({ error: 'Already clocked out today' }, { status: 400 });
+      }
+
+      // Calculate work hours
+      const clockOutTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const clockInDate = new Date(`${today.toDateString()} ${workHours.clockIn}`);
+      const clockOutDate = new Date(`${today.toDateString()} ${clockOutTime}`);
+      
+      // Handle overnight shifts
+      if (clockOutDate <= clockInDate) {
+        clockOutDate.setDate(clockOutDate.getDate() + 1);
+      }
+      
+      const totalHours = (clockOutDate.getTime() - clockInDate.getTime()) / (1000 * 60 * 60);
+
+      // Update user login status and work hours record
+      await Promise.all([
+        db.user.update({
+          where: { id: authenticatedUser.id },
+          data: { isLogin: false }
+        }),
+        db.workHours.update({
+          where: { id: workHours.id },
+          data: {
+            clockOut: clockOutTime,
+            hours: Math.max(0, totalHours)
+          }
+        })
+      ]);
 
       return NextResponse.json({ 
         success: true, 
-        message: `Goodbye ${authenticatedUser.name}! Clock-out successful`,
+        message: `Goodbye ${authenticatedUser.name}! Clock-out successful at ${clockOutTime}. Total hours: ${totalHours.toFixed(2)}`,
         userId: authenticatedUser.id,
-        timestamp: new Date().toISOString()
+        timestamp: now.toISOString(),
+        totalHours: Math.max(0, totalHours),
+        action: 'clock-out',
+        userRole: authenticatedUser.role
       });
     }
 
@@ -197,16 +278,23 @@ export async function GET() {
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { 
+        id: true,  // ADD THIS LINE
         faceDescriptor: true,
         name: true,
         isLogin: true
       }
     });
 
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     return NextResponse.json({ 
+      userId: user.id,
       hasFaceRegistered: !!user?.faceDescriptor,
       isLoggedIn: user?.isLogin || false,
-      userName: user?.name
+      userName: user?.name,
+      userRole: user?.role
     });
   } catch (error) {
     console.error('Face status error:', error);
