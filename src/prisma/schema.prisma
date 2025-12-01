@@ -11,30 +11,32 @@ model Users {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  employeeId     String?         @unique
-  email          String          @unique
-  name           String
-  password       String
-  role           ROLES           @default(CLIENT)
-  workingAs      String?
-  department     String?
-  phone          String?
-  bio            String?
-  image          String?
-  dob            String?
-  isLogin        Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  faceDescriptor String?
-  breaks         Break[]
-  clockRecords   ClockRecord[]
-  Documents      Docs[]          @relation("UserDocuments")
-  milestones     Milestone[]
-  projectMembers ProjectMember[]
-  leaves         UserLeaves?
-  timezone       UserTimezone?
-  workHours      WorkHours[]
+  id              String           @id @default(cuid())
+  employeeId      String?          @unique
+  email           String           @unique
+  name            String
+  password        String
+  role            ROLES            @default(CLIENT)
+  workingAs       String?
+  department      String?
+  phone           String?
+  bio             String?
+  image           String?
+  dob             String?
+  isLogin         Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  faceDescriptor  String?
+  breaks          Break[]
+  clockRecords    ClockRecord[]
+  Documents       Docs[]           @relation("UserDocuments")
+  meetingRequests MeetingRequest[]
+  milestones      Milestone[]
+  projectMembers  ProjectMember[]
+  leaves          UserLeaves?
+  timezone        UserTimezone?
+  workHours       WorkHours[]
+  featureRequests FeatureRequest[]
 }
 
 model Docs {
@@ -198,18 +200,19 @@ model Comment {
 }
 
 model Project {
-  id           String          @id @default(cuid())
-  name         String
-  summary      String?
-  priority     String?
-  basicDetails String?
-  createdAt    DateTime        @default(now())
-  members      ProjectMember[]
-  milestones   Milestone[]
-  assets       Asset[]
-
-  progress Int    @default(0)
-  tasks    Task[]
+  id              String           @id @default(cuid())
+  name            String
+  summary         String?
+  priority        String?
+  basicDetails    String?
+  createdAt       DateTime         @default(now())
+  progress        Int              @default(0)
+  assets          Asset[]
+  milestones      Milestone[]
+  members         ProjectMember[]
+  tasks           Task[]
+  featureRequests FeatureRequest[]
+  projectInfo     ProjectInfo?
 }
 
 model ProjectMember {
@@ -260,6 +263,44 @@ model UsefulTip {
   user      String
   tip       String
   createdAt DateTime @default(now())
+}
+
+model MeetingRequest {
+  id        String   @id @default(cuid())
+  clientId  String
+  reason    String
+  meetDate  DateTime
+  meetTime  String
+  duration  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    User     @relation(fields: [clientId], references: [id])
+}
+
+model FeatureRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  projectId   String
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+
+  client  User    @relation(fields: [clientId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model ProjectInfo {
+  id          String   @id @default(cuid())
+  projectId   String   @unique
+  budget      Float
+  clientName  String
+  projectType String
+  startDate   DateTime
+  deadline    DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  Project Project @relation(fields: [projectId], references: [id])
 }
 
 enum ROLES {
