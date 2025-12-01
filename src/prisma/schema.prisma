@@ -1,35 +1,9 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-enum ROLES {
-  ADMIN
-  CLIENT
-  EMPLOYEE
-}
-
-enum STATUS {
-  Requested
-  Pending
-  Rejected
-  Approved
-}
-
-enum CLOCK_STATUS {
-  NOT_LOGGED_IN
-  CLOCKED_IN
-  CLOCKED_OUT
-  ON_BREAK
-}
-
-enum BREAK_TYPE {
-  COFFEE
-  MEAL
-  EMERGENCY
+datasource db {
+  provider = "postgresql"
 }
 
 model Users {
@@ -37,34 +11,30 @@ model Users {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  employeeId     String?  @unique
-  email          String   @unique
+  id             String          @id @default(cuid())
+  employeeId     String?         @unique
+  email          String          @unique
   name           String
   password       String
-  role           ROLES    @default(CLIENT)
-  Documents      Docs[]   @relation("UserDocuments")
+  role           ROLES           @default(CLIENT)
   workingAs      String?
   department     String?
   phone          String?
   bio            String?
   image          String?
   dob            String?
-  isLogin        Boolean  @default(false)
-  faceDescriptor String? // Face recognition data
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  // Clock System Relations
-  timezone     UserTimezone?
-  leaves       UserLeaves?
-  clockRecords ClockRecord[]
-  workHours    WorkHours[]
-  breaks       Break[]
-
-  //Projects
-  projectMembers ProjectMember[]
+  isLogin        Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  faceDescriptor String?
+  breaks         Break[]
+  clockRecords   ClockRecord[]
+  Documents      Docs[]          @relation("UserDocuments")
   milestones     Milestone[]
+  projectMembers ProjectMember[]
+  leaves         UserLeaves?
+  timezone       UserTimezone?
+  workHours      WorkHours[]
 }
 
 model Docs {
@@ -122,84 +92,72 @@ model Analytics {
   createdAt     DateTime @default(now())
 }
 
-// ============ CLOCK SYSTEM MODELS ============
-
 model UserTimezone {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  code      String // IND, USA, UK, etc.
-  name      String // India Standard Time
-  hours     String // 10AM-5PM
-  offset    String // +05:30
-  startTime String // 10:00
-  endTime   String // 17:00
-
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  code      String
+  name      String
+  hours     String
+  offset    String
+  startTime String
+  endTime   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserLeaves {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  remaining Int @default(10)
-  emergency Int @default(10)
-  sick      Int @default(10)
-  total     Int @default(30)
-
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  remaining Int      @default(10)
+  emergency Int      @default(10)
+  sick      Int      @default(10)
+  total     Int      @default(30)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ClockRecord {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  clockIn  DateTime?
-  clockOut DateTime?
-  date     DateTime     @default(now())
-  status   CLOCK_STATUS @default(NOT_LOGGED_IN)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String       @id @default(cuid())
+  userId    String
+  clockIn   DateTime?
+  clockOut  DateTime?
+  date      DateTime     @default(now())
+  status    CLOCK_STATUS @default(NOT_LOGGED_IN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
 }
 
 model WorkHours {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  date     DateTime
-  hours    Float // Total hours worked
-  clockIn  String // Time as string "09:05 AM"
-  clockOut String // Time as string "05:10 PM"
-  summary  String? // Work summary for the day
-
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  hours     Float
+  clockIn   String
+  clockOut  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  summary   String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
 }
 
 model Break {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id        String     @id @default(cuid())
+  userId    String
   type      BREAK_TYPE
   startTime DateTime
   endTime   DateTime?
-  duration  Int? // in minutes
+  duration  Int?
   isActive  Boolean    @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startTime])
 }
@@ -213,11 +171,13 @@ model Task {
   priority       String
   dueDate        DateTime
   tags           String[]
-  comments       Comment[]
   attachments    Json[]    @default([])
   status         String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  projectId      String?
+  comments       Comment[]
+  Project        Project?  @relation(fields: [projectId], references: [id])
 }
 
 model Report {
@@ -247,18 +207,19 @@ model Project {
   members      ProjectMember[]
   milestones   Milestone[]
   assets       Asset[]
+
+  progress Int    @default(0)
+  tasks    Task[]
 }
 
 model ProjectMember {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   projectId String
   userId    String
-
-  role     String?
-  isLeader Boolean @default(false)
-
-  project Project @relation(fields: [projectId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  role      String?
+  isLeader  Boolean @default(false)
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 }
 
 model Milestone {
@@ -267,23 +228,21 @@ model Milestone {
   title       String
   description String?
   dueDate     DateTime
-  createdBy   String // admin userId
+  createdBy   String
   createdAt   DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
-  creator User    @relation(fields: [createdBy], references: [id])
+  creator     User     @relation(fields: [createdBy], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
 }
 
 model Asset {
   id        String   @id @default(cuid())
   projectId String
-  type      String // "figma", "image", "zip"
-  url       String // cloudinary url
-  publicId  String //this id will be used to delete the assest from cloudinary
+  type      String
+  url       String
+  publicId  String
   title     String?
   createdAt DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
 }
 
 model Ticket {
@@ -295,10 +254,36 @@ model Ticket {
 }
 
 model UsefulTip {
-  id         String   @id @default(cuid())
-  projectId  String
-  userId     String    // who gave the tip
-  user       String
-  tip        String
-  createdAt  DateTime  @default(now())
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  user      String
+  tip       String
+  createdAt DateTime @default(now())
+}
+
+enum ROLES {
+  ADMIN
+  CLIENT
+  EMPLOYEE
+}
+
+enum STATUS {
+  Requested
+  Pending
+  Rejected
+  Approved
+}
+
+enum CLOCK_STATUS {
+  NOT_LOGGED_IN
+  CLOCKED_IN
+  CLOCKED_OUT
+  ON_BREAK
+}
+
+enum BREAK_TYPE {
+  COFFEE
+  MEAL
+  EMERGENCY
 }
