@@ -6,30 +6,30 @@ import { createToken } from "@/lib/jwt";
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const department = formData.get('department') as string;
-    const phone = formData.get('phone') as string;
-    const workingAs = formData.get('workingAs') as string;
-    const bio = formData.get('bio') as string;
-    const dob = formData.get('dob') as string;
-    const role = formData.get('role') as string;
-    const image = formData.get('image') as File;
-    
+
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const department = formData.get("department") as string;
+    const phone = formData.get("phone") as string;
+    const workingAs = formData.get("workingAs") as string;
+    const bio = formData.get("bio") as string;
+    const dob = formData.get("dob") as string;
+    const role = formData.get("role") as string;
+    const image = formData.get("image") as File;
+
+    // ---- IMAGE ----
     let imageUrl = null;
     if (image && image.size > 0) {
-      // Convert image to base64 string for storage
       const bytes = await image.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      imageUrl = `data:${image.type};base64,${buffer.toString('base64')}`;
+      imageUrl = `data:${image.type};base64,${buffer.toString("base64")}`;
     }
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Check if user already exists
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: "User already exists" }, { status: 409 });
@@ -37,45 +37,32 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Determine final role (default to CLIENT if not provided)
-    const finalRole = role && ['CLIENT', 'EMPLOYEE', 'ADMIN'].includes(role) ? role : 'CLIENT';
+    const finalRole =
+      role && ["CLIENT", "EMPLOYEE", "ADMIN"].includes(role) ? role : "CLIENT";
 
-    // Generate employeeId for all users
-    const lastEmployee = await db.user.findFirst({
-      where: { employeeId: { not: null } },
-      orderBy: { createdAt: "desc" },
-      select: { employeeId: true },
-    });
+    // --------------------------------------------------------
+    // EMPLOYEE ID GENERATION (RUNS ONLY FOR EMPLOYEE ROLE)
+    // --------------------------------------------------------
+    let employeeId: string | null = null;
 
-    let nextNumber = 1;
-    if (lastEmployee?.employeeId) {
-      const parts = lastEmployee.employeeId.split("-");
-      const lastNumber = parseInt(parts[1], 10);
-      nextNumber = lastNumber + 1;
-    }
     if (finalRole === "EMPLOYEE") {
-  // Find last employee with a valid employeeId
-  const lastEmployee = await db.user.findFirst({
-    where: {
-      role: "EMPLOYEE",
-      employeeId: { not: null },
-    },
-    orderBy: { createdAt: "desc" },
-    select: { employeeId: true },
-  });
+      const last = await db.user.findFirst({
+        where: { role: "EMPLOYEE", employeeId: { not: null } },
+        orderBy: { createdAt: "desc" },
+        select: { employeeId: true },
+      });
 
-  let nextNumber = 1;
+      let next = 1;
 
-  if (lastEmployee?.employeeId) {
-    const num = parseInt(lastEmployee.employeeId.split("-")[1], 10);
-    if (!isNaN(num)) nextNumber = num + 1;
-  }
+      if (last?.employeeId) {
+        const num = parseInt(last.employeeId.split("-")[1], 10);
+        if (!isNaN(num)) next = num + 1;
+      }
 
-  employeeId = `emp-${String(nextNumber).padStart(3, "0")}`;
-}
+      employeeId = `emp-${String(next).padStart(3, "0")}`;
+    }
 
-    const employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
-
+    // ---- CREATE USER ----
     const user = await db.user.create({
       data: {
         name,
@@ -88,10 +75,11 @@ export async function POST(req: Request) {
         bio,
         dob,
         image: imageUrl,
-        employeeId: employeeId,
+        employeeId: employeeId, // only set if EMPLOYEE, else stays null
       },
     });
 
+    // ---- TOKEN ----
     const token = createToken({
       userId: user.id,
       email: user.email,
@@ -112,10 +100,10 @@ export async function POST(req: Request) {
       { status: 201 }
     );
 
-    response.cookies.set('token', token, {
+    response.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60,
     });
 
@@ -127,19 +115,21 @@ export async function POST(req: Request) {
 }
 
 
+
 //get all user
 export async function GET() {
   try {
     const users = await db.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        employeeId: true,
-        department: true,
-        phone: true,
-        createdAt: true,
+       include: {
+        Documents: true,
+        // leaves: true,
+        // clockRecords: true,
+        // workHours: true,
+        // breaks: true,
+        // projectMembers: true,
+        // milestones: true,
+        // timezone: true,
+        // tasks: true,
       },
       orderBy: {
         createdAt: "desc",

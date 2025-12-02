@@ -4,13 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import {getUserIdFromCookies} from "@/lib/getCookies";
 import {
   ChevronDownIcon,
   HorizontaLDots,
   ListIcon,
 } from "../icons/index";
 
-import {AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, Handshake, HeartPulseIcon} from "lucide-react"
+import {AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, User , Handshake, HeartPulseIcon} from "lucide-react"
 
 type NavItem = {
   name: string;
@@ -53,6 +54,12 @@ const navItems: NavItem[] = [
   },
 ];
 
+const adminOnlyItem: NavItem = {
+  name: "User Management",
+  icon: <User strokeWidth={1.5} />,
+  path: "/user",
+};
+
 const othersItems: NavItem[] = [
     {
     icon: <AlbumIcon strokeWidth={1.5} />,
@@ -89,6 +96,8 @@ const othersItems: NavItem[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  
+  
   const pathname = usePathname();
 
   const renderMenuItems = (
@@ -217,6 +226,7 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
+  const [userId, setUserId] = useState(null);
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
@@ -225,6 +235,11 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [dynamicOthers, setDynamicOthers] = useState<NavItem[]>(othersItems);
+
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+
 
   // const isActive = (path: string) => path === pathname;
    const isActive = useCallback((path: string) => path === pathname, [pathname]);
@@ -267,6 +282,48 @@ const AppSidebar: React.FC = () => {
       }
     }
   }, [openSubmenu]);
+
+  //   useEffect(() => {
+  //   async function load() {
+  //     const res = await fetch("/api/auth/me");
+  //     const data = await res.json();
+  //     setUserId(data);
+  //     console.log("User ID:", data);
+  //   }
+
+  //   // If admin, add the admin-only menu item
+  //   if (data?.role === "admin") {
+  //     othersItems.push({
+  //       name: "User Management",
+  //       icon: <GraduationCapIcon strokeWidth={1.5} />,
+  //       path: "/admin/users",
+  //     });
+  //   }
+
+  //   load();
+  //   console.log(userId);
+    
+  // }, []);
+
+useEffect(() => {
+  async function load() {
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+    const data = await res.json();
+    console.log("DATA FROM API:", data);
+    setUserId(data);
+
+    setUserRole(data?.user?.role?.toLowerCase() || null);
+
+    if (data?.user?.role?.toLowerCase() == "admin") {
+      setDynamicOthers(prev => [...prev, adminOnlyItem]);
+    }
+  }
+
+  load();
+}, []);
+
+
+
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prevOpenSubmenu) => {
@@ -358,7 +415,14 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {/* {renderMenuItems(dynamicOthers, "others")} */}
+
+{renderMenuItems(
+    userRole === "admin"
+      ? [...othersItems, adminOnlyItem]
+      : othersItems,
+    "others"
+)}
             </div>
           </div>
         </nav>

@@ -32,18 +32,13 @@ enum BREAK_TYPE {
   EMERGENCY
 }
 
-model Users {
-  id String @id @default(nanoid())
-}
-
 model User {
   id             String   @id @default(cuid())
-  employeeId     String?  @unique
+  employeeId     String?
   email          String   @unique
   name           String
   password       String
   role           ROLES    @default(CLIENT)
-  Documents      Docs[]   @relation("UserDocuments")
   workingAs      String?
   department     String?
   phone          String?
@@ -51,20 +46,25 @@ model User {
   image          String?
   dob            String?
   isLogin        Boolean  @default(false)
-  faceDescriptor String? // Face recognition data
+  faceDescriptor String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  // Clock System Relations
-  timezone     UserTimezone?
-  leaves       UserLeaves?
-  clockRecords ClockRecord[]
-  workHours    WorkHours[]
-  breaks       Break[]
-
-  //Projects
-  projectMembers ProjectMember[]
-  milestones     Milestone[]
+  // Relations
+  documents         Docs[]
+  timezone          UserTimezone?
+  leaves            UserLeaves?
+  leaveRequests     leaveReq[]      @relation("UserLeaveRequests")
+  clockRecords      ClockRecord[]   @relation("UserClockRecords")
+  workHours         WorkHours[]     @relation("UserWorkHours")
+  breaks            Break[]         @relation("UserBreaks")
+  tasks             Task[]          @relation("UserTasks")
+  reports           Report[]        @relation("UserReports")
+  comments          Comment[]       @relation("UserComments")
+  projectMembers    ProjectMember[] @relation("ProjectMembers")
+  projectDetails    Project[]       @relation("UserProjects")
+  milestonesCreated Milestone[]     @relation("MilestoneCreator")
+  usefulTips        UsefulTip[]     @relation("UserUsefulTips")
 }
 
 model Docs {
@@ -73,7 +73,7 @@ model Docs {
   fileUrl   String
   createdAt DateTime @default(now())
   userId    String?
-  User      User?    @relation("UserDocuments", fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model well {
@@ -98,12 +98,14 @@ model leaveReq {
   id         String   @id @default(cuid())
   status     STATUS   @default(Pending)
   empName    String
-  empId      String
+  empId      String // this is User.id
   department String
   leaveType  String
   startDate  DateTime
   endDate    DateTime
   reason     String
+
+  user User @relation("UserLeaveRequests", fields: [empId], references: [id])
 }
 
 model Analytics {
@@ -122,19 +124,17 @@ model Analytics {
   createdAt     DateTime @default(now())
 }
 
-// ============ CLOCK SYSTEM MODELS ============
-
 model UserTimezone {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  code      String // IND, USA, UK, etc.
-  name      String // India Standard Time
-  hours     String // 10AM-5PM
-  offset    String // +05:30
-  startTime String // 10:00
-  endTime   String // 17:00
+  code      String
+  name      String
+  hours     String
+  offset    String
+  startTime String
+  endTime   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -157,7 +157,7 @@ model UserLeaves {
 model ClockRecord {
   id     String @id @default(cuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserClockRecords", fields: [userId], references: [id], onDelete: Cascade)
 
   clockIn  DateTime?
   clockOut DateTime?
@@ -173,13 +173,13 @@ model ClockRecord {
 model WorkHours {
   id     String @id @default(cuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserWorkHours", fields: [userId], references: [id])
 
   date     DateTime
-  hours    Float // Total hours worked
-  clockIn  String // Time as string "09:05 AM"
-  clockOut String // Time as string "05:10 PM"
-  summary  String? // Work summary for the day
+  hours    Float
+  clockIn  String
+  clockOut String
+  summary  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,12 +190,12 @@ model WorkHours {
 model Break {
   id     String @id @default(cuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserBreaks", fields: [userId], references: [id])
 
   type      BREAK_TYPE
   startTime DateTime
   endTime   DateTime?
-  duration  Int? // in minutes
+  duration  Int?
   isActive  Boolean    @default(true)
 
   createdAt DateTime @default(now())
@@ -205,7 +205,7 @@ model Break {
 }
 
 model Task {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   title          String
   description    String
   assignee       String
@@ -213,19 +213,15 @@ model Task {
   priority       String
   dueDate        DateTime
   tags           String[]
-  comments       Comment[]
-  attachments    Json[]    @default([])
   status         String
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-}
 
-model Report {
-  id         String   @id @default(cuid())
-  message    String
-  taskId     String?
-  reportedBy String?
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  comments    Comment[]
+  attachments Json[]    @default([])
+  assignedTo  User?     @relation("UserTasks", fields: [assignee], references: [id])
 }
 
 model Comment {
@@ -234,19 +230,36 @@ model Comment {
   taskId    String
   userId    String?
   createdAt DateTime @default(now())
-  task      Task     @relation(fields: [taskId], references: [id])
+
+  task Task  @relation(fields: [taskId], references: [id])
+  user User? @relation("UserComments", fields: [userId], references: [id])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  message    String
+  taskId     String?
+  reportedBy String?
+  createdAt  DateTime @default(now())
+
+  reporter User? @relation("UserReports", fields: [reportedBy], references: [id])
 }
 
 model Project {
-  id           String          @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
   summary      String?
   priority     String?
   basicDetails String?
-  createdAt    DateTime        @default(now())
-  members      ProjectMember[]
-  milestones   Milestone[]
-  assets       Asset[]
+  createdAt    DateTime @default(now())
+
+  members    ProjectMember[]
+  milestones Milestone[]
+  assets     Asset[]
+  usefulTips UsefulTip[]
+
+  createdById String?
+  createdBy   User?   @relation("UserProjects", fields: [createdById], references: [id])
 }
 
 model ProjectMember {
@@ -258,7 +271,7 @@ model ProjectMember {
   isLeader Boolean @default(false)
 
   project Project @relation(fields: [projectId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  user    User    @relation("ProjectMembers", fields: [userId], references: [id])
 }
 
 model Milestone {
@@ -267,19 +280,19 @@ model Milestone {
   title       String
   description String?
   dueDate     DateTime
-  createdBy   String // admin userId
+  createdBy   String
   createdAt   DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id])
-  creator User    @relation(fields: [createdBy], references: [id])
+  creator User    @relation("MilestoneCreator", fields: [createdBy], references: [id])
 }
 
 model Asset {
   id        String   @id @default(cuid())
   projectId String
-  type      String // "figma", "image", "zip"
-  url       String // cloudinary url
-  publicId  String //this id will be used to delete the assest from cloudinary
+  type      String
+  url       String
+  publicId  String
   title     String?
   createdAt DateTime @default(now())
 
@@ -295,10 +308,12 @@ model Ticket {
 }
 
 model UsefulTip {
-  id         String   @id @default(cuid())
-  projectId  String
-  userId     String    // who gave the tip
-  user       String
-  tip        String
-  createdAt  DateTime  @default(now())
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  tip       String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+  user    User    @relation("UserUsefulTips", fields: [userId], references: [id])
 }

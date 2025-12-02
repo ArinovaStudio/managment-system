@@ -16,8 +16,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // Success
-    return NextResponse.json({
+    // 🔥 Create JWT
+    const token = createToken({
+      id: user.id,
+      role: user.role,
+    });
+
+    // 🔥 Set cookie
+    const res = NextResponse.json({
       message: "Login successful",
       user: {
         id: user.id,
@@ -27,6 +33,16 @@ export async function POST(req: Request) {
         employeeId: user.employeeId,
       },
     });
+
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+
+    return res;
   } catch (err) {
     console.error("SIGNIN ERROR:", err);
     return NextResponse.json(

@@ -175,10 +175,10 @@ model Ticket {
 }
 
 model UsefulTip {
-  id         String   @id @default(cuid())
-  projectId  String
-  userId     String    // who gave the tip
-  user       String
-  tip        String
-  createdAt  DateTime  @default(now())
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String // who gave the tip
+  user      String
+  tip       String
+  createdAt DateTime @default(now())
 }
