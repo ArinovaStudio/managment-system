@@ -24,7 +24,7 @@ export default function RoleDashboard() {
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [openCard, setOpenCard] = useState<string | null>(null);
 
-  
+
 
   // FETCH USERS FROM BACKEND
   useEffect(() => {
@@ -52,31 +52,31 @@ export default function RoleDashboard() {
     <div className="p-6">
       {/* TOP HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold uppercase">{selectedRole}</h1>
+  {/* ROLE + COUNT */}
+  <h1 className="text-2xl font-bold uppercase">
+    {selectedRole} <span className="text-gray-500">({filteredUsers.length})</span>
+  </h1>
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => setSelectedRole("EMPLOYEE")}
-            className="px-4 py-2 border rounded dark:border-gray-700"
-          >
-            Employee
-          </button>
+  {/* ROLE SWITCH BUTTONS */}
+  <div className="flex gap-3">
+    {["EMPLOYEE", "ADMIN", "CLIENT"].map((role) => (
+      <button
+        key={role}
+        onClick={() => setSelectedRole(role)}
+        className={`
+          px-4 py-2 rounded-lg font-medium border transition-all duration-200
+          ${selectedRole === role
+            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30 scale-[1.05]"
+            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+          }
+        `}
+      >
+        {role.toUpperCase()}
+      </button>
+    ))}
+  </div>
+</div>
 
-          <button
-            onClick={() => setSelectedRole("ADMIN")}
-            className="px-4 py-2 border rounded dark:border-gray-700"
-          >
-            Admin
-          </button>
-
-          <button
-            onClick={() => setSelectedRole("CLIENT")}
-            className="px-4 py-2 border rounded dark:border-gray-700"
-          >
-            Client
-          </button>
-        </div>
-      </div>
 
       {/* LOADING */}
       {loading && (
@@ -148,20 +148,19 @@ export default function RoleDashboard() {
 
                     <div>
                       <button
-  type="button"
-  onClick={() =>
-    setOpenCard(openCard === u.id ? null : u.id)
-  }
-  className="text-3xl text-[#7e7e7e]"
->
-  <span
-    className={`transition-transform duration-200 flex items-center ${
-      openCard === u.id ? "rotate-180" : ""
-    }`}
-  >
-    <ChevronDown className="w-6 h-6" />
-  </span>
-</button>
+                        type="button"
+                        onClick={() =>
+                          setOpenCard(openCard === u.id ? null : u.id)
+                        }
+                        className="text-3xl text-[#7e7e7e]"
+                      >
+                        <span
+                          className={`transition-transform duration-200 flex items-center ${openCard === u.id ? "rotate-180" : ""
+                            }`}
+                        >
+                          <ChevronDown className="w-6 h-6" />
+                        </span>
+                      </button>
 
                     </div>
 
@@ -191,18 +190,18 @@ export default function RoleDashboard() {
                   </p>
 
                   {openCard === u.id && (
-  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow z-10 relative">
-    <p className="text-sm text-gray-700 dark:text-gray-300">
-      <strong>Employee ID:</strong> {u.employeeId || "N/A"}
-    </p>
-    <p className="text-sm text-gray-700 dark:text-gray-300">
-      <strong>Bio:</strong> {u.bio || "No bio"}
-    </p>
-    <p className="text-sm text-gray-700 dark:text-gray-300">
-      <strong>Working As:</strong> {u.workingAs || "N/A"}
-    </p>
-  </div>
-)}
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow z-10 relative">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Employee ID:</strong> {u.employeeId || "N/A"}
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Bio:</strong> {u.bio || "No bio"}
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Working As:</strong> {u.workingAs || "N/A"}
+                      </p>
+                    </div>
+                  )}
 
 
                 </div>
