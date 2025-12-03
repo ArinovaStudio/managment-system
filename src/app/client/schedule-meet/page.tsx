@@ -139,37 +139,52 @@ export default function ScheduleMeet() {
 
                 <span
                   className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
                     }`}
                 >
                   {m.status}
                 </span>
               </div>
 
-              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                Date: {m.date}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Time: {m.time}
-              </p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Duration: {m.duration}
-              </p>
+              {/* Improved Flex Layout */}
+              <div className="flex justify-between items-center mt-3">
 
-              {m.status === "approved" && m.meetLink && (
-                <button
-                  onClick={() => window.open(m.meetLink, "_blank")}
-                  className="mt-3 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm transition"
-                >
-                  Join Meeting
-                </button>
+                {/* Left Section */}
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Date: {m.date}
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Time: {m.time}
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    Duration: {m.duration}
+                  </p>
+                </div>
 
-              )}
+                {/* Right Section - Join Meeting */}
+                {m.status === "approved" && m.meetLink && (
+                  <a
+                    href={m.meetLink}
+                    target="_blank"
+                    className="
+              px-4 py-2 rounded-lg text-sm font-medium
+              bg-blue-500/30 text-blue-600
+              dark:bg-blue-400/20 dark:text-blue-300
+              hover:bg-blue-500/40 dark:hover:bg-blue-400/30
+              transition
+            "
+                  >
+                    Join Meeting
+                  </a>
+                )}
+              </div>
 
             </div>
           ))}
         </div>
+
 
       </div>
     </div>
