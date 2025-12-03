@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {clientDemoData} from "../demodata"
+import { clientDemoData } from "../demodata"
 
 export default function ScheduleMeet() {
   const [reason, setReason] = useState("");
@@ -21,7 +21,7 @@ export default function ScheduleMeet() {
       time,
       duration,
       status: "pending",
-      meetLink:""
+      meetLink: ""
     };
 
     setMeetings([newMeeting, ...meetings]);
@@ -127,53 +127,52 @@ export default function ScheduleMeet() {
         </h2>
 
         <div className="grid gap-4">
-  {meetings.map((m) => (
-    <div
-      key={m.id}
-      className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
-    >
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-          {m.reason}
-        </h3>
+          {meetings.map((m) => (
+            <div
+              key={m.id}
+              className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {m.reason}
+                </h3>
 
-        <span
-          className={`px-3 py-1 text-xs rounded-full ${
-            m.status === "approved"
-              ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
-          }`}
-        >
-          {m.status}
-        </span>
-      </div>
+                <span
+                  className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                    }`}
+                >
+                  {m.status}
+                </span>
+              </div>
 
-      <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-        Date: {m.date}
-      </p>
-      <p className="text-sm text-gray-700 dark:text-gray-300">
-        Time: {m.time}
-      </p>
-      <p className="text-sm text-gray-700 dark:text-gray-300">
-        Duration: {m.duration}
-      </p>
+              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                Date: {m.date}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Time: {m.time}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Duration: {m.duration}
+              </p>
 
-      {m.status === "approved" && m.meetLink && (
-  <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-    <span className="font-medium">Meeting Link:</span>{" "}
-    <a
-      href={m.meetLink}
-      target="_blank"
-      className="text-blue-600 dark:text-blue-400 underline"
-    >
-      {m.meetLink}
-    </a>
-  </p>
-)}
+              {m.status === "approved" && m.meetLink && (
+                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                  <span className="font-medium">Meeting Link:</span>{" "}
+                  <a
+                    href={m.meetLink}
+                    target="_blank"
+                    className="text-blue-600 dark:text-blue-400 underline"
+                  >
+                    {m.meetLink}
+                  </a>
+                </p>
+              )}
 
-    </div>
-  ))}
-</div>
+            </div>
+          ))}
+        </div>
 
       </div>
     </div>
