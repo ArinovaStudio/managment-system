@@ -139,8 +139,8 @@ export default function ScheduleMeet() {
 
                 <span
                   className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
                     }`}
                 >
                   {m.status}
@@ -158,16 +158,13 @@ export default function ScheduleMeet() {
               </p>
 
               {m.status === "approved" && m.meetLink && (
-                <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
-                  <span className="font-medium">Meeting Link:</span>{" "}
-                  <a
-                    href={m.meetLink}
-                    target="_blank"
-                    className="text-blue-600 dark:text-blue-400 underline"
-                  >
-                    {m.meetLink}
-                  </a>
-                </p>
+                <button
+                  onClick={() => window.open(m.meetLink, "_blank")}
+                  className="mt-3 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm transition"
+                >
+                  Join Meeting
+                </button>
+
               )}
 
             </div>
