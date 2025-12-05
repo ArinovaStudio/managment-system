@@ -38,15 +38,6 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const userId = await getUserIdFromCookies();
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized: Invalid user" },
-        { status: 401 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId");
 
@@ -57,18 +48,21 @@ export async function GET(req: Request) {
       );
     }
 
-    // Count reports by this user for this task
-    const count = await db.report.count({
+    // Get user ID for counting user-specific reports
+    const userId = await getUserIdFromCookies();
+    
+    // Count reports by this user for this task (if user is authenticated)
+    const count = userId ? await db.report.count({
       where: {
         taskId,
         reportedBy: userId,
       },
-    });
+    }) : 0;
 
-      const messages = await db.report.findMany({
+    // Get all messages for this task
+    const messages = await db.report.findMany({
       where: {
         taskId,
-        reportedBy: userId,
       },
       select: {
         id: true,
@@ -82,7 +76,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       success: true,
-      userId,
+      userId: userId || null,
       taskId,
       count,
       messages,

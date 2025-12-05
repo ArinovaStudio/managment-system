@@ -6,22 +6,17 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
 
-    // Extract fields
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const assignee = formData.get("assignee") as string;
     const assigneeAvatar = formData.get("assigneeAvatar") as string;
-    const priority = formData.get("priority") as "low" | "medium" | "high";
+    const priority = (formData.get("priority") as string)?.trim();
     const dueDate = formData.get("dueDate") as string;
     const tagsRaw = formData.get("tags") as string;
-    const status = formData.get("status") as
-      | "assigned"
-      | "in-progress"
-      | "completed";
-
+    const status = (formData.get("status") as string)?.trim();
+    const projectId = formData.get("projectId") as string | null;
     const attachmentFile = formData.get("attachment") as File | null;
 
-    // Validation
     if (!title || !description || !assignee || !priority || !dueDate || !status) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -29,9 +24,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const attachments = [];
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "projectId is required" },
+        { status: 400 }
+      );
+    }
 
-    // Upload File to Cloudinary (if exists)
+    const attachments: any[] = [];
+
     if (attachmentFile && attachmentFile.size > 0) {
       if (attachmentFile.size > 10 * 1024 * 1024) {
         return NextResponse.json(
@@ -40,46 +41,34 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Upload file to Cloudinary using STREAM
-      if (attachmentFile && attachmentFile.size > 0) {
-        if (attachmentFile.size > 10 * 1024 * 1024) {
-          return NextResponse.json(
-            { error: "File must be under 10MB" },
-            { status: 400 }
-          );
-        }
+      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
 
-        const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+      const uploadResult: any = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "kanban_attachments",
+            resource_type: "auto",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
 
-        const uploadResult: any = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "kanban_attachments",
-              resource_type: "auto", // allows PDF, DOC, ZIP, IMAGE, etc.
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          );
+        uploadStream.end(buffer);
+      });
 
-          uploadStream.end(buffer);
-        });
-
-        attachments.push({
-          url: uploadResult.secure_url,
-          public_id: uploadResult.public_id,
-          size: attachmentFile.size,
-          contentType: attachmentFile.type,
-          originalName: attachmentFile.name,
-        });
-      }
+      attachments.push({
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+        size: attachmentFile.size,
+        contentType: attachmentFile.type,
+        originalName: attachmentFile.name,
+      });
     }
 
-    // Tags
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()) : [];
 
-    // Save to DB
     const task = await db.task.create({
       data: {
         title,
@@ -91,6 +80,7 @@ export async function POST(req: NextRequest) {
         tags,
         attachments,
         status,
+        projectId, // 🔥 IMPORTANT
       },
     });
 
@@ -107,16 +97,17 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET() {
+
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get("projectId");
+
     const tasks = await db.task.findMany({
+      where: projectId ? { projectId } : {},
       orderBy: { createdAt: "desc" },
-      include: {
-        comments: {
-          orderBy: { createdAt: "asc" },
-        }
-      }
     });
+
 
     const formatted = tasks.map((task) => ({
       ...task,

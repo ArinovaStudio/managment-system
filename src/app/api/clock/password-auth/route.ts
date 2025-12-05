@@ -78,8 +78,19 @@ export async function POST(req: Request) {
       });
 
     } else if (action === 'clock-out') {
-      if (!user.isLogin) {
-        return NextResponse.json({ error: 'Not clocked in' }, { status: 400 });
+      // Check for ANY active work session (including from previous days)
+      const activeWorkHours = await db.workHours.findFirst({
+        where: {
+          userId,
+          clockOut: '-'
+        },
+        orderBy: {
+          date: 'desc'
+        }
+      });
+
+      if (!activeWorkHours) {
+        return NextResponse.json({ error: 'No active work session found' }, { status: 400 });
       }
 
       return NextResponse.json({

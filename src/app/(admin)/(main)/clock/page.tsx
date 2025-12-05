@@ -1,8 +1,9 @@
 'use client';
-import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X } from 'lucide-react'
+import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X, SirenIcon } from 'lucide-react'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import WorkHoursChart from './Chart'
 import FaceRecognition from './FaceRecognition'
+import toast from 'react-hot-toast'
 // import { Button } from "@/components/ui/button";
 // import {
 //   Dialog,
@@ -36,6 +37,10 @@ function Clock() {
   const [stats, setStats] = useState<any>(null);
   const [breakTypes, setBreakTypes] = useState<BreakType[]>([]);
   const [activeBreak, setActiveBreak] = useState<string | null>(null);
+  const [activeBreakStartTime, setActiveBreakStartTime] = useState<Date | null>(null);
+  const [activeBreakEndTime, setActiveBreakEndTime] = useState<Date | null>(null);
+  const [totalBreakTime, setTotalBreakTime] = useState(0); // in minutes
+  const [breakTimeLeft, setBreakTimeLeft] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [password, setPassword] = useState('');
@@ -53,13 +58,43 @@ function Clock() {
   // Load user status on mount
   useEffect(() => {
     loadUserStatus();
+    loadStats();
   }, []);
+
+  const loadStats = async () => {
+    try {
+      const res = await fetch("/api/clock/stats");
+      const data = await res.json();
+      if (data.success) {
+        setStats(data.stats);
+        // If there's an active session, force user status to logged in
+        if (data.hasActiveSession) {
+          setUserStatus(prev => ({ ...prev, isLoggedIn: true }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    } finally {
+      setDataLoading(false);
+    }
+  };
 
   const loadUserStatus = async () => {
     try {
       const response = await fetch('/api/clock/face-recognition');
       if (response.ok) {
         const data = await response.json();
+        
+        // Always check stats for active sessions
+        const statsResponse = await fetch('/api/clock/stats');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          if (statsData.hasActiveSession) {
+            data.isLoggedIn = true;
+            console.log('Active session detected, setting user as logged in');
+          }
+        }
+        
         setUserStatus(data);
       }
     } catch (error) {
@@ -131,29 +166,39 @@ function Clock() {
     loadLeaves();
   }, []);
 
-  // LOAD STATS
-  const loadStats = useCallback(async () => {
-    try {
-      const res = await fetch("/api/clock/stats");
-      const data = await res.json();
-      if (data.success) {
-        setStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    } finally {
-      setDataLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
   // LOAD BREAK TYPES
   useEffect(() => {
     fetchBreakTypes();
   }, []);
+
+  // Countdown timer and auto-end
+  useEffect(() => {
+    if (!activeBreakEndTime || !activeBreak) return;
+    
+    const interval = setInterval(() => {
+      const timeLeft = Math.max(0, Math.floor((activeBreakEndTime.getTime() - Date.now()) / 1000));
+      setBreakTimeLeft(timeLeft);
+      
+      // Auto-end break when time is up
+      if (timeLeft <= 0) {
+        handleBreakAction(activeBreak, 'end');
+        toast.success('Break time completed! You are back online.');
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [activeBreakEndTime, activeBreak]);
+
+  // Check for expired breaks on component mount
+  useEffect(() => {
+    if (activeBreak && activeBreakEndTime) {
+      const timeLeft = Math.floor((activeBreakEndTime.getTime() - Date.now()) / 1000);
+      if (timeLeft <= 0) {
+        handleBreakAction(activeBreak, 'end');
+        toast.success('Previous break has been automatically ended.');
+      }
+    }
+  }, [activeBreak, activeBreakEndTime]);
 
   const fetchBreakTypes = async () => {
     try {
@@ -163,6 +208,16 @@ function Clock() {
         setBreakTypes(data.breakTypes);
         if (data.activeBreak) {
           setActiveBreak(data.activeBreak.id);
+          setActiveBreakStartTime(new Date(data.activeBreak.startTime));
+          const duration = breakTypes.find(bt => bt.id === data.activeBreak.id)?.duration || 15;
+          setActiveBreakEndTime(new Date(new Date(data.activeBreak.startTime).getTime() + duration * 60 * 1000));
+        } else {
+          setActiveBreak(null);
+          setActiveBreakStartTime(null);
+          setActiveBreakEndTime(null);
+        }
+        if (data.todayBreakTime) {
+          setTotalBreakTime(data.todayBreakTime);
         }
       }
     } catch (error) {
@@ -183,18 +238,29 @@ function Clock() {
       if (data.success) {
         if (action === 'start') {
           setActiveBreak(breakType);
+          setActiveBreakStartTime(new Date());
+          const duration = breakTypes.find(bt => bt.id === breakType)?.duration || 15;
+          setActiveBreakEndTime(new Date(Date.now() + duration * 60 * 1000));
         } else {
           setActiveBreak(null);
+          setActiveBreakStartTime(null);
+          setActiveBreakEndTime(null);
+          if (data.break?.duration) {
+            setTotalBreakTime(prev => prev + data.break.duration);
+          }
         }
         // Show success message
         const breakTypeName = breakTypes.find(bt => bt.id === breakType)?.name;
-        alert(`${breakTypeName} ${action === 'start' ? 'started' : 'ended'} successfully`);
+        const message = action === 'start'
+          ? `${breakTypeName} started successfully`
+          : `${breakTypeName} ended successfully. Duration: ${data.break?.duration || 0} minutes`;
+        toast.success(message);
       } else {
-        alert(data.error || 'Break action failed');
+        toast.error(data.error || 'Break action failed');
       }
     } catch (error) {
       console.error('Break action failed:', error);
-      alert('Failed to update break status');
+      toast.error('Failed to update break status');
     } finally {
       setLoading(false);
     }
@@ -214,6 +280,26 @@ function Clock() {
     return colors[color as keyof typeof colors] || colors.purple;
   };
 
+  const formatMinutes = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  const formatSeconds = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getCurrentBreakDuration = () => {
+    if (!activeBreakStartTime) return 0;
+    return Math.floor((new Date().getTime() - activeBreakStartTime.getTime()) / (1000 * 60));
+  };
+
   const handleFaceAuth = async () => {
     try {
       // Always refresh user status first
@@ -230,7 +316,7 @@ function Clock() {
         // Get user info to check role
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-        
+
         if (userData.user?.workingAs === 'Developer') {
           setShowDeveloperPopup(true);
         } else {
@@ -256,13 +342,13 @@ function Clock() {
       setShowFaceAuth(true);
     } catch (error) {
       console.error('Face auth error:', error);
-      alert('Failed to initialize face authentication. Please try again.');
+      toast.error('Failed to initialize face authentication. Please try again.');
     }
   };
 
   const handlePasswordAuth = async () => {
     if (!password.trim()) {
-      alert('Please enter your password');
+      toast.error('Please enter your password');
       return;
     }
 
@@ -271,18 +357,18 @@ function Clock() {
       const response = await fetch('/api/clock/password-auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           password,
           action: userStatus?.isLoggedIn ? 'clock-out' : 'clock-in'
         })
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setShowAuthPopup(false);
         setPassword('');
-        
+
         // If clocking out, check for developer workflow or show summary
         if (result.action === 'clock-out-auth') {
           if (result.userWorkingAs === 'Developer') {
@@ -291,16 +377,16 @@ function Clock() {
             setShowSummaryPopup(true);
           }
         } else {
-          alert(`Clock-In Successfully!\n${result.message}`);
+          toast.success(`Clock-In Successfully! ${result.message}`);
           await loadUserStatus();
           await loadStats();
         }
       } else {
-        alert(`Authentication failed\n\n${result.error}`);
+        toast.error(`Authentication failed: ${result.error}`);
       }
     } catch (error) {
       console.error('Password auth error:', error);
-      alert('Authentication failed. Please try again.');
+      toast.error('Authentication failed. Please try again.');
     } finally {
       setAuthLoading(false);
     }
@@ -309,7 +395,7 @@ function Clock() {
   const handleDeveloperResponse = (pushedCode: boolean) => {
     if (!pushedCode) {
       setShowDeveloperPopup(false);
-      alert('Please Commit and push changes');
+      toast('Please Commit and push changes');
     } else {
       setShowDeveloperPopup(false);
       setShowSummaryPopup(true);
@@ -318,7 +404,7 @@ function Clock() {
 
   const handleWorkSummary = async () => {
     if (!workSummary.trim()) {
-      alert('Please provide a work summary');
+      toast.error('Please provide a work summary');
       return;
     }
 
@@ -331,19 +417,19 @@ function Clock() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setShowSummaryPopup(false);
         setWorkSummary('');
-        alert(`Clock-out successful!\n${result.message}`);
+        toast.success(`Clock-out successful! ${result.message}`);
         await loadUserStatus();
         await loadStats();
       } else {
-        alert(`Failed to save work summary\n\n${result.error}`);
+        toast.error(`Failed to save work summary: ${result.error}`);
       }
     } catch (error) {
       console.error('Work summary error:', error);
-      alert('Failed to save work summary. Please try again.');
+      toast.error('Failed to save work summary. Please try again.');
     } finally {
       setSummaryLoading(false);
     }
@@ -351,7 +437,7 @@ function Clock() {
 
   const handleFaceAuthSuccess = async (result: any) => {
     setShowFaceAuth(false);
-    
+
     if (result.action === 'clock-out') {
       // For clock-out, check if user is developer
       if (result.userRole === 'DEVELOPER') {
@@ -360,7 +446,7 @@ function Clock() {
         setShowSummaryPopup(true);
       }
     } else {
-      alert(`Welcome!\n${result.message}`);
+      toast.success(`Welcome! ${result.message}`);
       await loadUserStatus();
       await loadStats();
     }
@@ -373,7 +459,7 @@ function Clock() {
 
   const handleSummarySubmit = async () => {
     if (!workSummary.trim()) {
-      alert('Please provide a work summary');
+      toast.error('Please provide a work summary');
       return;
     }
 
@@ -386,19 +472,19 @@ function Clock() {
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
-        alert('Clock-Out Successfully!\nWork summary saved.');
+        toast.success('Clock-Out Successfully! Work summary saved.');
         setShowSummaryPopup(false);
         setWorkSummary('');
         await loadUserStatus();
         await loadStats();
       } else {
-        alert(`Failed to save summary\n\n${result.error}`);
+        toast.error(`Failed to save summary: ${result.error}`);
       }
     } catch (error) {
       console.error('Summary save error:', error);
-      alert('Failed to save summary. Please try again.');
+      toast.error('Failed to save summary. Please try again.');
     } finally {
       setSummaryLoading(false);
     }
@@ -406,18 +492,18 @@ function Clock() {
 
   const handleFaceSuccess = async (result: any) => {
     if (faceAuthMode === 'register') {
-      alert('Face registered successfully! You can now use face authentication.');
+      toast.success('Face registered successfully! You can now use face authentication.');
       setShowFaceAuth(false);
       await loadUserStatus();
     } else {
       setShowFaceAuth(false);
-      
+
       // If clocking out, check for developer workflow or show summary
       if (result.action === 'clock-out') {
         // Get user info from API to check workingAs
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-        
+
         if (userData.user?.workingAs === 'Developer') {
           setShowDeveloperPopup(true);
         } else {
@@ -425,7 +511,7 @@ function Clock() {
         }
       } else {
         const action = result.action === 'clock-in' ? 'Clocked In' : 'Clocked Out';
-        alert(`${action} Successfully!\n${result.message}`);
+        toast.success(`${action} Successfully! ${result.message}`);
         await loadUserStatus();
         await loadStats();
       }
@@ -438,13 +524,13 @@ function Clock() {
 
   const handleFaceError = (error: string) => {
     console.error('Face recognition error:', error);
-    
-  // Show password popup for camera/permission issues
-    if (error.includes('NotAllowedError') || error.includes('NotFoundError') || 
-        error.includes('camera not found') || error.includes('Permission denied') ||
-        error.includes('getUserMedia') || error.includes('camera') || 
-        error.includes('Camera') || error.includes('device') || 
-        error.includes('media') || error.includes('video')) {
+
+    // Show password popup for camera/permission issues
+    if (error.includes('NotAllowedError') || error.includes('NotFoundError') ||
+      error.includes('camera not found') || error.includes('Permission denied') ||
+      error.includes('getUserMedia') || error.includes('camera') ||
+      error.includes('Camera') || error.includes('device') ||
+      error.includes('media') || error.includes('video')) {
       setShowFaceAuth(false);
       setShowAuthPopup(true);
       return;
@@ -452,13 +538,13 @@ function Clock() {
 
     // Show user-friendly error message for other issues
     if (error.includes('No face detected')) {
-      alert('No face detected\n\nPlease:\n• Position your face clearly in the camera\n• Ensure good lighting\n• Look directly at the camera');
+      toast('No face detected. Please position your face clearly in the camera with good lighting.');
     } else if (error.includes('Multiple faces')) {
-      alert('Multiple faces detected\n\nPlease ensure only one person is visible in the camera.');
+      toast('Multiple faces detected. Please ensure only one person is visible in the camera.');
     } else if (error.includes('not recognized')) {
-      alert('Face not recognized\n\nPlease register your face first or use password authentication.');
+      toast.error('Face not recognized. Please register your face first or use password authentication.');
     } else {
-      alert(`Face recognition failed\n\n${error}`);
+      toast.error(`Face recognition failed: ${error}`);
     }
 
     setShowFaceAuth(false);
@@ -645,6 +731,29 @@ function Clock() {
         </div>
       </div>
 
+      {/* BREAK TIME CARD */}
+      <div className="w-full h-20 mt-4 bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-2xl flex justify-between items-center px-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-red-400/20 text-red-500 rounded-full grid place-items-center">
+            <Coffee />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold dark:text-white">Today's Break Time</h2>
+            <p className="text-sm text-gray-400">Total break duration</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <h1 className="text-2xl font-bold dark:text-white">
+            {formatMinutes(totalBreakTime + (activeBreak ? getCurrentBreakDuration() : 0))}
+          </h1>
+          {activeBreak && (
+            <p className="text-sm text-red-500 animate-pulse">
+              Break active: {formatSeconds(breakTimeLeft)} left
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* WORK HOURS CARD */}
       <div className="w-full h-80 mt-4 flex justify-start items-start gap-4">
         <div className="w-3/5 h-full bg-white dark:bg-white/[0.03] rounded-3xl">
@@ -686,36 +795,62 @@ function Clock() {
           const isActive = activeBreak === breakType.id;
 
           return (
-            <div key={breakType.id} className="w-1/3 h-full bg-white dark:bg-white/[0.03] dark:text-white rounded-2xl flex justify-start p-4 items-center gap-3">
-              <div className={`w-20 h-5/6 ${colors.bg} text-white rounded-xl grid place-items-center`}>
-                <IconComponent size={28} strokeWidth={1.6} />
-              </div>
-              <div className="flex-1">
-                <h1 className='text-2xl font-bold tracking-tighter'>{breakType.name}</h1>
-                <p className="text-xs text-neutral-400">
-                  {breakType.description.split('\n').map((line, i) => (
-                    <span key={i}>{line}<br /></span>
-                  ))}
-                </p>
-              </div>
+            <>
+              <div key={breakType.id} className="w-1/3 h-full bg-white dark:bg-white/[0.03] dark:text-white rounded-2xl flex justify-start p-4 items-center gap-3">
+                <div className={`w-20 h-5/6 ${colors.bg} text-white rounded-xl grid place-items-center`}>
+                  <IconComponent size={28} strokeWidth={1.6} />
+                </div>
+                <div className="flex-1">
+                  <h1 className='text-2xl font-bold tracking-tighter'>{breakType.name}</h1>
+                  <p className="text-xs text-neutral-400">
+                    {breakType.description.split('\n').map((line, i) => (
+                      <span key={i}>{line}<br /></span>
+                    ))}
+                  </p>
+                </div>
 
-              <button
-                onClick={() => handleBreakAction(breakType.id, isActive ? 'end' : 'start')}
-                disabled={loading}
-                className={`w-12 h-12 ${colors.accent} ${colors.text} rounded-full grid place-items-center hover:scale-105 transition-transform ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={isActive ? 'End break' : 'Start break'}
-              >
-                {isActive ? (
-                  <div className="w-3 h-3 bg-current rounded-full animate-pulse" />
-                ) : breakType.id === 'emergency' ? (
-                  <ArrowUpFromDot size={22} />
-                ) : (
-                  <Play size={22} />
-                )}
-              </button>
-            </div>
+                <button
+                  onClick={() => handleBreakAction(breakType.id, isActive ? 'end' : 'start')}
+                  disabled={loading}
+                  className={`w-12 h-12 ${colors.accent} ${colors.text} rounded-full grid place-items-center hover:scale-105 transition-transform ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isActive ? 'End break' : 'Start break'}
+                >
+                  {isActive ? (
+                    <div className="w-3 h-3 bg-current rounded-full animate-pulse" />
+                  ) : breakType.id === 'emergency' ? (
+                    <ArrowUpFromDot size={22} />
+                  ) : (
+                    <Play size={22} />
+                  )}
+                </button>
+              </div>
+            </>
           );
         })}
+
+        {/* emergency break */}
+        <div className="w-1/3 h-full bg-white dark:bg-white/[0.03] dark:text-white rounded-2xl flex justify-start p-4 items-center gap-3">
+          <div className={`w-20 h-5/6 bg-red-500 text-white rounded-xl grid place-items-center`}>
+            {/* <IconComponent size={28} strokeWidth={1.6} /> */}
+            <SirenIcon size={28} strokeWidth={1.6}/>
+          </div>
+          <div className="flex-1">
+            <h1 className='text-2xl font-bold tracking-tighter'>Emergency Break</h1>
+            <p className="text-xs text-neutral-400">
+              Everything is alright? 
+              Request for break!
+            </p>
+          </div>
+          <button
+            onClick={() => window.open('/leave-requests', '_blank')}
+            disabled={loading}
+            className={`w-12 h-12 bg-red-300/20 text-red-500 rounded-full grid place-items-center hover:scale-105 transition-transform`}
+            title={'Start break'}
+          >
+            <ArrowUpFromDot size={22} />
+            {/* <Play size={22} /> */}
+          </button>
+        </div>
       </div>
 
       {/* Face Recognition Popup */}
@@ -809,13 +944,13 @@ function Clock() {
             <div className="flex gap-3">
               <button
                 onClick={() => handleDeveloperResponse(false)}
-                className="flex-1 py-3 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4  text-white rounded-lg border border-gray-600 transition-all hover:scale-105 font-medium"
               >
                 No
               </button>
               <button
                 onClick={() => handleDeveloperResponse(true)}
-                className="flex-1 py-3 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4 bg-sky-400 text-white rounded-lg hover:bg-sky-500 transition-all hover:scale-105 font-medium"
               >
                 Yes
               </button>

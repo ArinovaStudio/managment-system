@@ -23,7 +23,6 @@ export default function FaceRecognition({ onSuccess, onError, mode, userId, isLo
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.stop();
-        console.log('Camera stopped');
       });
       streamRef.current = null;
     }
@@ -49,7 +48,6 @@ export default function FaceRecognition({ onSuccess, onError, mode, userId, isLo
         
         if (!mounted) return;
         
-        console.log('Models loaded');
         setModelsLoaded(true);
         setStatus('Starting camera...');
         
@@ -73,11 +71,9 @@ export default function FaceRecognition({ onSuccess, onError, mode, userId, isLo
         
         // Wait for video to load
         videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
           if (videoRef.current) {
             videoRef.current.play()
               .then(() => {
-                console.log('Video playing');
                 if (mounted) {
                   setStatus('Ready');
                   setIsLoading(false);
@@ -90,7 +86,6 @@ export default function FaceRecognition({ onSuccess, onError, mode, userId, isLo
         // Fallback timeout
         timeoutId = setTimeout(() => {
           if (mounted && isLoading) {
-            console.log('Timeout - forcing ready state');
             setStatus('Ready');
             setIsLoading(false);
           }
@@ -234,8 +229,6 @@ export default function FaceRecognition({ onSuccess, onError, mode, userId, isLo
         </p>
         
         <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mb-3">
-          <span>Models: {modelsLoaded ? 'Ready' : 'Loading'}</span>
-          <span>•</span>
           <span>Camera: {isLoading ? 'Loading' : 'Ready'}</span>
         </div>
       </div>

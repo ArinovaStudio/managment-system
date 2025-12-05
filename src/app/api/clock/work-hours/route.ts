@@ -48,15 +48,42 @@ export async function GET(req: Request) {
     });
 
     const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    // Get break times for the week
+    const breakTimes = await db.break.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: startDate,
+          lte: endDate
+        },
+        isActive: false // Only completed breaks
+      }
+    });
+
     const weekData = weekDates.map((date, index) => {
       const dayData = workHours.find(wh => 
         wh.date.toDateString() === date.toDateString()
       );
       
+      // Calculate total break time for this day
+      const dayBreaks = breakTimes.filter(breakRecord => {
+        const breakDate = new Date(breakRecord.startTime);
+        return breakDate.toDateString() === date.toDateString();
+      });
+      
+      const totalBreakMinutes = dayBreaks.reduce((total, breakRecord) => {
+        return total + (breakRecord.duration || 0);
+      }, 0);
+      
+      const totalBreakHours = totalBreakMinutes / 60;
+      const actualWorkingHours = Math.max(0, (dayData?.hours || 0) - totalBreakHours);
+      
       return {
         day: dayNames[index],
         date: date.toISOString().split('T')[0],
-        hours: dayData?.hours || 0,
+        hours: actualWorkingHours, // Actual working hours (total - break time)
+        totalHours: dayData?.hours || 0, // Total clocked hours
+        breakHours: totalBreakHours, // Break time in hours
         login: dayData?.clockIn || "-",
         logout: dayData?.clockOut || "-"
       };

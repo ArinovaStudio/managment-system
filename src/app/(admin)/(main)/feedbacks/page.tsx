@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, IdCard } from "lucide-react";
+import { User, IdCard, Send } from "lucide-react";
 import Wrapper from "@/layout/Wrapper";
+import toast from "react-hot-toast";
 
 export default function FeedbackForm() {
   const [anonymous, setAnonymous] = useState(false);
@@ -10,6 +11,10 @@ export default function FeedbackForm() {
   const [rating, setRating] = useState<number | null>(null);
   const [description, setDescription] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -18,6 +23,10 @@ export default function FeedbackForm() {
         if (response.ok) {
           const data = await response.json();
           setUser(data.user);
+          if (data.user?.role === 'ADMIN') {
+            setIsAdmin(true);
+            await fetchEmployees();
+          }
         }
       } catch (error) {
         console.error('Failed to fetch user:', error);
@@ -26,10 +35,34 @@ export default function FeedbackForm() {
     fetchUser();
   }, []);
 
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/feedbacks?employees=true', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setEmployees(data.employees || []);
+      } else {
+        console.error('Failed to fetch employees:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch employees:', error);
+    }
+  };
+
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isAdmin && !selectedEmployee) {
+      toast.error('Please select an employee');
+      return;
+    }
+    
+    setLoading(true);
+    
     try {
       const response = await fetch('/api/feedbacks', {
         method: 'POST',
@@ -40,61 +73,122 @@ export default function FeedbackForm() {
           rating,
           desc: description,
           isAnynonyms: anonymous,
-          byName: anonymous ? "Anonymous" : user?.name || "Unknown",
-          byEmpId: anonymous ? "Hidden" : user?.employeeId || "Unknown",
+          byName: isAdmin ? `Admin: ${user?.name}` : (anonymous ? "Anonymous" : user?.name || "Unknown"),
+          byEmpId: isAdmin ? (user?.employeeId || 'ADMIN') : (anonymous ? "Hidden" : user?.employeeId || "Unknown"),
+          employeeId: isAdmin ? selectedEmployee : null,
+          isAdminFeedback: isAdmin
         })
       });
       
       if (response.ok) {
-        alert('Feedback submitted successfully!');
+        toast.success(isAdmin ? 'Feedback sent to employee successfully!' : 'Feedback submitted successfully!');
         setFeedbackType('');
         setRating(null);
         setDescription('');
+        setSelectedEmployee('');
       } else {
-        alert('Failed to submit feedback');
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to submit feedback');
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      alert('Error submitting feedback');
+      toast.error('Error submitting feedback');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const selectedEmp = employees.find(emp => emp.id === selectedEmployee);
+
   return (
-    <Wrapper>
       <div className={`min-h-[75vh] rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-8 xl:py-6`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-          Employee Feedback
+          {isAdmin ? 'Send Feedback to Employee' : 'Employee Feedback'}
         </h2>
 
-        {/* Anonymous toggle */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Anonymous
-          </span>
-          <div
-            onClick={() => setAnonymous((prev) => !prev)}
-            className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-              anonymous ? "bg-gray-700" : "bg-gray-300"
-            }`}
-          >
-            <motion.div
-              layout
-              transition={{ type: "spring", stiffness: 700, damping: 30 }}
-              className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
-                anonymous ? "translate-x-6 bg-white" : "translate-x-0 bg-gray-700"
+        {/* Anonymous toggle - only for employees */}
+        {!isAdmin && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Anonymous
+            </span>
+            <div
+              onClick={() => setAnonymous((prev) => !prev)}
+              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
+                anonymous ? "bg-gray-700" : "bg-gray-300"
               }`}
-            />
+            >
+              <motion.div
+                layout
+                transition={{ type: "spring", stiffness: 700, damping: 30 }}
+                className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
+                  anonymous ? "translate-x-6 bg-white" : "translate-x-0 bg-gray-700"
+                }`}
+              />
+            </div>
           </div>
-        </div>
+        )}
+        
+        {isAdmin && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <User size={16} />
+            Admin Panel
+          </div>
+        )}
       </div>
 
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-6 max-w-2xl mx-auto"
       >
+        {/* Employee Selection - Admin only */}
+        {isAdmin && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Select Employee
+              </label>
+              <select
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                required
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900/80 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Choose an employee</option>
+                {employees.map((emp, index) => {
+                  return (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name || 'No Name'} ({emp.employeeId || 'No ID'})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Selected Employee Info */}
+            {selectedEmp && (
+              <div className="bg-gray-50 dark:bg-white/[0.05] p-4 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sending feedback to:
+                </h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <User size={16} className="text-gray-500" />
+                    <span className="text-gray-800 dark:text-gray-200">{selectedEmp.name || 'No Name'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <IdCard size={16} className="text-gray-500" />
+                    <span className="text-gray-600 dark:text-gray-400">{selectedEmp.employeeId || 'No ID'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
         {/* Feedback Type */}
-        <div>
+        <div >
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Feedback Type
           </label>
@@ -102,15 +196,29 @@ export default function FeedbackForm() {
             value={feedbackType}
             onChange={(e) => setFeedbackType(e.target.value)}
             required
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900/80  text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             <option value="">Select a category</option>
-            <option value="Work Culture">Work Culture</option>
-            <option value="Management">Management</option>
-            <option value="Workload">Workload</option>
-            <option value="Communication">Communication</option>
-            <option value="Tools & Resources">Tools & Resources</option>
-            <option value="Other">Other</option>
+            {isAdmin ? (
+              <>
+                <option value="Performance">Performance</option>
+                <option value="Communication">Communication</option>
+                <option value="Teamwork">Teamwork</option>
+                <option value="Initiative">Initiative</option>
+                <option value="Quality of Work">Quality of Work</option>
+                <option value="Professional Development">Professional Development</option>
+                <option value="Other">Other</option>
+              </>
+            ) : (
+              <>
+                <option value="Work Culture">Work Culture</option>
+                <option value="Management">Management</option>
+                <option value="Workload">Workload</option>
+                <option value="Communication">Communication</option>
+                <option value="Tools & Resources">Tools & Resources</option>
+                <option value="Other">Other</option>
+              </>
+            )}
           </select>
         </div>
 
@@ -129,8 +237,8 @@ export default function FeedbackForm() {
                 onClick={() => setRating(num)}
                 className={`w-9 h-9 rounded-full border text-sm font-medium transition-all ${
                   rating === num
-                    ? "bg-gray-800 text-white border-gray-800 dark:bg-white dark:text-gray-900"
-                    : "border-gray-400 text-gray-600 dark:text-gray-300"
+                    ? isAdmin ? "bg-blue-600 text-white border-blue-600" : "bg-gray-800 text-white border-gray-800 dark:bg-white dark:text-gray-900"
+                    : "border-gray-400 text-gray-600 dark:text-gray-300 hover:border-blue-400"
                 }`}
               >
                 {num}
@@ -150,43 +258,44 @@ export default function FeedbackForm() {
             rows={5}
             required
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-800 dark:text-gray-200"
-            placeholder="Describe your feedback in detail..."
+            placeholder={isAdmin ? "Provide detailed feedback for the employee..." : "Describe your feedback in detail..."}
           />
         </div>
 
-        {/* Name (disabled) */}
-        <div className="flex gap-6">
-          <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <input
-                type="text"
-                disabled
-                value={anonymous ? "Anonymous" : user?.name || "Loading..."}
-                className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
-              />
+        {/* Name & ID - only for employees */}
+        {!isAdmin && (
+          <div className="flex gap-6">
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  disabled
+                  value={anonymous ? "Anonymous" : user?.name || "Loading..."}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Employee ID (disabled) */}
-          <div className="w-1/2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Employee ID
-            </label>
-            <div className="relative">
-              <IdCard className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <input
-                type="text"
-                disabled
-                value={anonymous ? "Hidden" : user?.employeeId || "Loading..."}
-                className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
-              />
+            <div className="w-1/2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Employee ID
+              </label>
+              <div className="relative">
+                <IdCard className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  disabled
+                  value={anonymous ? "Hidden" : user?.employeeId || "Loading..."}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Submit */}
         <div className="flex justify-end">
@@ -194,13 +303,18 @@ export default function FeedbackForm() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="px-5 py-2.5 rounded-md bg-blue-400/20 text-blue-600 dark:bg-white dark:text-gray-900 hover:bg-blue-500 hover:text-white dark:hover:bg-white/90 transition-colors"
+            disabled={loading}
+            className={`px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2 ${
+              isAdmin 
+                ? "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400" 
+                : "bg-blue-400/20 text-blue-600 dark:bg-white dark:text-gray-900 hover:bg-blue-500 hover:text-white dark:hover:bg-white/90"
+            } disabled:cursor-not-allowed`}
           >
-            Submit Feedback
+            {isAdmin && <Send size={16} />}
+            {loading ? 'Sending...' : (isAdmin ? 'Send Feedback' : 'Submit Feedback')}
           </motion.button>
         </div>
       </form>
       </div>
-    </Wrapper>
   );
 }

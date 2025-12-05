@@ -16,7 +16,7 @@ export default function WorkHoursCard() {
         cache: 'no-store'
       });
       const result = await res.json();
-      
+
       if (result.success) {
         setData(result.data);
         setWeekLabel(result.weekLabel);
@@ -106,14 +106,19 @@ export default function WorkHoursCard() {
                     </>
                   ) : "-"}
                 </span>
-
                 {/* Bar */}
                 <div
                   className="w-[60px] bg-[#FDBA74] rounded-xl transition-all"
                   style={{
                     height: `${maxHours > 0 ? (item.hours / maxHours) * 130 : 0}px`,
                   }}
-                ></div>
+                >
+                  {/* Working Hours Text */}
+                  <span className="text-[12px] text-black dark:text-black font-bold block mt-5 w-full text-center">
+                    {item.hours > 0 ? `${item.hours.toFixed(1)}h` : "-"}
+                  </span>
+
+                </div>
 
                 {/* Login time */}
                 <span className="text-[13px] text-[#92400E] dark:text-orange-300 font-semibold mt-1">

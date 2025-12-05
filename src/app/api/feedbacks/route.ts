@@ -1,7 +1,31 @@
 import db from "@/lib/client";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const getEmployees = searchParams.get('employees');
+    
+    if (getEmployees === 'true') {
+        try {
+            const employees = await db.user.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    employeeId: true,
+                    email: true,
+                    role: true
+                }
+            });
+            
+            // Filter out admins if role field exists
+            const filteredEmployees = employees.filter(emp => emp.role !== 'ADMIN');
+            return NextResponse.json({ employees: filteredEmployees }, { status: 200 });
+        } catch (error) {
+            console.error('Employee fetch error:', error);
+            return NextResponse.json({ error: 'Failed to fetch employees' }, { status: 500 });
+        }
+    }
+
     const get_data = await db.feedback.findMany();
 
     if (get_data.length === 0) {
@@ -22,20 +46,36 @@ export async function DELETE(req: Request, res: Response) {
 }
 
 export async function POST(req: Request, res: Response) {
-    const { type, rating, desc, isAnynonyms, byName, byEmpId } = await req.json()
+    const { type, rating, desc, isAnynonyms, byName, byEmpId, employeeId, isAdminFeedback } = await req.json()
+
+    if (!type || !rating || !desc) {
+        return NextResponse.json({ "error": "Missing required fields" }, { status: 400 })
+    }
 
     try {
-        const save = await db.feedback.create({
-            data: {
-                type, rating: parseInt(rating), desc, isAnynonyms: Boolean(isAnynonyms), byName, byEmpId
-            }
-        })
-        if (save) {
-            return NextResponse.json({ "message": "success", "feedback": save }, { status: 200 })
+        const feedbackData: any = {
+            type, 
+            rating: parseInt(rating), 
+            desc, 
+            isAnynonyms: Boolean(isAnynonyms), 
+            byName: byName || "Unknown", 
+            byEmpId: byEmpId || "Unknown"
+        };
+
+        // For admin feedback, store employee info in description
+        if (isAdminFeedback && employeeId) {
+            feedbackData.desc = ` ${desc}`;
         }
+
+        const save = await db.feedback.create({
+            data: feedbackData
+        })
+        
+        return NextResponse.json({ "message": "success", "feedback": save }, { status: 200 })
     }
     catch (e) {
-        return NextResponse.json({ "message": "failed", "error": e }, { status: 500 })
+        console.error('Feedback creation error:', e);
+        return NextResponse.json({ "message": "failed", "error": String(e) }, { status: 500 })
     }
 }
 

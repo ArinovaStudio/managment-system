@@ -11,11 +11,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Optional → Verify admin
-    const admin = await db.user.findUnique({ where: { id: adminId } });
-    if (!admin || admin.role !== "ADMIN") {
+    // Verify user has permission
+    const user = await db.user.findUnique({ where: { id: adminId } });
+    if (!user || (user.role !== "ADMIN" && user.role !== "EMPLOYEE")) {
       return Response.json(
-        { success: false, message: "Only admins can create milestones" },
+        { success: false, message: "Only admins and employees can create milestones" },
         { status: 403 }
       );
     }

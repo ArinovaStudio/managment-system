@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   {
     icon: <FolderGit2 strokeWidth={1.5} />,
     name: "Projects",
-    path: "/blank",
+    path: "/project",
   },
 
   {

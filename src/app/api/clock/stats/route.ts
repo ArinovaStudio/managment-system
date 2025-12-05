@@ -72,6 +72,17 @@ export async function GET(req: Request) {
       return `${h}:${m.toString().padStart(2, '0')}`;
     };
 
+    // Check for active work session (no clockOut)
+    const activeWorkSession = await db.workHours.findFirst({
+      where: {
+        userId,
+        clockOut: '-'
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
+
     return NextResponse.json({
       success: true,
       stats: {
@@ -79,7 +90,9 @@ export async function GET(req: Request) {
         avgClockOut: formatTime(avgClockOutMinutes),
         avgWorkingHours: formatHours(avgHours),
         totalPayPeriod: formatHours(totalHours)
-      }
+      },
+      hasActiveSession: !!activeWorkSession,
+      activeWorkSession
     });
 
   } catch (error: any) {

@@ -12,35 +12,38 @@ export async function POST(req: Request) {
     }
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
+    // Find ANY active work session (clockOut: '-') regardless of date
     const workHours = await db.workHours.findFirst({
       where: {
         userId,
-        date: {
-          gte: today,
-          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-        }
+        clockOut: '-'
+      },
+      orderBy: {
+        date: 'desc'
       }
     });
 
     if (!workHours) {
-      return NextResponse.json({ error: 'No work record found for today' }, { status: 400 });
+      return NextResponse.json({ error: 'No active work session found' }, { status: 400 });
     }
 
+    // Allow re-clocking out by resetting if already clocked out
     if (workHours.clockOut !== '-') {
-      return NextResponse.json({ error: 'Already clocked out today' }, { status: 400 });
+      // Reset for re-clock out
+      await db.workHours.update({
+        where: { id: workHours.id },
+        data: { clockOut: '-', hours: 0 }
+      });
     }
 
     const clockOutTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    const clockInDate = new Date(`${today.toDateString()} ${workHours.clockIn}`);
-    const clockOutDate = new Date(`${today.toDateString()} ${clockOutTime}`);
     
-    if (clockOutDate <= clockInDate) {
-      clockOutDate.setDate(clockOutDate.getDate() + 1);
-    }
+    // Use the actual session date for clock-in calculation
+    const sessionDate = new Date(workHours.date);
+    const clockInDate = new Date(`${sessionDate.toDateString()} ${workHours.clockIn}`);
     
-    const totalHours = (clockOutDate.getTime() - clockInDate.getTime()) / (1000 * 60 * 60);
+    const totalHours = (now.getTime() - clockInDate.getTime()) / (1000 * 60 * 60);
 
     await Promise.all([
       db.user.update({

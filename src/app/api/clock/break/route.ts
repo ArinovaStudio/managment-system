@@ -45,8 +45,6 @@ export async function POST(req: Request) {
         })
       ]);
 
-      console.log('User set offline for break:', updatedUser.isLogin);
-
       return NextResponse.json({ 
         success: true, 
         message: 'Break started successfully',
@@ -83,8 +81,6 @@ export async function POST(req: Request) {
           data: { isLogin: true }
         })
       ]);
-
-      console.log('User set online after break:', updatedUser.isLogin);
 
       return NextResponse.json({ 
         success: true, 
@@ -137,22 +133,35 @@ export async function GET() {
         color: 'yellow',
         icon: 'CookingPot'
       },
-      { 
-        id: 'emergency', 
-        name: 'Emergency', 
-        duration: 0, 
-        description: 'Everything is alright?\nRequest for break!',
-        color: 'red',
-        icon: 'Siren'
-      }
     ];
+
+    // Get today's total break time
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    const todayBreaks = await db.break.findMany({
+      where: {
+        userId,
+        startTime: {
+          gte: todayStart,
+          lt: todayEnd
+        },
+        isActive: false // Only completed breaks
+      }
+    });
+    
+    const totalBreakTime = todayBreaks.reduce((total, breakRecord) => {
+      return total + (breakRecord.duration || 0);
+    }, 0);
 
     return NextResponse.json({ 
       breakTypes,
       activeBreak: activeBreak ? {
         id: activeBreak.type.toLowerCase(),
         startTime: activeBreak.startTime
-      } : null
+      } : null,
+      todayBreakTime: totalBreakTime
     });
   } catch (error) {
     console.error('Break GET Error:', error);

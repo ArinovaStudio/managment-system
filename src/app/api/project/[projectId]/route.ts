@@ -1,9 +1,9 @@
 import db from "@/lib/client";
 
 //overview of a single project
-export async function GET(req: Request, { params }: any) {
+export async function GET(req: Request, ctx: { params: Promise<{ projectId: string }> }) {
   try {
-    const projectId = params.projectId;
+    const { projectId } = await ctx.params;
 
     const project = await db.project.findUnique({
       where: { id: projectId },
@@ -43,7 +43,7 @@ export async function GET(req: Request, { params }: any) {
     });
   } catch (err) {
     return Response.json(
-      { success: false, message: "Failed to fetch project overview",err },
+      { success: false, message: "Failed to fetch project overview", err },
       { status: 500 }
     );
   }

@@ -115,21 +115,18 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Face not recognized' }, { status: 404 });
       }
 
-      if (authenticatedUser.isLogin) {
-        return NextResponse.json({ error: 'Already clocked in' }, { status: 400 });
-      }
-
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // Check if already has work hours for today
+      // Check if already has active work hours for today
       const existingWorkHours = await db.workHours.findFirst({
         where: {
           userId: authenticatedUser.id,
           date: {
             gte: today,
             lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-          }
+          },
+          clockOut: '-' // Only check for active sessions
         }
       });
 
@@ -168,7 +165,7 @@ export async function POST(req: Request) {
       // Authenticate face first, then clock out
       const users = await db.user.findMany({
         where: { faceDescriptor: { not: null } },
-        select: { id: true, name: true, faceDescriptor: true, isLogin: true }
+        select: { id: true, name: true, faceDescriptor: true, isLogin: true, role: true }
       });
 
       let authenticatedUser = null;
@@ -191,41 +188,29 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Face not recognized' }, { status: 404 });
       }
 
-      if (!authenticatedUser.isLogin) {
-        return NextResponse.json({ error: 'Not clocked in' }, { status: 400 });
-      }
-
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      // Find today's work hours record
-      const workHours = await db.workHours.findFirst({
+      // Check for ANY active work session (including from previous days)
+      const activeWorkHours = await db.workHours.findFirst({
         where: {
           userId: authenticatedUser.id,
-          date: {
-            gte: today,
-            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-          }
+          clockOut: '-'
+        },
+        orderBy: {
+          date: 'desc'
         }
       });
 
-      if (!workHours) {
-        return NextResponse.json({ error: 'No clock-in record found for today' }, { status: 400 });
+      if (!activeWorkHours) {
+        return NextResponse.json({ error: 'Not clocked in' }, { status: 400 });
       }
 
-      if (workHours.clockOut !== '-') {
-        return NextResponse.json({ error: 'Already clocked out today' }, { status: 400 });
-      }
+      // Use the activeWorkHours we already found
+      const workHours = activeWorkHours;
 
-      // Calculate work hours
+      // Calculate work hours using the actual work session date
       const clockOutTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      const clockInDate = new Date(`${today.toDateString()} ${workHours.clockIn}`);
-      const clockOutDate = new Date(`${today.toDateString()} ${clockOutTime}`);
-      
-      // Handle overnight shifts
-      if (clockOutDate <= clockInDate) {
-        clockOutDate.setDate(clockOutDate.getDate() + 1);
-      }
+      const sessionDate = new Date(workHours.date);
+      const clockInDate = new Date(`${sessionDate.toDateString()} ${workHours.clockIn}`);
+      const clockOutDate = now; // Use current time for clock out
       
       const totalHours = (clockOutDate.getTime() - clockInDate.getTime()) / (1000 * 60 * 60);
 
@@ -262,6 +247,34 @@ export async function POST(req: Request) {
   }
 }
 
+export async function DELETE() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token) as any;
+    const userId = payload.userId || payload.id;
+
+    // Delete face descriptor for the user
+    await db.user.update({
+      where: { id: userId },
+      data: { faceDescriptor: null }
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'Face recognition data deleted successfully'
+    });
+  } catch (error) {
+    console.error('Face deletion error:', error);
+    return NextResponse.json({ error: "Failed to delete face data" }, { status: 500 });
+  }
+}
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
@@ -278,10 +291,11 @@ export async function GET() {
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { 
-        id: true,  // ADD THIS LINE
+        id: true,
         faceDescriptor: true,
         name: true,
-        isLogin: true
+        isLogin: true,
+        role: true
       }
     });
 
@@ -289,10 +303,36 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Check for ANY active work session (including from previous days)
+    const activeWorkHours = await db.workHours.findFirst({
+      where: {
+        userId,
+        clockOut: '-' // Only active sessions
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
+
+    // User is logged in if they have any active work session
+    const actuallyLoggedIn = !!activeWorkHours;
+
+    // Update user login status to match active session status
+    if (user.isLogin !== actuallyLoggedIn) {
+      await db.user.update({
+        where: { id: userId },
+        data: { isLogin: actuallyLoggedIn }
+      });
+    }
+
     return NextResponse.json({ 
       userId: user.id,
       hasFaceRegistered: !!user?.faceDescriptor,
-      isLoggedIn: user?.isLogin || false,
+      isLoggedIn: actuallyLoggedIn,
+      activeSession: activeWorkHours ? {
+        date: activeWorkHours.date,
+        clockIn: activeWorkHours.clockIn
+      } : null,
       userName: user?.name,
       userRole: user?.role
     });
