@@ -146,11 +146,8 @@ export default function ScheduleMeet() {
                   {m.status}
                 </span>
               </div>
-
-              {/* Improved Flex Layout */}
               <div className="flex justify-between items-center mt-3">
 
-                {/* Left Section */}
                 <div className="space-y-1">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     Date: {m.date}
@@ -163,7 +160,6 @@ export default function ScheduleMeet() {
                   </p>
                 </div>
 
-                {/* Right Section - Join Meeting */}
                 {m.status === "approved" && m.meetLink && (
                   <a
                     href={m.meetLink}
@@ -176,7 +172,7 @@ export default function ScheduleMeet() {
               transition
             "
                   >
-                    Join Meeting
+                    Join
                   </a>
                 )}
               </div>

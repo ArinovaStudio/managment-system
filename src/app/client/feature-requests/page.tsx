@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { clientDemoData } from "../demodata";
-import { PlusCircle, Sparkles } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 export default function FeatureRequestPage() {
     const [title, setTitle] = useState("");
@@ -17,7 +17,8 @@ export default function FeatureRequestPage() {
             id: features.length + 1,
             title: title,
             description: desc,
-            date: new Date().toISOString().split("T")[0]
+            date: new Date().toISOString().split("T")[0],
+            status:"pending"
         };
 
         setFeatures([newFeature, ...features]);
@@ -30,7 +31,6 @@ export default function FeatureRequestPage() {
             {/* Heading */}
             <div>
                 <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <Sparkles strokeWidth={1.5} className="text-blue-500" />
                     Feature Requests
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -99,9 +99,14 @@ export default function FeatureRequestPage() {
                                 className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all"
                             >
                                 {/* Title */}
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                    {f.title}
-                                </h3>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                                        {f.title}
+                                    </h3>
+
+                                    {/* 👉 Status Badge */}
+                                    <StatusBadge status={f.status} />
+                                </div>
 
                                 {/* Description */}
                                 {f.description && (
@@ -123,3 +128,22 @@ export default function FeatureRequestPage() {
         </div>
     );
 }
+
+const StatusBadge = ({ status}) => {
+    const colors = {
+        pending:
+            "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",
+        approved:
+            "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+        rejected:
+            "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    };
+
+    return (
+        <span
+            className={`px-3 py-1 text-xs font-medium rounded-full ${colors[status]}`}
+        >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+    );
+};

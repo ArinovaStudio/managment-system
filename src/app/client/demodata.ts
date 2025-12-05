@@ -98,7 +98,7 @@ export const clientDemoData = {
       time: "4:00 PM",
       duration: "45 minutes",
       status: "pending",
-      meetLink:""
+      meetLink: ""
     },
     {
       id: 2,
@@ -107,29 +107,32 @@ export const clientDemoData = {
       time: "11:00 AM",
       duration: "30 minutes",
       status: "approved",
-      meetLink:"https://meet.example.com/meet-48291-AZX"
+      meetLink: "https://meet.example.com/meet-48291-AZX"
     },
   ],
 
   featureRequests: [
-  {
-    id: 1,
-    title: "Add real-time notifications",
-    description: "Implement a live notification system for project updates, messages, and deadlines.",
-    date: "2025-03-01",
-  },
-  {
-    id: 2,
-    title: "Add download invoices option",
-    description: "Provide users with the ability to view and download monthly or per-project invoices.",
-    date: "2025-02-25",
-  },
-  {
-    id: 3,
-    title: "Provide mobile responsive dashboard",
-    description: "Optimize the dashboard layout and components for seamless mobile usage.",
-    date: "2025-02-27",
-  },
-]
+    {
+      id: 1,
+      title: "Add real-time notifications",
+      description: "Implement a live notification system for project updates, messages, and deadlines.",
+      date: "2025-03-01",
+      status:"pending"
+    },
+    {
+      id: 2,
+      title: "Add download invoices option",
+      description: "Provide users with the ability to view and download monthly or per-project invoices.",
+      date: "2025-02-25",
+      status:"approved"
+    },
+    {
+      id: 3,
+      title: "Provide mobile responsive dashboard",
+      description: "Optimize the dashboard layout and components for seamless mobile usage.",
+      date: "2025-02-27",
+      status:"rejected"
+    },
+  ]
 
 };
