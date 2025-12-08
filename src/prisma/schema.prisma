@@ -1,35 +1,9 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-enum ROLES {
-  ADMIN
-  CLIENT
-  EMPLOYEE
-}
-
-enum STATUS {
-  Requested
-  Pending
-  Rejected
-  Approved
-}
-
-enum CLOCK_STATUS {
-  NOT_LOGGED_IN
-  CLOCKED_IN
-  CLOCKED_OUT
-  ON_BREAK
-}
-
-enum BREAK_TYPE {
-  COFFEE
-  MEAL
-  EMERGENCY
+datasource db {
+  provider = "postgresql"
 }
 
 model Users {
@@ -37,34 +11,34 @@ model Users {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  employeeId     String?  @unique
-  email          String   @unique
-  name           String
-  password       String
-  role           ROLES    @default(CLIENT)
-  Documents      Docs[]   @relation("UserDocuments")
-  workingAs      String?
-  department     String?
-  phone          String?
-  bio            String?
-  image          String?
-  dob            String?
-  isLogin        Boolean  @default(false)
-  faceDescriptor String? // Face recognition data
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  // Clock System Relations
-  timezone     UserTimezone?
-  leaves       UserLeaves?
-  clockRecords ClockRecord[]
-  workHours    WorkHours[]
-  breaks       Break[]
-
-  //Projects
-  projectMembers ProjectMember[]
-  milestones     Milestone[]
+  id              String            @id @default(cuid())
+  employeeId      String?           @unique
+  email           String            @unique
+  name            String
+  password        String
+  role            ROLES             @default(CLIENT)
+  workingAs       String?
+  department      String?
+  phone           String?
+  bio             String?
+  image           String?
+  dob             String?
+  isLogin         Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  faceDescriptor  String?
+  breaks          Break[]
+  clockRecords    ClockRecord[]
+  Documents       Docs[]            @relation("UserDocuments")
+  meetingRequests MeetingRequest[]
+  milestones      Milestone[]
+  projectMembers  ProjectMember[]
+  leaves          UserLeaves?
+  timezone        UserTimezone?
+  workHours       WorkHours[]
+  featureRequests FeatureRequest[]
+  createdMeetings Meeting[]         @relation("CreatedMeetings")
+  meetingAssigned MeetingAttendee[]
 }
 
 model Docs {
@@ -125,84 +99,72 @@ model Analytics {
   createdAt     DateTime @default(now())
 }
 
-// ============ CLOCK SYSTEM MODELS ============
-
 model UserTimezone {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  code      String // IND, USA, UK, etc.
-  name      String // India Standard Time
-  hours     String // 10AM-5PM
-  offset    String // +05:30
-  startTime String // 10:00
-  endTime   String // 17:00
-
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  code      String
+  name      String
+  hours     String
+  offset    String
+  startTime String
+  endTime   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserLeaves {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  remaining Int @default(10)
-  emergency Int @default(10)
-  sick      Int @default(10)
-  total     Int @default(30)
-
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  remaining Int      @default(10)
+  emergency Int      @default(10)
+  sick      Int      @default(10)
+  total     Int      @default(30)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ClockRecord {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  clockIn  DateTime?
-  clockOut DateTime?
-  date     DateTime     @default(now())
-  status   CLOCK_STATUS @default(NOT_LOGGED_IN)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String       @id @default(cuid())
+  userId    String
+  clockIn   DateTime?
+  clockOut  DateTime?
+  date      DateTime     @default(now())
+  status    CLOCK_STATUS @default(NOT_LOGGED_IN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
 }
 
 model WorkHours {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  date     DateTime
-  hours    Float // Total hours worked
-  clockIn  String // Time as string "09:05 AM"
-  clockOut String // Time as string "05:10 PM"
-  summary  String? // Work summary for the day
-
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime
+  hours     Float
+  clockIn   String
+  clockOut  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  summary   String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, date])
 }
 
 model Break {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id        String     @id @default(cuid())
+  userId    String
   type      BREAK_TYPE
   startTime DateTime
   endTime   DateTime?
-  duration  Int? // in minutes
+  duration  Int?
   isActive  Boolean    @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, startTime])
 }
@@ -216,14 +178,13 @@ model Task {
   priority       String
   dueDate        DateTime
   tags           String[]
-  comments       Comment[]
   attachments    Json[]    @default([])
   status         String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id])
+  projectId      String?
+  comments       Comment[]
+  Project        Project?  @relation(fields: [projectId], references: [id])
 }
 
 model Report {
@@ -244,29 +205,30 @@ model Comment {
 }
 
 model Project {
-  id           String          @id @default(cuid())
-  name         String
-  summary      String?
-  priority     String?
-  basicDetails String?
-  status       Int             @default(0) // Progress percentage 0-100
-  createdAt    DateTime        @default(now())
-  members      ProjectMember[]
-  milestones   Milestone[]
-  assets       Asset[]
-  tasks        Task[]
+  id              String           @id @default(cuid())
+  name            String
+  summary         String?
+  priority        String?
+  basicDetails    String?
+  status          Int              @default(0) // Progress percentage 0-100
+  createdAt       DateTime         @default(now())
+  progress        Int              @default(0)
+  assets          Asset[]
+  milestones      Milestone[]
+  members         ProjectMember[]
+  tasks           Task[]
+  featureRequests FeatureRequest[]
+  projectInfo     ProjectInfo?
 }
 
 model ProjectMember {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   projectId String
   userId    String
-
-  role     String?
-  isLeader Boolean @default(false)
-
-  project Project @relation(fields: [projectId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  role      String?
+  isLeader  Boolean @default(false)
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
 }
 
 model Milestone {
@@ -275,23 +237,21 @@ model Milestone {
   title       String
   description String?
   dueDate     DateTime
-  createdBy   String // admin userId
+  createdBy   String
   createdAt   DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
-  creator User    @relation(fields: [createdBy], references: [id])
+  creator     User     @relation(fields: [createdBy], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
 }
 
 model Asset {
   id        String   @id @default(cuid())
   projectId String
-  type      String // "figma", "image", "zip"
-  url       String // cloudinary url
-  publicId  String //this id will be used to delete the assest from cloudinary
+  type      String
+  url       String
+  publicId  String
   title     String?
   createdAt DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
 }
 
 model Ticket {
@@ -305,8 +265,113 @@ model Ticket {
 model UsefulTip {
   id        String   @id @default(cuid())
   projectId String
-  userId    String // who gave the tip
+  userId    String
   user      String
   tip       String
   createdAt DateTime @default(now())
+}
+
+model MeetingRequest {
+  id        String   @id @default(cuid())
+  clientId  String
+  reason    String
+  meetDate  DateTime
+  meetTime  String
+  duration  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    User     @relation(fields: [clientId], references: [id])
+}
+
+model FeatureRequest {
+  id          String   @id @default(cuid())
+  clientId    String
+  projectId   String
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+
+  client  User    @relation(fields: [clientId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model ProjectInfo {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  budget          Float
+  clientName      String?
+  projectType     String
+  startDate       DateTime
+  deadline        DateTime
+  supervisorAdmin String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  Project Project @relation(fields: [projectId], references: [id])
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  publicId    String
+  assignedTo  String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ROLES {
+  ADMIN
+  CLIENT
+  EMPLOYEE
+}
+
+enum STATUS {
+  Requested
+  Pending
+  Rejected
+  Approved
+}
+
+enum CLOCK_STATUS {
+  NOT_LOGGED_IN
+  CLOCKED_IN
+  CLOCKED_OUT
+  ON_BREAK
+}
+
+enum BREAK_TYPE {
+  COFFEE
+  MEAL
+  EMERGENCY
+}
+
+model Meeting {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.VarChar(150)
+  scheduledAt DateTime
+  meetingLink String?
+
+  createdById String
+  createdBy   User   @relation("CreatedMeetings", fields: [createdById], references: [id])
+
+  attendees MeetingAttendee[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MeetingAttendee {
+  id String @id @default(cuid())
+
+  meetingId String
+  userId    String
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId]) // prevents duplicate assignment
 }

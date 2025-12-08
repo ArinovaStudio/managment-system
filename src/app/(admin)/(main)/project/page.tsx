@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, AlertCircle, Plus, Search, Filter } from 'lucide-react';
+import { Users, Calendar, AlertCircle, Plus, Search, Filter, X, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 interface Project {
   id: string;
@@ -10,6 +11,7 @@ interface Project {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   basicDetails: string;
   membersCount: number;
+  progress: number;
   createdAt: string;
 }
 
@@ -18,14 +20,36 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [users, setUsers] = useState<any[]>([]);
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    summary: '',
+    priority: 'MEDIUM',
+    basicDetails: '',
+    budget: '',
+    projectType: '',
+    startDate: '',
+    deadline: '',
+    supervisorAdmin: ''
+  });
+  const [createLoading, setCreateLoading] = useState(false);
 
   useEffect(() => {
     fetchUserProjects();
+    fetchUsers();
   }, []);
 
   const fetchUserProjects = async () => {
     try {
-      const response = await fetch('/api/project?userOnly=true');
+      const userResponse = await fetch('/api/user');
+      const userData = await userResponse.json();
+
+      const isAdmin = userData.user && userData.user.role === 'ADMIN';
+
+      const response = await fetch(`/api/project${isAdmin ? '' : '?userOnly=true'}`);
       const data = await response.json();
       if (data.success) {
         setProjects(data.projects);
@@ -37,12 +61,71 @@ export default function ProjectsPage() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/user?all=true');
+      const data = await response.json();
+      if (data.success) {
+        setUsers(data.users.filter((user: any) => user.role !== 'ADMIN'));
+        setAdmins(data.users.filter((user: any) => user.role === 'ADMIN'));
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.projectType || !formData.budget || !formData.startDate || !formData.deadline || !formData.supervisorAdmin) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const response = await fetch('/api/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          budget: parseFloat(formData.budget),
+          startDate: new Date(formData.startDate),
+          deadline: new Date(formData.deadline),
+          memberIds: selectedMembers
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Project created successfully');
+        setShowCreateModal(false);
+        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '' });
+        setSelectedMembers([]);
+        fetchUserProjects();
+      } else {
+        toast.error(data.message || 'Failed to create project');
+      }
+    } catch (error) {
+      toast.error('Failed to create project');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const toggleMember = (userId: string) => {
+    setSelectedMembers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'HIGH': return 'bg-red-100 text-red-800 border-red-200';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'LOW': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'HIGH': return 'bg-red-500/20 text-red-500 ';
+      case 'MEDIUM': return 'bg-yellow-500/20 text-yellow-500 ';
+      case 'LOW': return 'bg-green-500/20 text-green-500';
+      default: return 'bg-gray-100/20 text-gray-500';
     }
   };
 
@@ -65,7 +148,7 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-row sm:items-center sm:justify-between gap-4">
-        
+
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Projects</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -87,13 +170,13 @@ export default function ProjectsPage() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
-          <Link
-            href="/projects/create"
+          <button
+            onClick={() => setShowCreateModal(true)}
             className="w-[50%] inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus size={20} />
             New Project
-          </Link>
+          </button>
 
           <div className="relative w-8">
             {/* The displayed filter icon */}
@@ -152,7 +235,7 @@ export default function ProjectsPage() {
                 </p>
 
                 {/* Project Stats */}
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
                   <div className="flex items-center gap-1">
                     <Users size={16} />
                     <span>{project.membersCount} members</span>
@@ -163,17 +246,246 @@ export default function ProjectsPage() {
                   </div>
                 </div>
 
+                {/* Progress Bar */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <span>{project.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                    <div 
+                      className="bg-blue-600 h-1.5 rounded-full transition-all" 
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+
                 {/* Basic Details Preview */}
                 {project.basicDetails && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                     <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                       {project.basicDetails}
                     </p>
-                  </div>
                 )}
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Create Project Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 ">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto   [&::-webkit-scrollbar]:hidden 
+  [-ms-overflow-style:'none'] 
+  [scrollbar-width:'none']">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold dark:text-white">Create New Project</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  <X size={20} className="text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateProject} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Project Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Enter project name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Project Type *
+                    </label>
+                    <select
+                      value={formData.projectType}
+                      onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    >
+                      <option value="">Select project type</option>
+                      <option value="e-commerce">E-commerce</option>
+                      <option value="saas">SaaS</option>
+                      <option value="static">Static Website</option>
+                      <option value="mobile-app">Mobile App</option>
+                      <option value="web-app">Web Application</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Priority
+                    </label>
+                    <select
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    >
+                      <option value="LOW">Low</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HIGH">High</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Budget *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Enter budget amount"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Start Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Deadline *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.deadline}
+                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Supervisor Admin *
+                    </label>
+                    <select
+                      value={formData.supervisorAdmin}
+                      onChange={(e) => setFormData({ ...formData, supervisorAdmin: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      required
+                    >
+                      <option value="">Select supervisor</option>
+                      {admins.map((admin) => (
+                        <option key={admin.id} value={admin.id}>
+                          {admin.name} - {admin.workingAs || 'Admin'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">
+                    Summary
+                  </label>
+                  <textarea
+                    value={formData.summary}
+                    onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Brief project summary"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">
+                    Basic Details
+                  </label>
+                  <textarea
+                    value={formData.basicDetails}
+                    onChange={(e) => setFormData({ ...formData, basicDetails: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Detailed project description"
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users size={20} className="text-gray-600 dark:text-gray-400" />
+                    <label className="text-sm font-medium dark:text-white">
+                      Team Members ({selectedMembers.length} selected)
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                    {users.map((user) => (
+                      <div
+                        key={user.id}
+                        onClick={() => toggleMember(user.id)}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedMembers.includes(user.id)
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-300 hover:border-gray-400 dark:border-gray-600'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm dark:text-white">{user.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.workingAs || 'Employee'}</p>
+                          </div>
+                          {selectedMembers.includes(user.id) && (
+                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                              <Plus size={12} className="text-white rotate-45" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createLoading}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {createLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={16} />
+                        Create Project
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>

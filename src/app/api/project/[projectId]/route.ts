@@ -18,7 +18,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
               }
             }
           }
-        }
+        },
+        projectInfo: true
       }
     });
 
@@ -37,8 +38,10 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
         summary: project.summary,
         priority: project.priority,
         basicDetails: project.basicDetails,
+        progress: project.progress,
         membersCount: project.members.length,
-        members: project.members.map((m) => m.user)
+        members: project.members.map((m) => m.user),
+        projectInfo: project.projectInfo
       }
     });
   } catch (err) {

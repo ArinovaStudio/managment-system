@@ -43,3 +43,23 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(req:Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+
+  try {
+    const tasks = await db.task.findMany({
+      where: {
+        projectId: id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return Response.json(tasks);
+  } catch (error) {
+    return Response.json({ error: error }, { status: 500 });
+  }
+}

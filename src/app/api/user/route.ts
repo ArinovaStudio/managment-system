@@ -3,8 +3,27 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/jwt';
 import db from '@/lib/client';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const getAll = searchParams.get('all');
+
+    if (getAll === 'true') {
+      const users = await db.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          workingAs: true,
+          department: true,
+          role: true,
+          employeeId: true,
+        },
+        orderBy: { name: 'asc' }
+      });
+      return NextResponse.json({ success: true, users });
+    }
+
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 

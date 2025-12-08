@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/router";
+import Link from "next/link";
 import React from "react";
 export default function ProjectTabs({ activeTab, setActiveTab }: any) {
   const tabs = [
@@ -13,27 +13,17 @@ export default function ProjectTabs({ activeTab, setActiveTab }: any) {
     "Report Issue",
     "Tips",
   ];
-  // const router = useRouter();
 
-  // const handleBack = () => {
-  //   if (window.history.length > 1) {
-  //     router.back();
-  //   } else {
-  //     router.push("/"); // fallback route if no history
-  //   }
-  // };
   return (
     <div className="flex items-center gap-6 border-b border-gray-200 dark:border-gray-700">
       {/* Back Arrow */}
-      <button 
-        type="button"
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+      <Link href="/project" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
-      </button>
+      </Link>
 
-     
+
 
       {/* Tabs */}
       <div className="flex gap-8 overflow-x-auto">

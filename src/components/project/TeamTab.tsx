@@ -74,22 +74,6 @@ export default function TeamTab({ projectId }: { projectId: string }) {
               </div>
 
               <div className="flex flex-col items-end gap-2">
-                {/* ROLE BUTTONS */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => updateRole(m.userId, "Frontend Developer", false)}
-                    className="px-3 py-1 rounded bg-blue-600 dark:bg-blue-600 text-white text-xs"
-                  >
-                    Frontend
-                  </button>
-                  <button
-                    onClick={() => updateRole(m.userId, "Backend Developer", false)}
-                    className="px-3 py-1 rounded bg-purple-600 dark:bg-purple-600 text-white text-xs"
-                  >
-                    Backend
-                  </button>
-                </div>
-
                 {/* SET LEADER */}
                 <button
                   onClick={() => updateRole(m.userId, m.role || "Member", true)}

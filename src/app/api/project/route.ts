@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, summary, priority, basicDetails, memberIds } = body;
+    const { name, summary, priority, basicDetails, memberIds, budget, projectType, startDate, deadline, supervisorAdmin, clientName } = body;
 
     if (!name || !priority) {
       return Response.json(
@@ -14,13 +14,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create project
+    // Create project with project info
     const project = await db.project.create({
       data: {
         name,
         summary,
         priority,
         basicDetails,
+        projectInfo: {
+          create: {
+            budget,
+            projectType,
+            startDate: new Date(startDate),
+            deadline: new Date(deadline),
+            supervisorAdmin,
+            clientName
+          }
+        }
       },
     });
 
@@ -84,6 +94,7 @@ export async function GET(req: Request) {
         priority: up.project.priority,
         basicDetails: up.project.basicDetails,
         membersCount: up.project._count.members,
+        progress: up.project.progress,
         createdAt: up.project.createdAt
       }));
 
@@ -92,10 +103,26 @@ export async function GET(req: Request) {
     
     // Get all projects (admin view)
     const projects = await db.project.findMany({
+      include: {
+        _count: {
+          select: { members: true }
+        }
+      },
       orderBy: { createdAt: "desc" }
     });
 
-    return Response.json({ success: true, projects });
+    const formattedProjects = projects.map(p => ({
+      id: p.id,
+      name: p.name,
+      summary: p.summary,
+      priority: p.priority,
+      basicDetails: p.basicDetails,
+      membersCount: p._count.members,
+      progress: p.progress,
+      createdAt: p.createdAt
+    }));
+
+    return Response.json({ success: true, projects: formattedProjects });
   } catch (err) {
     return Response.json(
       { success: false, message: "Failed to fetch projects", err },
