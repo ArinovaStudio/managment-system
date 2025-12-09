@@ -1,9 +1,11 @@
 datasource db {
   provider = "postgresql"
+  url      = env("DB_URI")
 }
 
 generator client {
   provider = "prisma-client-js"
+  
 }
 
 enum ROLES {
@@ -43,6 +45,7 @@ model User {
 
   projectMembers ProjectMember[]
   milestones     Milestone[]
+  leaveRequests leaveReq[]
 }
 
 model Docs {
@@ -77,11 +80,18 @@ model leaveReq {
   status     STATUS   @default(Pending)
   empName    String
   empId      String
+  userId     String  // FK → User.id
   department String
   leaveType  String
   startDate  DateTime
   endDate    DateTime
   reason     String
+
+  // timestamps
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Task {

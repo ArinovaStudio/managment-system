@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/client";
+import  db  from "@/lib/client";
 
 interface Params {
   params: { id: string };
 }
 
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { status } = await req.json();
+
+    const { id } = await context.params;
+
 
     if (!status) {
       return NextResponse.json(
@@ -17,7 +20,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const updatedLeave = await db.leaveReq.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status },
     });
 

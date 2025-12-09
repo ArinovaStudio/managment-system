@@ -11,7 +11,7 @@ import {
   ListIcon,
 } from "../icons/index";
 
-import {AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, User , Handshake, HeartPulseIcon} from "lucide-react"
+import {AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, User , Handshake, HeartPulseIcon, NotebookPen} from "lucide-react"
 
 type NavItem = {
   name: string;
@@ -54,11 +54,18 @@ const navItems: NavItem[] = [
   },
 ];
 
-const adminOnlyItem: NavItem = {
-  name: "User Management",
-  icon: <User strokeWidth={1.5} />,
-  path: "/user",
-};
+const adminOnlyItem: NavItem[] = [
+  {
+    name: "User Management",
+    icon: <User strokeWidth={1.5} />,
+    path: "/user",
+  },
+  {
+    name: "Leave Management",
+    icon: <NotebookPen strokeWidth={1.5} />,
+    path: "/leavemanage",
+  }
+];
 
 const othersItems: NavItem[] = [
     {
@@ -315,7 +322,7 @@ useEffect(() => {
     setUserRole(data?.user?.role?.toLowerCase() || null);
 
     if (data?.user?.role?.toLowerCase() == "admin") {
-      setDynamicOthers(prev => [...prev, adminOnlyItem]);
+      setDynamicOthers(prev => [...prev, ...adminOnlyItem]);
     }
   }
 
@@ -419,7 +426,7 @@ useEffect(() => {
 
 {renderMenuItems(
     userRole === "admin"
-      ? [...othersItems, adminOnlyItem]
+      ? [...othersItems, ...adminOnlyItem]
       : othersItems,
     "others"
 )}
