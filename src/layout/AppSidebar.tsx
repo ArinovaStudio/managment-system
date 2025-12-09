@@ -15,7 +15,9 @@ import {
   CalendarPlus,
   Lightbulb,
   FileUp,
-  MessageSquareMoreIcon
+  MessageSquareMoreIcon,
+  User,
+  NotebookPen
 } from "lucide-react"
 
 type NavItem = {
@@ -121,13 +123,26 @@ const clientItems: NavItem[] = [
   },
 ];
 
+const adminOnlyItem: NavItem[] = [
+  {
+    name: "User Management",
+    icon: <User strokeWidth={1.5} />,
+    path: "/user",
+  },
+  {
+    name: "Leave Management",
+    icon: <NotebookPen strokeWidth={1.5} />,
+    path: "/leavemanage",
+  }
+];
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
 
   const renderMenuItems = (
     navItems: NavItem[],
-    menuType: "main" | "others" | "for client"
+    menuType: "main" | "others" | "for client" | "for Admin"
   ) => (
     <ul className="flex flex-col gap-4">
       {navItems.map((nav, index) => (
@@ -243,7 +258,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others" | "for client";
+    type: "main" | "others" | "for client" | "for Admin";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -264,7 +279,7 @@ const AppSidebar: React.FC = () => {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "others" | "for client",
+                type: menuType as "main" | "others" | "for client" | "for Admin",
                 index,
               });
               submenuMatched = true;
@@ -293,7 +308,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others" | "for client") => {
+  const handleSubmenuToggle = (index: number, menuType: "main" | "others" | "for client" | "for Admin") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -394,6 +409,21 @@ const AppSidebar: React.FC = () => {
               </h2>
 
               {renderMenuItems(clientItems, "for client")}
+            </div>
+{/* admin */}
+            <div>
+              <h2
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+                  }`}
+              >
+                {isExpanded || isHovered || isMobileOpen ? (
+                  "For Admin"
+                ) : (
+                  <HorizontaLDots />
+                )}
+              </h2>
+
+              {renderMenuItems(adminOnlyItem, "for Admin")}
             </div>
           </div>
         </nav>

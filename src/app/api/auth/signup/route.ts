@@ -131,22 +131,50 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const users = await db.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        employeeId: true,
-        department: true,
-        phone: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    employeeId: true,
+    department: true,
+    phone: true,
+    createdAt: true,
+    image: true,
+    isLogin: true,
+    workingAs: true,
+    bio: true,
+    dob: true,
+    faceDescriptor: true,
 
+    // RELATIONS
+    breaks: true,
+    clockRecords: true,
+    Documents: true,
+    meetingRequests: true,
+    milestones: true,
+    leaves: true,
+    timezone: true,
+    workHours: true,
+    featureRequests: true,
+    createdMeetings: true,
+    meetingAssigned: true,
+
+    // ProjectMembers → include the Project model
+    projectMembers: {
+      include: {
+        project: true,
+      },
+    },
+  },
+
+  orderBy: { createdAt: "desc" },
+});
+
+// console.log(users)
     return NextResponse.json({ users }, { status: 200 });
+    
+    
   } catch (err) {
     console.error("GET_USERS_ERROR:", err);
     return NextResponse.json(

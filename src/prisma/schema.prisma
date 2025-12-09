@@ -39,6 +39,7 @@ model User {
   featureRequests FeatureRequest[]
   createdMeetings Meeting[]         @relation("CreatedMeetings")
   meetingAssigned MeetingAttendee[]
+  leaveRequests   leaveReq[]
 }
 
 model Docs {
@@ -81,6 +82,8 @@ model leaveReq {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String
+
+  user User? @relation(fields: [userId], references: [id])
 }
 
 model Analytics {
