@@ -15,13 +15,15 @@ import {
   CalendarPlus,
   Lightbulb,
   FileUp,
-  MessageSquareMoreIcon
+  MessageSquareMoreIcon,
+  Quote
 } from "lucide-react"
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
+  role?: "ADMIN" | "USER" | "CLIENT";
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
@@ -49,13 +51,21 @@ const navItems: NavItem[] = [
     // subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
-    name: "Well Being",
-    icon: <HeartPulseIcon strokeWidth={1.5} />,
-    path: "/well-being",
-    // subItems: [
-      //   { name: "Blank Page", path: "/blank", pro: false },
-      //   { name: "404 Error", path: "/error-404", pro: false },
-      // ],
+    name: "Well Being  Management",
+    icon: <HeartPulseIcon  strokeWidth={1.5} />,
+    path: "/well-being-management",
+    role: "ADMIN"
+    },
+    {
+      icon: <Quote strokeWidth={1.5} />,
+      name: "Quotes",
+      path: "/quotes",
+      role: "ADMIN"
+    },
+    {
+      icon: <HeartPulseIcon strokeWidth={1.5} />,
+      name: "Well Being",
+      path: "/well-being",
     },
     {
       icon: <CalendarPlus strokeWidth={1.5} />,
@@ -124,13 +134,22 @@ const clientItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/user')
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) setUserRole(data.user.role);
+      });
+  }, []);
 
   const renderMenuItems = (
     navItems: NavItem[],
     menuType: "main" | "others" | "for client"
   ) => (
     <ul className="flex flex-col gap-4">
-      {navItems.map((nav, index) => (
+      {navItems.filter(nav => !nav.role || nav.role === userRole).map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button

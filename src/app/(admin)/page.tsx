@@ -34,7 +34,7 @@ export default function EmployeeDashboard() {
         <EmployeeProfile />
       </div>
       <div className="col-span-12 md:col-span-7">
-        <QuoteOfTheDay analyticsData={analyticsData} />
+        <QuoteOfTheDay />
       </div>
       <div className="col-span-12 md:col-span-7">
         <ProjectStats analyticsData={analyticsData} />
@@ -52,7 +52,7 @@ export default function EmployeeDashboard() {
         <Feedback />
       </div>
       <div className="col-span-12 md:col-span-4">
-        <UpcomingMeetings analyticsData={analyticsData} />
+        <UpcomingMeetings />
       </div>
       <div className="col-span-12 md:col-span-4">
         <ToDoTask analyticsData={analyticsData} />

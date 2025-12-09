@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const getEmployees = searchParams.get('employees');
+    const getAll = searchParams.get('all');
     
     if (getEmployees === 'true') {
         try {
@@ -23,6 +24,29 @@ export async function GET(req: Request) {
         } catch (error) {
             console.error('Employee fetch error:', error);
             return NextResponse.json({ error: 'Failed to fetch employees' }, { status: 500 });
+        }
+    }
+
+    if (getAll === 'true') {
+        const feedbacks = await db.feedback.findMany({
+            orderBy: { id: 'desc' }
+        });
+        return NextResponse.json({ feedbacks }, { status: 200 });
+    }
+
+    const userOnly = searchParams.get('userOnly');
+    if (userOnly === 'true') {
+        try {
+            const { getUserId } = await import('@/lib/auth');
+            const userId = await getUserId(req);
+            
+            const feedbacks = await db.feedback.findMany({
+                where: { employeeId: userId },
+                orderBy: { id: 'desc' }
+            });
+            return NextResponse.json({ feedbacks }, { status: 200 });
+        } catch (error) {
+            return NextResponse.json({ feedbacks: [] }, { status: 200 });
         }
     }
 
@@ -59,13 +83,9 @@ export async function POST(req: Request, res: Response) {
             desc, 
             isAnynonyms: Boolean(isAnynonyms), 
             byName: byName || "Unknown", 
-            byEmpId: byEmpId || "Unknown"
+            byEmpId: byEmpId || "Unknown",
+            ...(employeeId && { employeeId })
         };
-
-        // For admin feedback, store employee info in description
-        if (isAdminFeedback && employeeId) {
-            feedbackData.desc = ` ${desc}`;
-        }
 
         const save = await db.feedback.create({
             data: feedbackData

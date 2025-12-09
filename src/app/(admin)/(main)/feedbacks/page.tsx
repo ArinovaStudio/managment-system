@@ -15,6 +15,8 @@ export default function FeedbackForm() {
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<'view' | 'give'>('view');
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -26,6 +28,7 @@ export default function FeedbackForm() {
           if (data.user?.role === 'ADMIN') {
             setIsAdmin(true);
             await fetchEmployees();
+            await fetchAllFeedbacks();
           }
         }
       } catch (error) {
@@ -34,6 +37,18 @@ export default function FeedbackForm() {
     }
     fetchUser();
   }, []);
+
+  const fetchAllFeedbacks = async () => {
+    try {
+      const response = await fetch('/api/feedbacks?all=true');
+      if (response.ok) {
+        const data = await response.json();
+        setFeedbacks(data.feedbacks || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch feedbacks:', error);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -131,17 +146,61 @@ export default function FeedbackForm() {
         )}
         
         {isAdmin && (
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <User size={16} />
-            Admin Panel
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setViewMode('view')}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            >
+              View Feedbacks
+            </button>
+            <button 
+              onClick={() => setViewMode('give')}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'give' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            >
+              Give Feedback
+            </button>
           </div>
         )}
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-6 max-w-2xl mx-auto"
-      >
+      {isAdmin && viewMode === 'view' ? (
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">All Feedbacks</h3>
+          {feedbacks.length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">No feedbacks yet</p>
+          ) : (
+            <div className="grid gap-4">
+              {feedbacks.map((fb) => (
+                <div key={fb.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-white/[0.05]">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {fb.type}
+                      </span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{fb.byName}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">({fb.byEmpId})</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-lg ${i < fb.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{fb.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-6 max-w-2xl mx-auto"
+        >
         {/* Employee Selection - Admin only */}
         {isAdmin && (
           <>
@@ -315,6 +374,7 @@ export default function FeedbackForm() {
           </motion.button>
         </div>
       </form>
+      )}
       </div>
   );
 }
