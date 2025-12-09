@@ -24,13 +24,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!projectId) {
-      return NextResponse.json(
-        { error: "projectId is required" },
-        { status: 400 }
-      );
-    }
-
     const attachments: any[] = [];
 
     if (attachmentFile && attachmentFile.size > 0) {
@@ -80,7 +73,7 @@ export async function POST(req: NextRequest) {
         tags,
         attachments,
         status,
-        projectId, // 🔥 IMPORTANT
+        ...(projectId && { projectId }),
       },
     });
 
@@ -102,9 +95,13 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
+    const assignee = searchParams.get("assignee");
 
     const tasks = await db.task.findMany({
-      where: projectId ? { projectId } : {},
+      where: {
+        ...(projectId && { projectId }),
+        ...(assignee && { assignee })
+      },
       orderBy: { createdAt: "desc" },
     });
 

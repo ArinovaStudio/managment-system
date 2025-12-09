@@ -6,7 +6,7 @@ const Feedback = () => {
   useEffect(() => {
     async function fetchFeedbacks() {
       try {
-        const response = await fetch('/api/feedbacks', { credentials: 'include' });
+        const response = await fetch('/api/feedbacks?userOnly=true', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setFeedbacks(data.feedbacks || []);

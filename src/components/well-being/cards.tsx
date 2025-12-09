@@ -214,11 +214,20 @@ export const PositiveThoughtCard = () => {
   const [thought, setThought] = useState("");
   const [sparkle, setSparkle] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!thought.trim()) return;
-    setSparkle(true);
-    setTimeout(() => setSparkle(false), 2000);
-    setThought("");
+    
+    const res = await fetch('/api/quotes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quote: thought })
+    });
+
+    if (res.ok) {
+      setSparkle(true);
+      setTimeout(() => setSparkle(false), 2000);
+      setThought("");
+    }
   };
 
   return (

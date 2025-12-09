@@ -67,6 +67,7 @@ model feedback {
   isAnynonyms Boolean @default(false)
   byName      String
   byEmpId     String
+  employeeId  String?
 }
 
 model leaveReq {
@@ -377,4 +378,15 @@ model MeetingAttendee {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([meetingId, userId]) // prevents duplicate assignment
+}
+
+model SharedQuote {
+  id        String   @id @default(cuid())
+  quote     String
+  author    String
+  userId    String
+  isApproved Boolean @default(false)
+  isSelected Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -18,6 +18,8 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [searchUser, setSearchUser] = useState("");
 
     useEffect(() => {
         if (open) {
@@ -65,6 +67,11 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
             toast.error(data.error || "Failed to create meeting");
         }
     };
+
+    const filteredUsers = users.filter((user) =>
+        user.name.toLowerCase().includes(searchUser.toLowerCase())
+    );
+
 
     if (!open) return null;
 
@@ -131,39 +138,85 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
                         </div>
 
                         <div>
-                            <div className="flex items-center gap-2 mb-3">
+                            <div className="flex items-center gap-2 mb-2">
                                 <Users size={20} className="text-gray-600 dark:text-gray-400" />
                                 <label className="text-sm font-medium dark:text-white">
                                     Select Attendees ({selectedUsers.length} selected) *
                                 </label>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                {users.map((user) => (
-                                    <div
-                                        key={user.id}
-                                        onClick={() => toggleUser(user.id)}
-                                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedUsers.includes(user.id)
-                                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                : 'border-gray-300 hover:border-gray-400 dark:border-gray-600'
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="font-medium text-sm dark:text-white">{user.name}</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{user.workingAs || 'Employee'}</p>
-                                            </div>
-                                            {selectedUsers.includes(user.id) && (
-                                                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
+                            </div> 
+
+                            {/* DROPDOWN BUTTON */}
+                            <button
+                                type="button"
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="w-full text-left px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            >
+                                {selectedUsers.length > 0
+                                    ? `${selectedUsers.length} user(s) selected`
+                                    : "Select attendees"} ↓
+                            </button>
+
+                            {/* DROPDOWN PANEL */}
+                            {isDropdownOpen && (
+                                <div className="mt-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 p-2 max-h-64 overflow-y-auto">
+
+                                    {/* SEARCH INPUT */}
+                                    <input
+                                        type="text"
+                                        placeholder="Search users..."
+                                        value={searchUser}
+                                        onChange={(e) => setSearchUser(e.target.value)}
+                                        className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                    />
+
+                                    {/* USER LIST */}
+                                    {filteredUsers.length === 0 ? (
+                                        <p className="text-sm text-gray-500 px-2">No users found</p>
+                                    ) : (
+                                        filteredUsers.map((user) => (
+                                            <div
+                                                key={user.id}
+                                                onClick={() => toggleUser(user.id)}
+                                                className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all mb-1
+              ${selectedUsers.includes(user.id)
+                                                        ? "bg-blue-100 dark:bg-blue-900/30"
+                                                        : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    }
+            `}
+                                            >
+                                                <div>
+                                                    <p className="text-sm font-medium dark:text-white">
+                                                        {user.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {user.workingAs || "Employee"}
+                                                    </p>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+
+                                                {selectedUsers.includes(user.id) && (
+                                                    <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                                        <svg
+                                                            className="w-3 h-3 text-white"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M5 13l4 4L19 7"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
                         </div>
+
                     </div>
 
                     <div className="flex gap-3 mt-6">
