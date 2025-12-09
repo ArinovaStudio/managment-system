@@ -31,6 +31,11 @@ export async function POST(req: Request) {
       reason,
     } = body;
 
+    const user = await db.user.findUnique({ where: { employeeId: empId } });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const newLeave = await db.leaveReq.create({
       data: {
         empName,
@@ -40,6 +45,7 @@ export async function POST(req: Request) {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         reason,
+        userId: user.id,
       },
     });
 

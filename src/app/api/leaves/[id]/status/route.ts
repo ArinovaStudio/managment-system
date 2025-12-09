@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/client";
+import db from "@/lib/client";
 
 interface Params {
   params: { id: string };
@@ -7,6 +7,7 @@ interface Params {
 
 export async function PATCH(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
     const { status } = await req.json();
 
     if (!status) {
@@ -17,7 +18,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const updatedLeave = await db.leaveReq.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
 

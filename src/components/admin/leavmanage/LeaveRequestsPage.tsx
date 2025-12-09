@@ -39,8 +39,6 @@ export default function LeaveRequestsPage() {
             try {
                 const res = await fetch("/api/leaves", { method: "GET" });
                 const data = await res.json();
-                console.log("leav data", data);
-
                 setLeaveRequests(Array.isArray(data) ? data : data?.leaveRequests || data?.data || []);
 
             } catch (err) {

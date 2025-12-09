@@ -203,7 +203,7 @@ function AddLeaveForm({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-100"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -263,7 +263,7 @@ function AddLeaveForm({
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
                   required
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-900/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
                   <option value="">Select leave type</option>
                   <option value="Annual Leave">Annual Leave</option>
