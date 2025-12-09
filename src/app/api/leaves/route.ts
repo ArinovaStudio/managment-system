@@ -3,7 +3,12 @@ import db from "@/lib/client";
 
 export async function GET() {
   try {
-    const leaveRequests = await db.leaveReq.findMany();
+    const leaveRequests = await db.leaveReq.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: { user: true },
+    });
     return NextResponse.json(leaveRequests, { status: 200 });
   } catch (error) {
     return NextResponse.json(

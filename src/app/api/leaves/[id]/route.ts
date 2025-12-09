@@ -9,6 +9,7 @@ export async function GET(_: Request, { params }: Params) {
   try {
     const leave = await db.leaveReq.findUnique({
       where: { id: params.id },
+      
     });
 
     if (!leave) {
