@@ -91,7 +91,6 @@ function Clock() {
           const statsData = await statsResponse.json();
           if (statsData.hasActiveSession) {
             data.isLoggedIn = true;
-            console.log('Active session detected, setting user as logged in');
           }
         }
         

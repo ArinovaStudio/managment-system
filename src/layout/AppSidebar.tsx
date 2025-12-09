@@ -17,7 +17,8 @@ import {
   FileUp,
   Quote,
   User,
-  NotebookPen
+  NotebookPen,
+  Calendar
 } from "lucide-react"
 
 type NavItem = {
@@ -106,6 +107,11 @@ const othersItems: NavItem[] = [
     //   { name: "Line Chart", path: "/line-chart", pro: false },
     //   { name: "Bar Chart", path: "/bar-chart", pro: false },
     // ],
+  },
+  {
+    icon: <Calendar strokeWidth={1.5} />,
+    name: "Calanedar",
+    path: "/calender"
   },
 ];
 
