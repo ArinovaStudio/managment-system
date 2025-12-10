@@ -19,7 +19,11 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
             }
           }
         },
-        projectInfo: true
+        projectInfo: true,
+        latestUpdates: {
+          orderBy: { createdAt: "desc" },
+          take: 3
+        }
       }
     });
 
@@ -30,6 +34,32 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
       );
     }
 
+    // Dashboard data structure
+    const dashboardData = {
+      projectProgress: project.progress || 0,
+      latestUpdates: project.latestUpdates.length > 0 ? project.latestUpdates : [
+        {
+          id: 1,
+          title: `Project ${project.name} created`,
+          date: new Date(project.createdAt).toLocaleDateString()
+        }
+      ],
+      workDone: [],
+      projectInfo: {
+        projectName: project.name,
+        budget: project.projectInfo?.budget ? `$${project.projectInfo.budget}` : "N/A",
+        clientName: project.projectInfo?.clientName || "N/A",
+        type: project.projectInfo?.projectType || "N/A",
+        startDate: project.projectInfo?.startDate 
+          ? new Date(project.projectInfo.startDate).toLocaleDateString() 
+          : "N/A",
+        deadline: project.projectInfo?.deadline 
+          ? new Date(project.projectInfo.deadline).toLocaleDateString() 
+          : "N/A"
+      },
+      documents: []
+    };
+
     return Response.json({
       success: true,
       project: {
@@ -37,18 +67,15 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
         name: project.name,
         summary: project.summary,
         priority: project.priority,
-        status: project.status,            // <-- ADDED
+        status: project.status,
         progress: project.progress,
-        createdAt: project.createdAt,      // <-- ADDED
+        createdAt: project.createdAt,
         basicDetails: project.basicDetails,
-
-        // Members
         membersCount: project.members.length,
         members: project.members.map((m) => m.user),
-
-        // Info
         projectInfo: project.projectInfo
-      }
+      },
+      dashboardData
     });
   } catch (err) {
     return Response.json(

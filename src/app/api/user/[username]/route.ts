@@ -3,10 +3,10 @@ import db from '@/lib/client';
 
 export async function GET(
   req: Request,
-  { params }: { params: { username: string } }
+  { params }: { params: Promise<{ username: string }> }
 ) {
   try {
-    const rawUsername = params.username;
+    const { username: rawUsername } = await params;
 
     // In case there are encoded characters in the URL (spaces, etc.)
     const username = decodeURIComponent(rawUsername);
@@ -42,6 +42,17 @@ export async function GET(
                 progress: true,
                 status: true,
                 createdAt: true,
+                members: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
                 projectInfo: {
                   select: {
                     budget: true,
