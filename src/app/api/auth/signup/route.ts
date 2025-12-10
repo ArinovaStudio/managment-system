@@ -159,13 +159,19 @@ export async function GET() {
     featureRequests: true,
     createdMeetings: true,
     meetingAssigned: true,
+    leaveRequests: true,
 
     // ProjectMembers → include the Project model
     projectMembers: {
+  include: {
+    project: {
       include: {
-        project: true,
+        projectInfo: true,     // <-- ADD THIS
       },
     },
+  },
+},
+
   },
 
   orderBy: { createdAt: "desc" },

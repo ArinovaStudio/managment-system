@@ -45,7 +45,7 @@ const navItems: NavItem[] = [
     name: "Projects",
     path: "/project",
   },
-  
+
   {
     name: "Kanban Board",
     icon: <ListIcon />,
@@ -54,26 +54,26 @@ const navItems: NavItem[] = [
   },
   {
     name: "Well Being  Management",
-    icon: <HeartPulseIcon  strokeWidth={1.5} />,
+    icon: <HeartPulseIcon strokeWidth={1.5} />,
     path: "/well-being-management",
     role: "ADMIN"
-    },
-    {
-      icon: <Quote strokeWidth={1.5} />,
-      name: "Quotes",
-      path: "/quotes",
-      role: "ADMIN"
-    },
-    {
-      icon: <HeartPulseIcon strokeWidth={1.5} />,
-      name: "Well Being",
-      path: "/well-being",
-    },
-    {
-      icon: <CalendarPlus strokeWidth={1.5} />,
-      name: "Meetings",
-      path: "/meeting",
-    },
+  },
+  {
+    icon: <Quote strokeWidth={1.5} />,
+    name: "Quotes",
+    path: "/quotes",
+    role: "ADMIN"
+  },
+  {
+    icon: <HeartPulseIcon strokeWidth={1.5} />,
+    name: "Well Being",
+    path: "/well-being",
+  },
+  {
+    icon: <CalendarPlus strokeWidth={1.5} />,
+    name: "Meetings",
+    path: "/meeting",
+  },
 ];
 
 const othersItems: NavItem[] = [
@@ -404,6 +404,43 @@ const AppSidebar: React.FC = () => {
               {renderMenuItems(navItems, "main")}
             </div>
 
+            {/* CLIENT SECTION — Only for ADMIN */}
+            {userRole === "ADMIN" && (
+              <div>
+                <h2
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+                    }`}
+                >
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    "For Clients"
+                  ) : (
+                    <HorizontaLDots />
+                  )}
+                </h2>
+
+                {renderMenuItems(clientItems, "for client")}
+              </div>
+            )}
+
+            {/* ADMIN SECTION — Only for ADMIN */}
+            {userRole === "ADMIN" && (
+              <div>
+                <h2
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+                    }`}
+                >
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    "For Admin"
+                  ) : (
+                    <HorizontaLDots />
+                  )}
+                </h2>
+
+                {renderMenuItems(adminOnlyItem, "for Admin")}
+              </div>
+            )}
+
+
             {/* OTHERS MENU */}
             <div>
               <h2
@@ -419,36 +456,6 @@ const AppSidebar: React.FC = () => {
               {renderMenuItems(othersItems, "others")}
             </div>
 
-            {/* CLIENT SECTION */}
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-                  }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "For Clients"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-
-              {renderMenuItems(clientItems, "for client")}
-            </div>
-{/* admin */}
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-                  }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "For Admin"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-
-              {renderMenuItems(adminOnlyItem, "for Admin")}
-            </div>
           </div>
         </nav>
 

@@ -130,9 +130,15 @@ export default function LeaveRequestModule() {
         </div>
 
         {/* List */}
-        <div className="grid gap-4">
+        {/* <div className="grid gap-4">
           {requests.map((r) => renderCard(r))}
-        </div>
+        </div> */}
+
+<div className="grid gap-4">
+  {(user ? requests.filter((r) => r.empId === user.employeeId) : [])
+    .map((r) => renderCard(r))}
+</div>
+
       </div>
 
       {/* Form Modal */}
@@ -153,6 +159,198 @@ export default function LeaveRequestModule() {
 }
 
 /* --------------------- APPLY LEAVE FORM --------------------- */
+// function AddLeaveForm({
+//   isOpen,
+//   onClose,
+//   onSubmit,
+//   user,
+// }: {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onSubmit: (req: any) => void;
+//   user: any;
+// }) {
+//   const [leaveType, setLeaveType] = useState("");
+//   const [startDate, setStartDate] = useState("");
+//   const [endDate, setEndDate] = useState("");
+//   const [reason, setReason] = useState("");
+//   const [department, setDepartment] = useState("");
+
+//   const employeeName = user?.name;
+//   const employeeId = user?.employeeId;
+
+//   const handleSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+    
+//     if (!employeeName || !employeeId) {
+//       alert('User data not loaded. Please wait and try again.');
+//       return;
+//     }
+
+//     const newReq = {
+//       empName: employeeName,
+//       empId: employeeId,
+//       leaveType,
+//       startDate,
+//       endDate,
+//       reason,
+//       department: department || user?.department || 'Not specified',
+//     };
+//     onSubmit(newReq);
+//     onClose();
+//     setLeaveType("");
+//     setStartDate("");
+//     setEndDate("");
+//     setReason("");
+//     setDepartment("");
+//   };
+
+//   return (
+//     <AnimatePresence>
+//       {isOpen && (
+//         <motion.div
+//           className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-100"
+//           initial={{ opacity: 0 }}
+//           animate={{ opacity: 1 }}
+//           exit={{ opacity: 0 }}
+//         >
+//           <motion.div
+//             initial={{ scale: 0.9, opacity: 0 }}
+//             animate={{ scale: 1, opacity: 1 }}
+//             exit={{ scale: 0.9, opacity: 0 }}
+//             transition={{ duration: 0.2 }}
+//             className="bg-white dark:bg-neutral-900 rounded-lg p-6 w-[90%] sm:w-[500px] shadow-lg border border-gray-200 dark:border-gray-700"
+//           >
+//             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+//               Apply for Leave
+//             </h3>
+//             <form onSubmit={handleSubmit} className="space-y-4">
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+//                     Name
+//                   </label>
+//                   <input
+//                     type="text"
+//                     value={employeeName}
+//                     disabled
+//                     className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
+//                   />
+//                 </div>
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+//                     Employee ID
+//                   </label>
+//                   <input
+//                     type="text"
+//                     value={employeeId}
+//                     disabled
+//                     className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
+//                   />
+//                 </div>
+//               </div>
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+//                   Department
+//                 </label>
+//                 <input
+//                   type="text"
+//                   value={department}
+//                   onChange={(e) => setDepartment(e.target.value)}
+//                   className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 dark:text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
+//                   placeholder="Your department"
+//                 />
+//               </div>
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+//                   Leave Type *
+//                 </label>
+//                 <select
+//                   value={leaveType}
+//                   onChange={(e) => setLeaveType(e.target.value)}
+//                   required
+//                   className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-900/40 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+//                 >
+//                   <option value="">Select leave type</option>
+//                   <option value="Annual Leave">Annual Leave</option>
+//                   <option value="Sick Leave">Sick Leave</option>
+//                   <option value="Personal Leave">Personal Leave</option>
+//                   <option value="Maternity / Paternity">
+//                     Maternity / Paternity
+//                   </option>
+//                   <option value="Bereavement Leave">Bereavement Leave</option>
+//                   <option value="Unpaid Leave">Unpaid Leave</option>
+//                 </select>
+//               </div>
+
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
+//                     Start Date *
+//                   </label>
+//                   <input
+//                     type="date"
+//                     value={startDate}
+//                     onChange={(e) => setStartDate(e.target.value)}
+//                     required
+//                     className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
+//                   />
+//                 </div>
+//                 <div>
+//                   <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
+//                     End Date *
+//                   </label>
+//                   <input
+//                     type="date"
+//                     value={endDate}
+//                     onChange={(e) => setEndDate(e.target.value)}
+//                     required
+//                     className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
+//                   />
+//                 </div>
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
+//                   Reason / Comments *
+//                 </label>
+//                 <textarea
+//                   value={reason}
+//                   onChange={(e) => setReason(e.target.value)}
+//                   rows={3}
+//                   required
+//                   className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 dark:text-gray-200"
+//                   placeholder="Explain your reason for leave"
+//                 />
+//               </div>
+
+
+
+//               <div className="flex justify-end gap-2 pt-4">
+//                 <button
+//                   type="button"
+//                   onClick={onClose}
+//                   className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:text-white rounded-md hover:bg-gray-100 dark:hover:bg-white/10 transition"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <motion.button
+//                   whileHover={{ scale: 1.02 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   type="submit"
+//                   className="px-5 py-2.5 rounded-md bg-blue-400 text-white hover:bg-blue-500 transition"
+//                 >
+//                   Submit Request
+//                 </motion.button>
+//               </div>
+//             </form>
+//           </motion.div>
+//         </motion.div>
+//       )}
+//     </AnimatePresence>
+//   );
+// }
+
 function AddLeaveForm({
   isOpen,
   onClose,
@@ -165,38 +363,49 @@ function AddLeaveForm({
   user: any;
 }) {
   const [leaveType, setLeaveType] = useState("");
+  const [customLeaveType, setCustomLeaveType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [department, setDepartment] = useState("");
 
+  // TODAY DATE (safe version)
+  const today = new Date().toLocaleDateString("en-CA");
+
+  // Hidden auto-filled values
   const employeeName = user?.name;
   const employeeId = user?.employeeId;
+  const departmentValue = user?.department || "Not specified";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!employeeName || !employeeId) {
-      alert('User data not loaded. Please wait and try again.');
+      alert("User data not loaded. Please wait and try again.");
       return;
     }
+
+    const finalLeaveType =
+      leaveType === "Other" ? customLeaveType : leaveType;
 
     const newReq = {
       empName: employeeName,
       empId: employeeId,
-      leaveType,
+      leaveType: finalLeaveType,
       startDate,
       endDate,
       reason,
-      department: department || user?.department || 'Not specified',
+      department: departmentValue,
     };
+
     onSubmit(newReq);
     onClose();
+
+    // Reset fields
     setLeaveType("");
+    setCustomLeaveType("");
     setStartDate("");
     setEndDate("");
     setReason("");
-    setDepartment("");
   };
 
   return (
@@ -218,43 +427,10 @@ function AddLeaveForm({
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
               Apply for Leave
             </h3>
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={employeeName}
-                    disabled
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                    Employee ID
-                  </label>
-                  <input
-                    type="text"
-                    value={employeeId}
-                    disabled
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-white/[0.05] text-gray-600 dark:text-gray-400 cursor-not-allowed"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                  Department
-                </label>
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 dark:text-white bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  placeholder="Your department"
-                />
-              </div>
+
+              {/* LEAVE TYPE */}
               <div>
                 <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                   Leave Type *
@@ -269,14 +445,31 @@ function AddLeaveForm({
                   <option value="Annual Leave">Annual Leave</option>
                   <option value="Sick Leave">Sick Leave</option>
                   <option value="Personal Leave">Personal Leave</option>
-                  <option value="Maternity / Paternity">
-                    Maternity / Paternity
-                  </option>
+                  <option value="Maternity / Paternity">Maternity / Paternity</option>
                   <option value="Bereavement Leave">Bereavement Leave</option>
                   <option value="Unpaid Leave">Unpaid Leave</option>
+                  <option value="Other">Other (Specify)</option>
                 </select>
               </div>
 
+              {/* CUSTOM LEAVE TYPE FIELD */}
+              {leaveType === "Other" && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Enter Custom Leave Type *
+                  </label>
+                  <input
+                    type="text"
+                    value={customLeaveType}
+                    onChange={(e) => setCustomLeaveType(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Example: Half Day, Emergency Leave"
+                  />
+                </div>
+              )}
+
+              {/* START & END DATE */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
@@ -287,9 +480,11 @@ function AddLeaveForm({
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
+                    min={today}
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
                     End Date *
@@ -299,11 +494,13 @@ function AddLeaveForm({
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 dark:text-white"
+                    min={startDate || today}
+                    className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
               </div>
 
+              {/* REASON */}
               <div>
                 <label className="block text-sm font-medium text-gray-600 dark:text-white mb-1">
                   Reason / Comments *
@@ -313,13 +510,12 @@ function AddLeaveForm({
                   onChange={(e) => setReason(e.target.value)}
                   rows={3}
                   required
-                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 dark:text-gray-200"
+                  className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-700 bg-transparent dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   placeholder="Explain your reason for leave"
                 />
               </div>
 
-
-
+              {/* FOOTER BUTTONS */}
               <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="button"
@@ -328,6 +524,7 @@ function AddLeaveForm({
                 >
                   Cancel
                 </button>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -344,6 +541,8 @@ function AddLeaveForm({
     </AnimatePresence>
   );
 }
+
+
 
 /* --------------------- CARD DETAILS MODAL --------------------- */
 function CardDetailsModal({

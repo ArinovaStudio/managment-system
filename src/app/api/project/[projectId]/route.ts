@@ -37,10 +37,16 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
         name: project.name,
         summary: project.summary,
         priority: project.priority,
-        basicDetails: project.basicDetails,
+        status: project.status,            // <-- ADDED
         progress: project.progress,
+        createdAt: project.createdAt,      // <-- ADDED
+        basicDetails: project.basicDetails,
+
+        // Members
         membersCount: project.members.length,
         members: project.members.map((m) => m.user),
+
+        // Info
         projectInfo: project.projectInfo
       }
     });

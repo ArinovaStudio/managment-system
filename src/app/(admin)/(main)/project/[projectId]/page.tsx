@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-import ProjectTabs from "@/components/project/ProjectTabs";
+import ProjectTabs from "@/components/project/projectTabs";
 import TabContent from "@/components/project/TabContent";
 
 export default function ProjectIdPage() {

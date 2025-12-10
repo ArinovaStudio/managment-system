@@ -33,6 +33,7 @@ model User {
   meetingRequests MeetingRequest[]
   milestones      Milestone[]
   projectMembers  ProjectMember[]
+  
   leaves          UserLeaves?
   timezone        UserTimezone?
   workHours       WorkHours[]
@@ -223,6 +224,7 @@ model Project {
   tasks           Task[]
   featureRequests FeatureRequest[]
   projectInfo     ProjectInfo?
+
 }
 
 model ProjectMember {
@@ -381,23 +383,23 @@ model MeetingAttendee {
 }
 
 model SharedQuote {
-  id        String   @id @default(cuid())
-  quote     String
-  author    String
-  userId    String
-  isApproved Boolean @default(false)
-  isSelected Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  quote      String
+  author     String
+  userId     String
+  isApproved Boolean  @default(false)
+  isSelected Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model CalendarEvent {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String
   date      DateTime
   type      EventType
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum EventType {
