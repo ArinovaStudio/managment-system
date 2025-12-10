@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
-    
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: "No token found" },
@@ -15,7 +15,7 @@ export async function GET() {
       );
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
     
     const user = await db.user.findUnique({
       where: { id: decoded.userId },
@@ -23,8 +23,7 @@ export async function GET() {
         id: true,
         name: true,
         email: true,
-        role: true,
-        employeeId: true
+        role: true
       }
     });
 
@@ -39,8 +38,7 @@ export async function GET() {
       success: true,
       user
     });
-
-  } catch (err: any) {
+  } catch (error) {
     return NextResponse.json(
       { success: false, message: "Invalid token" },
       { status: 401 }
