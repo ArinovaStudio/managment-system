@@ -60,7 +60,7 @@ export default function UserProfilePage() {
           alt={user.name}
           width={96}
           height={96}
-          className="rounded-full object-cover"
+          className="rounded-full h-30 w-30 object-cover"
         />
 
         <div>
@@ -144,7 +144,7 @@ export default function UserProfilePage() {
                           alt={member.user.name}
                           width={28}
                           height={28}
-                          className="rounded-full border object-cover"
+                          className="rounded-full h-8 w-8 border object-cover"
                         />
                       ))}
                       {members.length > 5 && (

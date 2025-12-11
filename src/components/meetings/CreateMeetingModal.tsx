@@ -27,7 +27,7 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        setUsers(data.users.filter((u: any) => u.role === 'EMPLOYEE'));
+                        setUsers(data.users);
                     }
                 })
         }

@@ -135,9 +135,21 @@ export default function LeaveRequestModule() {
         </div> */}
 
 <div className="grid gap-4">
-  {(user ? requests.filter((r) => r.empId === user.employeeId) : [])
-    .map((r) => renderCard(r))}
+
+  {user ? (
+    (() => {
+      const userLeaves = requests.filter((r) => r.empId === user.employeeId);
+
+      return userLeaves.length > 0 ? (
+        userLeaves.map((r) => renderCard(r))
+      ) : (
+        <p className="text-gray-500 text-sm">No leave requests found.</p>
+      );
+    })()
+  ) : null}
+
 </div>
+
 
       </div>
 
