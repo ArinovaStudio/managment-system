@@ -17,9 +17,12 @@ export async function POST(req: Request) {
     }
 
     // Create JWT token
-    const token = createToken({ userId: user.id, email: user.email });
+    const token = createToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role, // IMPORTANT
+    });
 
-    // Create response with token cookie
     const response = NextResponse.json({
       message: "Login successful",
       user: {
@@ -31,12 +34,26 @@ export async function POST(req: Request) {
       },
     });
 
-    // Set token as httpOnly cookie
-    response.cookies.set('token', token, {
+    // -----------------------------
+    // SET TOKEN COOKIE (secure)
+    // -----------------------------
+    response.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    // -----------------------------
+    // SET ROLE COOKIE (MIDDLEWARE NEEDS THIS)
+    // -----------------------------
+    response.cookies.set("role", user.role, {
+      httpOnly: false, // MUST be false or middleware can't read it
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
@@ -47,4 +64,8 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ message: "Signin API is working" });
 }
