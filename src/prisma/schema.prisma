@@ -41,6 +41,7 @@ model User {
   createdMeetings Meeting[]         @relation("CreatedMeetings")
   meetingAssigned MeetingAttendee[]
   leaveRequests   leaveReq[]
+  todoTasks       TodoTask[]
 }
 
 model Docs {
@@ -416,4 +417,31 @@ model CalendarEvent {
 enum EventType {
   HOLIDAY
   WORKDAY
+}
+
+model PerformanceRating {
+  id            String   @id @default(cuid())
+  employeeId    String
+  newLearnings  Int      @default(5)
+  speed         Int      @default(5)
+  workQuality   Int      @default(5)
+  leaves        Int      @default(5)
+  communication Int      @default(5)
+  feedback      Int      @default(5)
+  ratedBy       String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model TodoTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completed])
 }

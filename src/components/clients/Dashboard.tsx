@@ -60,6 +60,7 @@ export default function ClientDashboard({ data }) {
   const [userRole, setUserRole] = useState(null);
   const [showAddUpdate, setShowAddUpdate] = useState(false);
   const [newUpdate, setNewUpdate] = useState("");
+  const [feedbacks, setFeedbacks] = useState([]);
 
   useEffect(() => {
     // Get user role from API
@@ -68,6 +69,17 @@ export default function ClientDashboard({ data }) {
       .then(data => {
         if (data.success) {
           setUserRole(data.user.role);
+          // Fetch feedbacks for employees
+          if (data.user.role === "EMPLOYEE") {
+            fetch("/api/feedbacks?userOnly=true")
+              .then(res => res.json())
+              .then(result => {
+                if (result.feedbacks) {
+                  setFeedbacks(result.feedbacks);
+                }
+              })
+              .catch(err => console.error("Failed to get feedbacks:", err));
+          }
         }
       })
       .catch(err => console.error("Failed to get user:", err));
@@ -247,6 +259,41 @@ export default function ClientDashboard({ data }) {
           ))}
         </div>
       </CardBox>
+
+      {/* Employee Feedbacks */}
+      {userRole === "EMPLOYEE" && (
+        <CardBox title="My Feedbacks">
+          {feedbacks.length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">No feedbacks received yet</p>
+          ) : (
+            <div className="grid gap-4">
+              {feedbacks.slice(0, 5).map((fb) => (
+                <div key={fb.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-white/[0.05]">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {fb.type}
+                      </span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{fb.byName}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">({fb.byEmpId})</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={`text-lg ${i < fb.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{fb.desc}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardBox>
+      )}
     </div>
   );
 }

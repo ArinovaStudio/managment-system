@@ -6,8 +6,8 @@ import { ApexOptions } from "apexcharts";
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function BarChartOne({ skillsData }: { skillsData: any[] }) {
-  const categories = skillsData.map(item => item.month);
-  const values = skillsData.map(item => item.skills);
+  const categories = skillsData.map(item => item.name);
+  const values = skillsData.map(item => item.value);
 
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -39,13 +39,13 @@ export default function BarChartOne({ skillsData }: { skillsData: any[] }) {
     fill: { opacity: 1 },
     tooltip: {
       x: { show: true },
-      y: { formatter: (val: number) => `${val}%` },
+      y: { formatter: (val: number) => `${val}/10` },
     },
   };
 
   const series = [
     {
-      name: "Skill Score",
+      name: "Rating",
       data: values,
     },
   ];

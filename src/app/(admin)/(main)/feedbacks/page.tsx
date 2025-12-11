@@ -17,6 +17,7 @@ export default function FeedbackForm() {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'view' | 'give'>('view');
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [employeeFeedbacks, setEmployeeFeedbacks] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -29,6 +30,8 @@ export default function FeedbackForm() {
             setIsAdmin(true);
             await fetchEmployees();
             await fetchAllFeedbacks();
+          } else {
+            await fetchEmployeeFeedbacks();
           }
         }
       } catch (error) {
@@ -63,6 +66,18 @@ export default function FeedbackForm() {
       }
     } catch (error) {
       console.error('Failed to fetch employees:', error);
+    }
+  };
+
+  const fetchEmployeeFeedbacks = async () => {
+    try {
+      const response = await fetch('/api/feedbacks?userOnly=true', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setEmployeeFeedbacks(data.feedbacks || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch employee feedbacks:', error);
     }
   };
 
@@ -122,26 +137,21 @@ export default function FeedbackForm() {
           {isAdmin ? 'Send Feedback to Employee' : 'Employee Feedback'}
         </h2>
 
-        {/* Anonymous toggle - only for employees */}
+        {/* View/Give toggle for employees */}
         {!isAdmin && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Anonymous
-            </span>
-            <div
-              onClick={() => setAnonymous((prev) => !prev)}
-              className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                anonymous ? "bg-gray-700" : "bg-gray-300"
-              }`}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setViewMode('view')}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
             >
-              <motion.div
-                layout
-                transition={{ type: "spring", stiffness: 700, damping: 30 }}
-                className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
-                  anonymous ? "translate-x-6 bg-white" : "translate-x-0 bg-gray-700"
-                }`}
-              />
-            </div>
+              My Feedbacks
+            </button>
+            <button 
+              onClick={() => setViewMode('give')}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'give' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            >
+              Give Feedback
+            </button>
           </div>
         )}
         
@@ -163,14 +173,18 @@ export default function FeedbackForm() {
         )}
       </div>
 
-      {isAdmin && viewMode === 'view' ? (
+      {viewMode === 'view' ? (
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">All Feedbacks</h3>
-          {feedbacks.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">No feedbacks yet</p>
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+            {isAdmin ? 'All Feedbacks' : 'My Feedbacks'}
+          </h3>
+          {(isAdmin ? feedbacks : employeeFeedbacks).length === 0 ? (
+            <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+              {isAdmin ? 'No feedbacks yet' : 'No feedbacks received yet'}
+            </p>
           ) : (
             <div className="grid gap-4">
-              {feedbacks.map((fb) => (
+              {(isAdmin ? feedbacks : employeeFeedbacks).map((fb) => (
                 <div key={fb.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-white/[0.05]">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -197,6 +211,32 @@ export default function FeedbackForm() {
           )}
         </div>
       ) : (
+        <>
+        {/* Anonymous toggle - only for employees in give mode */}
+        {!isAdmin && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Anonymous
+              </span>
+              <div
+                onClick={() => setAnonymous((prev) => !prev)}
+                className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
+                  anonymous ? "bg-gray-700" : "bg-gray-300"
+                }`}
+              >
+                <motion.div
+                  layout
+                  transition={{ type: "spring", stiffness: 700, damping: 30 }}
+                  className={`w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
+                    anonymous ? "translate-x-6 bg-white" : "translate-x-0 bg-gray-700"
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-6 max-w-2xl mx-auto"
@@ -374,6 +414,7 @@ export default function FeedbackForm() {
           </motion.button>
         </div>
       </form>
+      </>
       )}
       </div>
   );

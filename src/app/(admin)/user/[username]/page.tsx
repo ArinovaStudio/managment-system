@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Users, Calendar } from "lucide-react";
+import { Users, Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import dynamic from 'next/dynamic';
+
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 // Priority Color Helper
 function getPriorityColor(priority: string) {
@@ -25,9 +28,14 @@ export default function UserProfilePage() {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('projects');
 
   useEffect(() => {
-    if (username) loadUser();
+    if (username) {
+      loadUser();
+      loadPerformanceData();
+    }
   }, [username]);
 
   async function loadUser() {
@@ -42,6 +50,16 @@ export default function UserProfilePage() {
       console.error("Error loading user:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadPerformanceData() {
+    try {
+      const res = await fetch(`/api/performace?employeeId=${username}`);
+      const data = await res.json();
+      setPerformanceData(data.ratings || []);
+    } catch (err) {
+      console.error("Error loading performance data:", err);
     }
   }
 
@@ -72,14 +90,36 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* SECTION HEADER */}
-      <h2 className="text-xl font-semibold mb-4">Assigned Projects</h2>
+      {/* TABS */}
+      <div className="flex gap-4 mb-6 border-b">
+        <button
+          onClick={() => setActiveTab('projects')}
+          className={`pb-2 px-1 ${activeTab === 'projects' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+        >
+          <div className="flex items-center gap-2">
+            <Users size={16} />
+            Projects
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`pb-2 px-1 ${activeTab === 'analytics' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+        >
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} />
+            Performance Analytics
+          </div>
+        </button>
+      </div>
 
-      {/* PROJECT GRID */}
-      {projects.length === 0 ? (
-        <p className="text-gray-500">No assigned projects</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* CONTENT */}
+      {activeTab === 'projects' ? (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Assigned Projects</h2>
+          {projects.length === 0 ? (
+            <p className="text-gray-500">No assigned projects</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
           {projects.map((pm: any) => {
             const project = pm.project;
@@ -167,6 +207,107 @@ export default function UserProfilePage() {
               </Link>
             );
           })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Performance Analytics</h2>
+          {performanceData.length === 0 ? (
+            <div className="text-center py-12">
+              <BarChart3 size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">No performance data available yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Line Chart - Performance Over Time */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+                <h3 className="text-lg font-semibold mb-4">Performance Trends</h3>
+                <Chart
+                  options={{
+                    chart: { type: 'line', toolbar: { show: false } },
+                    xaxis: {
+                      categories: performanceData.map((_, i) => `Rating ${i + 1}`),
+                      labels: { style: { colors: '#6B7280' } }
+                    },
+                    yaxis: {
+                      min: 0,
+                      max: 10,
+                      labels: { style: { colors: '#6B7280' } }
+                    },
+                    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'],
+                    stroke: { curve: 'smooth', width: 2 },
+                    grid: { borderColor: '#E5E7EB' },
+                    legend: { position: 'bottom' }
+                  }}
+                  series={[
+                    { name: 'New Learnings', data: performanceData.map(d => d.newLearnings) },
+                    { name: 'Speed', data: performanceData.map(d => d.speed) },
+                    { name: 'Work Quality', data: performanceData.map(d => d.workQuality) },
+                    { name: 'Attendance', data: performanceData.map(d => d.leaves) },
+                    { name: 'Communication', data: performanceData.map(d => d.communication) },
+                    { name: 'Feedback Reception', data: performanceData.map(d => d.feedback) }
+                  ]}
+                  type="line"
+                  height={350}
+                />
+              </div>
+
+              {/* Radial Chart - Latest Performance */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border p-6">
+                <h3 className="text-lg font-semibold mb-4">Latest Performance Scores</h3>
+                {performanceData.length > 0 && (
+                  <Chart
+                    options={{
+                      chart: { type: 'radialBar' },
+                      plotOptions: {
+                        radialBar: {
+                          dataLabels: {
+                            name: { fontSize: '12px' },
+                            value: { fontSize: '14px', formatter: (val: number) => `${val}%` }
+                          }
+                        }
+                      },
+                      labels: ['New Learnings', 'Speed', 'Work Quality', 'Attendance', 'Communication', 'Feedback'],
+                      colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
+                    }}
+                    series={[
+                      (performanceData[0]?.newLearnings || 0) * 10,
+                      (performanceData[0]?.speed || 0) * 10,
+                      (performanceData[0]?.workQuality || 0) * 10,
+                      (performanceData[0]?.leaves || 0) * 10,
+                      (performanceData[0]?.communication || 0) * 10,
+                      (performanceData[0]?.feedback || 0) * 10
+                    ]}
+                    type="radialBar"
+                    height={350}
+                  />
+                )}
+              </div>
+
+              {/* Performance Summary Cards */}
+              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {performanceData.length > 0 && [
+                  { key: 'newLearnings', label: 'New Learnings', color: 'bg-blue-500' },
+                  { key: 'speed', label: 'Speed', color: 'bg-green-500' },
+                  { key: 'workQuality', label: 'Work Quality', color: 'bg-yellow-500' },
+                  { key: 'leaves', label: 'Attendance', color: 'bg-red-500' },
+                  { key: 'communication', label: 'Communication', color: 'bg-purple-500' },
+                  { key: 'feedback', label: 'Feedback', color: 'bg-cyan-500' }
+                ].map(metric => (
+                  <div key={metric.key} className="bg-white dark:bg-gray-800 rounded-lg border p-4 text-center">
+                    <div className={`w-12 h-12 ${metric.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                      <span className="text-white font-bold">
+                        {performanceData[0]?.[metric.key] || 0}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium">{metric.label}</p>
+                    <p className="text-xs text-gray-500">Latest Score</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -12,50 +12,64 @@ import React, { useEffect, useState } from "react";
 
 export default function EmployeeDashboard() {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [performanceData, setPerformanceData] = useState<any>(null);
+
+  const fetchData = async () => {
+    try {
+      const [analyticsRes, performanceRes] = await Promise.all([
+        fetch('/api/analytics', { credentials: 'include' }),
+        fetch('/api/performace', { credentials: 'include' })
+      ]);
+
+      if (analyticsRes.ok) {
+        const data = await analyticsRes.json();
+        setAnalyticsData(data.analytics);
+      }
+
+      if (performanceRes.ok) {
+        const data = await performanceRes.json();
+        setPerformanceData(data);
+      } else {
+      }
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    }
+  };
 
   useEffect(() => {
-    async function fetchAnalyticsData() {
-      try {
-        const response = await fetch('/api/analytics', { credentials: 'include' });
-        if (response.ok) {
-          const data = await response.json();
-          setAnalyticsData(data.analytics);
-        }
-      } catch (error) {
-        console.error('Failed to fetch analytics data:', error);
-      }
-    }
-    fetchAnalyticsData();
+    fetchData();
   }, []);
 
   return (
-    <div className="grid grid-cols-12 gap-4 md:gap-6">
-      <div className="col-span-12 md:col-span-5">
-        <EmployeeProfile />
-      </div>
-      <div className="col-span-12 md:col-span-7">
-        <QuoteOfTheDay />
-      </div>
-      <div className="col-span-12 md:col-span-7">
-        <ProjectStats analyticsData={analyticsData} />
-      </div>
-      <div className="col-span-12 md:col-span-5">
-        <StatusCard />
-      </div>
-      <div className="col-span-12 md:col-span-7">
-        <SkillsDevelopment analyticsData={analyticsData} />
-      </div>
-      <div className="col-span-12 md:col-span-5">
-        <PerformanceRadial analyticsData={analyticsData} />
-      </div>
-      <div className="col-span-12 md:col-span-4">
-        <Feedback />
-      </div>
-      <div className="col-span-12 md:col-span-4">
-        <UpcomingMeetings />
-      </div>
-      <div className="col-span-12 md:col-span-4">
-        <ToDoTask analyticsData={analyticsData} />
+    <div>
+      <div className="grid grid-cols-12 gap-4 md:gap-6">
+        <div className="col-span-12 md:col-span-5">
+          <EmployeeProfile />
+        </div>
+        <div className="col-span-12 md:col-span-7">
+          <QuoteOfTheDay />
+        </div>
+        <div className="col-span-12 md:col-span-7">
+          <ProjectStats analyticsData={analyticsData} />
+        </div>
+        <div className="col-span-12 md:col-span-5">
+          <StatusCard />
+        </div>
+        <div className="col-span-12 md:col-span-7">
+          <SkillsDevelopment performanceData={performanceData} />
+        </div>
+        <div className="col-span-12 md:col-span-5">
+          <PerformanceRadial performanceData={performanceData} />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <Feedback />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <UpcomingMeetings />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <ToDoTask />
+        </div>
       </div>
     </div>
   );

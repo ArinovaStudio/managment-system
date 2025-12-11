@@ -177,7 +177,6 @@ export async function GET() {
   orderBy: { createdAt: "desc" },
 });
 
-// console.log(users)
     return NextResponse.json({ users }, { status: 200 });
     
     

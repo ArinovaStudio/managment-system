@@ -148,6 +148,11 @@ const adminOnlyItem: NavItem[] = [
     name: "Leave Management",
     icon: <NotebookPen strokeWidth={1.5} />,
     path: "/leavemanage",
+  },
+  {
+    name: "User Performance",
+    icon: <GraduationCapIcon strokeWidth={1.5} />,
+    path: "/user-performance",
   }
 ];
 
