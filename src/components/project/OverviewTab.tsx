@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { ArrowUp, User, X } from "lucide-react";
 
+import toast, { Toaster } from "react-hot-toast";
+
+
 type Member = {
   id: string;
   name: string;
@@ -138,7 +141,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
 
   const handleProgressUpdate = async () => {
     if (newProgress < 0 || newProgress > 100) {
-      alert('Progress must be between 0 and 100');
+      toast.error('Progress must be between 0 and 100');
       return;
     }
 
@@ -151,15 +154,15 @@ export default function OverviewTab({ project }: OverviewTabProps) {
       });
 
       if (response.ok) {
-        alert('Progress updated successfully');
+        toast.success('Progress updated successfully');
         setShowProgressModal(false);
         setCurrentProgress(newProgress);
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to update progress');
+        toast.error(data.error || 'Failed to update progress');
       }
     } catch (error) {
-      alert('Failed to update progress');
+      toast.error('Failed to update progress');
     } finally {
       setUpdating(false);
     }

@@ -10,9 +10,11 @@ import {
   ClipboardList,
   Plus,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
+/* -------------------------
+   ProgressGauge (local)
+--------------------------*/
 const ProgressGauge = ({ progress = 0 }: { progress?: number }) => {
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
@@ -45,48 +47,80 @@ const ProgressGauge = ({ progress = 0 }: { progress?: number }) => {
       </svg>
 
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold">
-          {progress}%
-        </span>
+        <span className="text-2xl font-bold">{progress}%</span>
       </div>
     </div>
   );
 };
 
-
-export default function ClientDashboard({ data}) {
-  const { projectId } = useParams();
-  const [dashboard, setDashboard] = useState(data);
-  const [userRole, setUserRole] = useState(null);
+/* ------------------------------------------
+   ClientDashboardV2
+   - Accepts `user` returned by your backend:
+     { id, name, ..., projectMembers: [{ project: { ... }}, ...] }
+------------------------------------------- */
+export default function ClientDashboardV2({ user }: { user: any }) {
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [showAddUpdate, setShowAddUpdate] = useState(false);
   const [newUpdate, setNewUpdate] = useState("");
-  const [feedbacks, setFeedbacks] = useState([]);
 
+  // Build projects array from user.projectMembers safely (memoize)
+  const projects = useMemo(() => {
+    if (!user?.projectMembers) return [];
+
+    return user.projectMembers.map((pm: any) => {
+      const p = pm.project || {};
+      const info = p.projectInfo || null;
+
+      return {
+        id: p.id,
+        name: p.name || "Untitled",
+        summary: p.summary || "",
+        progress: typeof p.progress === "number" ? p.progress : 0,
+        // dashboard-specific pieces (safe defaults)
+        dashboardData: {
+          projectProgress: typeof p.progress === "number" ? p.progress : 0,
+          latestUpdates: Array.isArray(p.latestUpdates) ? p.latestUpdates : [],
+          workDone: Array.isArray(p.workDone) ? p.workDone : [],
+          documents: Array.isArray(p.documents) ? p.documents : [],
+          projectInfo: {
+            projectName: info?.projectName ?? p.name ?? "Untitled",
+            clientName: info?.clientName ?? "Not provided",
+            budget: info?.budget ?? "N/A",
+            type: info?.projectType ?? "N/A",
+            startDate: info?.startDate ? new Date(info.startDate).toDateString() : "N/A",
+            deadline: info?.deadline ? new Date(info.deadline).toDateString() : "N/A",
+          },
+        },
+      };
+    });
+  }, [user]);
+
+  // Selected project state
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+
+  // initialize selectedProject when projects array is available/changes
   useEffect(() => {
-    // Get user role from API
+    if (projects.length > 0) setSelectedProject(projects[0]);
+    else setSelectedProject(null);
+  }, [projects]);
+
+  // fetch role (optional) — keeps same logic you had
+  useEffect(() => {
     fetch("/api/auth/me")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data.user?.role) {
           setUserRole(data.user.role);
-          // Fetch feedbacks for employees
-          if (data.user.role === "EMPLOYEE") {
-            fetch("/api/feedbacks?userOnly=true")
-              .then(res => res.json())
-              .then(result => {
-                if (result.feedbacks) {
-                  setFeedbacks(result.feedbacks);
-                }
-              })
-              .catch(err => console.error("Failed to get feedbacks:", err));
-          }
         }
       })
-      .catch(err => console.error("Failed to get user:", err));
+      .catch(() => {
+        setUserRole(null);
+      });
   }, []);
 
+  // Add update (uses selectedProject.id)
   const handleAddUpdate = async () => {
-    if (!newUpdate.trim()) return;
+    if (!newUpdate.trim() || !selectedProject) return;
 
     try {
       const userRes = await fetch("/api/auth/me");
@@ -97,30 +131,70 @@ export default function ClientDashboard({ data}) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newUpdate,
-          projectId,
-          createdBy: userData.user?.name || "Admin"
-        })
+          projectId: selectedProject.id,
+          createdBy: userData.user?.name || "Admin",
+        }),
       });
 
       if (res.ok) {
         const result = await res.json();
-        setDashboard(prev => ({
-          ...prev,
-          latestUpdates: [result.update, ...prev.latestUpdates].slice(0, 3)
-        }));
+        // update local copy of selectedProject's latestUpdates safely
+        setSelectedProject((prev: any) => {
+          if (!prev) return prev;
+          const prevDashboard = prev.dashboardData || {};
+          return {
+            ...prev,
+            dashboardData: {
+              ...prevDashboard,
+              latestUpdates: [(result.update || {}), ...(prevDashboard.latestUpdates || [])].slice(0, 3),
+            },
+          };
+        });
         setNewUpdate("");
         setShowAddUpdate(false);
+      } else {
+        console.error("Add update failed", await res.text());
       }
-    } catch (error) {
-      console.error("Failed to add update:", error);
+    } catch (err) {
+      console.error("Failed to add update:", err);
     }
   };
+
+  if (!selectedProject) return <div className="p-6">No Projects Found</div>;
+
+  const dashboard = selectedProject.dashboardData || {
+    projectProgress: 0,
+    latestUpdates: [],
+    workDone: [],
+    documents: [],
+    projectInfo: {},
+  };
+
   return (
     <div className="space-y-6">
-      {/* Page Title */}
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-        Dashboard Overview
-      </h1>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Dashboard Overview
+        </h1>
+
+        {projects.length > 1 && (
+          <select
+            value={selectedProject.id}
+            onChange={(e) => {
+              const proj = projects.find((p: any) => p.id === e.target.value);
+              if (proj) setSelectedProject(proj);
+            }}
+            className="px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-white"
+          >
+            {projects.map((p: any) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {/* Top Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -132,22 +206,22 @@ export default function ClientDashboard({ data}) {
         />
 
         <DashboardCard
-          title="Latest Update"
-          value={dashboard.latestUpdates[0].title}
-          icon={<Clock className="w-6 h-6" />}
+          title="Client Name"
+          value={dashboard.projectInfo.clientName}
+          icon={<User className="w-6 h-6" />}
           color="from-indigo-500 to-indigo-700"
         />
 
         <DashboardCard
-          title="Tasks Completed"
-          value={dashboard.workDone.length}
-          icon={<ClipboardList className="w-6 h-6" />}
+          title="Project Type"
+          value={dashboard.projectInfo.type}
+          icon={<FolderKanban className="w-6 h-6" />}
           color="from-emerald-500 to-emerald-700"
         />
 
         <DashboardCard
-          title="Documents"
-          value={dashboard.documents.length}
+          title="Budget"
+          value={dashboard.projectInfo.budget}
           icon={<FileText className="w-6 h-6" />}
           color="from-rose-500 to-rose-700"
         />
@@ -168,12 +242,11 @@ export default function ClientDashboard({ data}) {
         </div>
       </section>
 
-
       {/* Latest Updates + Work Done */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Latest Updates */}
         <CardBox title="">
-          <div className="flex justify-between items-center mb-4">
+         <div className="flex justify-between items-center mb-4">
   {/* Left title */}
   <h1 className="text-lg font-semibold">Latest Updates</h1>
 
@@ -242,7 +315,7 @@ export default function ClientDashboard({ data}) {
       {/* Project Information */}
       <CardBox title="Project Information">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InfoItem label="Project Name" value={dashboard.projectInfo.projectName} icon={<FolderKanban />} />
+          <InfoItem label="Project Name" value={selectedProject.name || dashboard.projectInfo.projectName} icon={<FolderKanban />} />
           <InfoItem label="Budget" value={dashboard.projectInfo.budget} icon={<BarChart />} />
           <InfoItem label="Client Name" value={dashboard.projectInfo.clientName} icon={<User />} />
           <InfoItem label="Type" value={dashboard.projectInfo.type} icon={<FileText />} />
@@ -250,91 +323,36 @@ export default function ClientDashboard({ data}) {
           <InfoItem label="Deadline" value={dashboard.projectInfo.deadline} icon={<Clock />} />
         </div>
       </CardBox>
-
-      {/* Documents */}
-      <CardBox title="Project Documents">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {dashboard.documents.map((doc) => (
-            <div key={doc.id} className="p-4 rounded-lg border dark:border-gray-700">
-              <p className="font-medium text-gray-800 dark:text-gray-100">{doc.title}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{doc.type}</p>
-              <button className="mt-2 text-blue-600 dark:text-blue-400 underline text-sm">
-                View Document
-              </button>
-            </div>
-          ))}
-        </div>
-      </CardBox>
-
-      {/* Employee Feedbacks */}
-      {userRole === "EMPLOYEE" && (
-        <CardBox title="My Feedbacks">
-          {feedbacks.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">No feedbacks received yet</p>
-          ) : (
-            <div className="grid gap-4">
-              {feedbacks.slice(0, 5).map((fb) => (
-                <div key={fb.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-white/[0.05]">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <span className="inline-block px-2 py-1 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                        {fb.type}
-                      </span>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{fb.byName}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({fb.byEmpId})</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <span key={i} className={`text-lg ${i < fb.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{fb.desc}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardBox>
-      )}
     </div>
   );
 }
 
-
-// CARD
-const DashboardCard = ({ title, value, icon, color }: any) => {
-  return (
-    <div
-      className={`p-5 rounded-xl shadow bg-gradient-to-br ${color} text-white flex flex-col gap-2`}
-    >
-      <div className="flex items-center justify-between">
-        <p className="text-sm opacity-80">{title}</p>
-        {icon}
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
+/* -------------------------
+   Reusable small components
+--------------------------*/
+const DashboardCard = ({ title, value, icon, color }: any) => (
+  <div className={`p-5 rounded-xl shadow bg-gradient-to-br ${color} text-white`}>
+    <div className="flex justify-between items-center mb-1">
+      <p className="text-sm opacity-80">{title}</p>
+      {icon}
     </div>
-  );
-};
+    <p className="text-2xl font-bold">{value}</p>
+  </div>
+);
 
-// BOX CONTAINER
 const CardBox = ({ title, children }: any) => (
-  <div className="bg-white dark:bg-gray-900 dark:border dark:border-gray-700 shadow rounded-xl p-6">
-    <h2 className="font-semibold text-lg text-gray-800 dark:text-gray-100 mb-4">{title}</h2>
+  <div className="bg-white dark:bg-gray-900 shadow rounded-xl p-6">
+    <h2 className="font-semibold text-lg mb-4">{title}</h2>
     {children}
   </div>
 );
 
-// INFO ITEM
 const InfoItem = ({ label, value, icon }: any) => (
-  <div className="flex items-start gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+  <div className="flex gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
     <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700">{icon}</div>
     <div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="font-medium text-gray-800 dark:text-gray-100">{value}</p>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-medium">{value}</p>
     </div>
   </div>
 );

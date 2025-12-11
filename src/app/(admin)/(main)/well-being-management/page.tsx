@@ -9,7 +9,7 @@ export default function page() {
     const [searchTerm, setSearchTerm] = useState("");
     const [viewMode, setViewMode] = useState("list");
     const [newTip, setNewTip] = useState({ title: "", description: "", category: "" });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -28,6 +28,8 @@ export default function page() {
             }
         } catch (error) {
             console.error('Failed to fetch user:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -36,7 +38,6 @@ export default function page() {
             const response = await fetch('/api/well-being', { credentials: 'include' });
             if (response.ok) {
                 const data = await response.json();
-                // Map the data to match expected structure
                 const mappedData = (data.wellBeing || []).map(item => ({
                     ...item,
                     description: item.answer || item.description,
@@ -48,6 +49,21 @@ export default function page() {
             console.error('Failed to fetch well-being data:', error);
         }
     };
+
+    // -----------------------------
+    // ADDED: Loading screen here
+    // -----------------------------
+    if (loading || !user) {
+        return (
+            <div className="min-h-[75vh] flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="mt-3 text-gray-600 dark:text-gray-300">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+    // -----------------------------
 
     const createTip = async () => {
         if (!newTip.title.trim() || !newTip.description.trim()) {
@@ -113,7 +129,7 @@ export default function page() {
         item.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Admin interface
+    // --- Admin UI remains same ---
     if (isAdmin) {
         return (
             <div className="min-h-[75vh] rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-8 xl:py-6">
@@ -189,15 +205,12 @@ export default function page() {
                             {viewMode === "card" ? (
                                 <>
                                     <div className="flex items-start justify-between mb-3">
-
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => deleteTip(item.id)}
-                                                className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => deleteTip(item.id)}
+                                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
 
                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
@@ -215,7 +228,6 @@ export default function page() {
                             ) : (
                                 <>
                                     <div className="flex items-center gap-4 flex-1">
-
                                         <div>
                                             <h3 className="font-medium text-gray-900 dark:text-white">
                                                 {item.title || 'Untitled'}
@@ -334,4 +346,6 @@ export default function page() {
             </div>
         );
     }
-};
+
+    return null;
+}
