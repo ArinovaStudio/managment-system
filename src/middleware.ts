@@ -13,24 +13,29 @@ const employeeBlocked = [
   "well-being-management",
 ];
 
-// Client allowed and blocked logic
-const clientAllowed = ["client"]; // client must stay inside /client
-// everything else will be blocked for client automatically
-
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname.toLowerCase();
-
-  // Allow public pages
-  if (publicRoutes.includes(pathname)) return NextResponse.next();
 
   // Allow auth APIs
   if (pathname.startsWith("/api/auth")) return NextResponse.next();
 
-  // Get cookies
+  // Read cookies
   const token = req.cookies.get("token")?.value;
   const role = req.cookies.get("role")?.value?.toLowerCase();
 
-  // Not logged in
+  // ------------------------------------
+  // BLOCK SIGNIN/SIGNUP FOR LOGGED-IN USERS
+  // ------------------------------------
+  if (token && role && publicRoutes.includes(pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  // Public pages allowed when NOT logged in
+  if (publicRoutes.includes(pathname)) return NextResponse.next();
+
+  // Not logged in → redirect to signin
   if (!token || !role) {
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
@@ -38,9 +43,16 @@ export function middleware(req: NextRequest) {
   }
 
   // ------------------------------------
-  // ADMIN — FULL ACCESS
+  // ADMIN — FULL ACCESS EXCEPT /client/**
   // ------------------------------------
-  if (role === "admin") return NextResponse.next();
+  if (role === "admin") {
+    if (pathname.startsWith("/client")) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
 
   // ------------------------------------
   // EMPLOYEE — LIMITED ACCESS
@@ -51,7 +63,6 @@ export function middleware(req: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
-
     return NextResponse.next();
   }
 
@@ -59,20 +70,17 @@ export function middleware(req: NextRequest) {
   // CLIENT — ONLY /client/** ALLOWED
   // ------------------------------------
   if (role === "client") {
-    // If URL does NOT start with /client → block
     if (!pathname.startsWith("/client")) {
       const url = req.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
-
     return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
-// Ensure middleware runs on ALL app routes including grouped folders
 export const config = {
   matcher: [
     "/((?!_next|static|favicon.ico|api/auth|images|fonts).*)",

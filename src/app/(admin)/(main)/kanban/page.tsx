@@ -74,6 +74,8 @@ const NewTaskModal: React.FC<{
 }> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag }) => {
   if (!isOpen) return null;
 
+
+
   return (
     <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -120,16 +122,22 @@ const NewTaskModal: React.FC<{
             {/* Assignee */}
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Assignee</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <input
+              <div className="flex items-center gap-2 pl-1">
+                <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {newTask.assignee || "Loading..."}
+                </p>
+
+
+                {/* <input
                   type="text"
                   value={newTask.assignee}
-                  onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                  readOnly
                   placeholder="Assign to..."
                   className="w-full pl-10 pr-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                /> */}
               </div>
+
             </div>
 
             {/* Due Date */}
@@ -592,22 +600,49 @@ const KanbanBoard: React.FC = () => {
     fetchTasks();
   }, []);
 
+  // useEffect(() => {
+  //   if (selectedEmployee) {
+  //     fetchTasks(selectedEmployee);
+  //   }
+  // }, [selectedEmployee]);
+
   useEffect(() => {
-    if (selectedEmployee) {
+    if (selectedEmployee === "") {
+      // Admin sees own tasks
+      fetchTasks();
+    } else {
+      // Admin sees selected employee's tasks
       fetchTasks(selectedEmployee);
     }
   }, [selectedEmployee]);
 
+
+  // const fetchUserRole = async () => {
+  //   const res = await fetch('/api/user');
+  //   const data = await res.json();
+  //   if (data.user) {
+  //     setUserRole(data.user.role);
+  //     if (data.user.role === 'ADMIN') {
+  //       fetchEmployees();
+  //     }
+  //   }
+  // };
+
   const fetchUserRole = async () => {
-    const res = await fetch('/api/user');
+    const res = await fetch("/api/user");
     const data = await res.json();
+
     if (data.user) {
-      setUserRole(data.user.role);
-      if (data.user.role === 'ADMIN') {
+      setCurrentUser(data.user);
+      const role = data.user.role?.toUpperCase();
+      setUserRole(role);
+
+      if (role === "ADMIN") {
         fetchEmployees();
       }
     }
   };
+
 
   const fetchEmployees = async () => {
     const res = await fetch('/api/user?all=true');
@@ -897,6 +932,11 @@ const KanbanBoard: React.FC = () => {
   const getTasksByStatus = (status: Task['status']) => filteredTasks.filter(task => task.status === status);
 
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+ 
+
+
   return (
     <div className={`min-h-screen transition-colors duration-200`}>
       <div className="border-b sticky top-0 z-10">
@@ -911,7 +951,7 @@ const KanbanBoard: React.FC = () => {
                   onChange={(e) => setSelectedEmployee(e.target.value)}
                   className="px-4 py-2 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Employees</option>
+                  <option value="">Employees (My Tasks)</option>
                   {employees.map((emp) => (
                     <option key={emp.id} value={emp.name}>
                       {emp.name} - {emp.employeeId}
@@ -931,7 +971,24 @@ const KanbanBoard: React.FC = () => {
                 />
               </div>
 
-              <button onClick={() => setShowNewTaskModal(true)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <button
+                onClick={() => {
+                  setShowNewTaskModal(true);
+
+                  if (currentUser) {
+                    setNewTask(prev => ({
+                      ...prev,
+                      assignee: currentUser.name,
+                      assigneeAvatar: currentUser.name
+                        .split(" ")
+                        .map(n => n[0])
+                        .join("")
+                        .toUpperCase(),
+                    }));
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
+              >
                 <Plus className="w-4 h-4" />
                 New Task
               </button>
