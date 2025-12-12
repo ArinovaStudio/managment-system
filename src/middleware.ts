@@ -48,7 +48,7 @@ export function middleware(req: NextRequest) {
   if (role === "employee") {
     if (employeeBlocked.some((part) => pathname.includes(part))) {
       const url = req.nextUrl.clone();
-      url.pathname = "/unauthorized";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
 
@@ -62,7 +62,7 @@ export function middleware(req: NextRequest) {
     // If URL does NOT start with /client → block
     if (!pathname.startsWith("/client")) {
       const url = req.nextUrl.clone();
-      url.pathname = "/unauthorized";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
 
