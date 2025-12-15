@@ -7,7 +7,15 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    const user = await db.user.findUnique({ where: { email } });
+    // Check if input is email or employee ID
+    const user = await db.user.findFirst({
+      where: {
+        OR: [
+          { email: email },
+          { employeeId: email }
+        ]
+      }
+    });
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 

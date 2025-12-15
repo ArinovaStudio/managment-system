@@ -445,3 +445,19 @@ model TodoTask {
 
   @@index([userId, completed])
 }
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  type      OtpType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([email, type])
+}
+
+enum OtpType {
+  SIGNUP
+  FORGOT_PASSWORD
+}

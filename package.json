@@ -42,6 +42,7 @@
     "lucide-react": "^0.546.0",
     "multer": "^2.0.2",
     "next": "^16.0.8",
+    "nodemailer": "^7.0.11",
     "pg": "^8.16.3",
     "react": "^19.0.0",
     "react-apexcharts": "^1.7.0",

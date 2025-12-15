@@ -1,13 +1,10 @@
 "use client";
-import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { EyeCloseIcon, EyeIcon } from "@/icons";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState} from "react";
 import Link from "next/link";
-import { ScanFace, X } from "lucide-react";
+import { EyeClosedIcon, EyeIcon } from "lucide-react";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +12,6 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +47,7 @@ export default function SignInForm() {
               Sign In
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
+              Enter your email/employee ID and password to sign in!
             </p>
           </div>
 
@@ -60,12 +56,13 @@ export default function SignInForm() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
               <div>
-                <Label>User ID <span className="text-error-500">*</span></Label>
+                <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
                 <Input
-                  placeholder="adarsh@arinova.studio"
-                  type="email"
+                  placeholder="adarsh@arinova.studio or emp-001"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
 
@@ -77,6 +74,7 @@ export default function SignInForm() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -85,7 +83,7 @@ export default function SignInForm() {
                     {showPassword ? (
                       <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                      <EyeClosedIcon className="fill-gray-500 dark:fill-gray-400" />
                     )}
                   </span>
                 </div>
@@ -103,7 +101,7 @@ export default function SignInForm() {
               </div>
 
               <div>
-                <Button type="submit" className="w-full" size="sm" disabled={loading}>
+                <Button type="submit" className="w-full" size="sm" disabled={loading || !email || !password}>
                   {loading ? "Signing in..." : "Sign in"}
                 </Button>
               </div>
