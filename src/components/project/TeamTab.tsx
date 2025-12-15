@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, User2, Crown } from "lucide-react";
+import { ShieldCheck, User2, Crown, Edit, Trash2, Plus } from "lucide-react";
 
 export default function TeamTab({ projectId }: { projectId: string }) {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingMember, setEditingMember] = useState<any>(null);
+  const [newRole, setNewRole] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState("");
+  const [memberRole, setMemberRole] = useState("");
 
   useEffect(() => {
     if (projectId) fetchMembers();
@@ -29,14 +35,76 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const updateRole = async (userId: string, role: string, isLeader: boolean) => {
     try {
       await fetch(`/api/project/member`, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId, userId, role, isLeader }),
       });
 
-      fetchMembers(); // refresh UI
+      fetchMembers();
     } catch (err) {
       console.error("Update Failed:", err);
+    }
+  };
+
+  const removeMember = async (userId: string) => {
+    if (!confirm('Remove this member from the project?')) return;
+    
+    try {
+      await fetch(`/api/project/member`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, userId }),
+      });
+
+      fetchMembers();
+    } catch (err) {
+      console.error("Remove Failed:", err);
+    }
+  };
+
+  const saveRole = async () => {
+    if (!editingMember || !newRole.trim()) return;
+    
+    await updateRole(editingMember.userId, newRole, editingMember.isLeader);
+    setEditingMember(null);
+    setNewRole("");
+  };
+
+  const fetchAvailableUsers = async () => {
+    try {
+      const res = await fetch('/api/auth/signup');
+      const data = await res.json();
+      if (data.users) {
+        const currentMemberIds = members.map(m => m.userId);
+        const available = data.users.filter(u => !currentMemberIds.includes(u.id));
+        setAvailableUsers(available);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    }
+  };
+
+  const addMember = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await fetch('/api/project/member', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          userId: selectedUser,
+          role: memberRole || 'Member',
+          isLeader: false
+        })
+      });
+      
+      setShowAddModal(false);
+      setSelectedUser('');
+      setMemberRole('');
+      fetchMembers();
+    } catch (err) {
+      console.error('Add member failed:', err);
     }
   };
 
@@ -46,7 +114,18 @@ export default function TeamTab({ projectId }: { projectId: string }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Project Team</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Project Team</h2>
+        <button
+          onClick={() => {
+            fetchAvailableUsers();
+            setShowAddModal(true);
+          }}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+        >
+          <Plus size={18} /> Add Member
+        </button>
+      </div>
 
       {members.length === 0 && (
         <p className="text-gray-400">No team members added yet.</p>
@@ -59,12 +138,36 @@ export default function TeamTab({ projectId }: { projectId: string }) {
             className="p-5 bg-white  dark:bg-gray-800/50 border border-gray-400 rounded-xl"
           >
             <div className="flex justify-between items-center">
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold dark:text-white">{m.user.name}</p>
 
-                <p className="dark:text-gray-400 text-sm">
-                  <span className="font-medium">{m.role || "Not assigned"}</span>
-                </p>
+                {editingMember?.id === m.id ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={newRole}
+                      onChange={(e) => setNewRole(e.target.value)}
+                      className="px-2 py-1 text-sm border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Enter role"
+                    />
+                    <button
+                      onClick={saveRole}
+                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingMember(null)}
+                      className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <p className="dark:text-gray-400 text-sm">
+                    <span className="font-medium">{m.role || "Not assigned"}</span>
+                  </p>
+                )}
 
                 {m.isLeader && (
                   <p className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 mt-1">
@@ -74,9 +177,28 @@ export default function TeamTab({ projectId }: { projectId: string }) {
               </div>
 
               <div className="flex flex-col items-end gap-2">
-                {/* SET LEADER */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      setEditingMember(m);
+                      setNewRole(m.role || "");
+                    }}
+                    className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                    title="Edit role"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => removeMember(m.userId)}
+                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    title="Remove member"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                
                 <button
-                  onClick={() => updateRole(m.userId, m.role || "Member", true)}
+                  onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
                   className={`flex items-center gap-1 px-3 py-1 rounded text-xs ${
                     m.isLeader
                       ? "bg-yellow-400/70 text-black"
@@ -84,13 +206,69 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   }`}
                 >
                   <ShieldCheck size={14} />
-                  {m.isLeader ? "Leader" : "Make Leader"}
+                  {m.isLeader ? "Remove Leader" : "Make Leader"}
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Add Member Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xl">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Team Member</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Select User</label>
+                <select
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Choose a user...</option>
+                  {availableUsers.map(user => (
+                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Role</label>
+                <input
+                  type="text"
+                  value={memberRole}
+                  onChange={(e) => setMemberRole(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter role (e.g., Developer, Designer)"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setSelectedUser('');
+                  setMemberRole('');
+                }}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addMember}
+                disabled={!selectedUser}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg"
+              >
+                Add Member
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

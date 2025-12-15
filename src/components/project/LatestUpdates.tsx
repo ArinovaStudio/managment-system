@@ -69,7 +69,7 @@ export default function LatestUpdates({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900 p-5 rounded-xl dark:border-gray-700">
       <h3 className="text-lg font-semibold mb-4 dark:text-white">Latest Updates</h3>
 
       {updates.length === 0 ? (

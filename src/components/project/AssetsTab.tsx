@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Image, FileArchive, FileText, Plus, Loader2, Eye, Download } from "lucide-react";
+import { Image, FileArchive, FileText, Plus, Loader2, Eye, Download, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function AssetsTab({ projectId }: { projectId: string }) {
@@ -69,7 +69,27 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
     }
   };
 
-
+  const deleteAsset = async (assetId: string) => {
+    if (!confirm('Are you sure you want to delete this asset?')) return;
+    
+    try {
+      const res = await fetch('/api/project/assets', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assetId }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        await fetchAssets();
+        toast.success('Asset deleted successfully!');
+      } else {
+        toast.error(data.message || 'Failed to delete asset');
+      }
+    } catch (error) {
+      toast.error('Failed to delete asset');
+    }
+  };
 
   const getIcon = (type: string) => {
     if (type === "image") return <Image className="text-blue-500" size={24} />;
@@ -123,13 +143,21 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
                 </p>
               </div>
 
-              {/* View & Download */}
+              {/* View & Delete */}
               <div className="flex gap-2">
                 <button
                   onClick={() => window.open(a.url, '_blank')}
                   className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                  title="View asset"
                 >
                   <Eye className="text-blue-500" size={18} />
+                </button>
+                <button
+                  onClick={() => deleteAsset(a.id)}
+                  className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                  title="Delete asset"
+                >
+                  <Trash2 className="text-red-500" size={18} />
                 </button>
               </div>
             </div>

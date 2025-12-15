@@ -26,6 +26,7 @@ export async function POST(req: Request) {
         title,
         description,
         dueDate: new Date(dueDate),
+        status: "PENDING",
         createdBy: adminId,
       },
     });
@@ -62,6 +63,62 @@ export async function GET(req: Request) {
     console.error(error);
     return Response.json(
       { success: false, message: "Failed to fetch milestones",error },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req: Request) {
+  try {
+    const { id, title, description, dueDate, status } = await req.json();
+
+    if (!id || !title || !dueDate) {
+      return Response.json(
+        { success: false, message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const milestone = await db.milestone.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        dueDate: new Date(dueDate),
+        status: status || "PENDING",
+      },
+    });
+
+    return Response.json({ success: true, milestone });
+  } catch (error) {
+    console.error(error);
+    return Response.json(
+      { success: false, message: "Failed to update milestone" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json();
+
+    if (!id) {
+      return Response.json(
+        { success: false, message: "Milestone ID required" },
+        { status: 400 }
+      );
+    }
+
+    await db.milestone.delete({
+      where: { id },
+    });
+
+    return Response.json({ success: true, message: "Milestone deleted" });
+  } catch (error) {
+    console.error(error);
+    return Response.json(
+      { success: false, message: "Failed to delete milestone" },
       { status: 500 }
     );
   }

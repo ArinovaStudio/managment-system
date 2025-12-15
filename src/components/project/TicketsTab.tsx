@@ -10,15 +10,18 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [teammates, setTeammates] = useState([]);
 
   const [newTicket, setNewTicket] = useState({
-    reason: ""
+    reason: "",
+    blockedTeammates: [] as string[]
   });
 
   useEffect(() => {
     if (projectId) {
       fetchTickets();
       fetchCurrentUser();
+      fetchTeammates();
     }
   }, [projectId]);
 
@@ -34,11 +37,23 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
     }
   };
 
+  const fetchTeammates = async () => {
+    try {
+      const res = await fetch(`/api/project/member?projectId=${projectId}`);
+      const data = await res.json();
+      if (data.success) {
+        setTeammates(data.members);
+      }
+    } catch (err) {
+      console.error('Failed to fetch teammates:', err);
+    }
+  };
+
   const fetchTickets = async () => {
     try {
       const res = await fetch(`/api/project/ticket?projectId=${projectId}`);
       const data = await res.json();
-      
+
       if (data.success) {
         setTickets(data.tickets);
       }
@@ -68,15 +83,16 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
         body: JSON.stringify({
           projectId,
           reportedBy: currentUser.name,
-          reason: newTicket.reason.trim()
+          reason: newTicket.reason.trim(),
+          blockedTeammates: newTicket.blockedTeammates
         })
       });
 
       const data = await res.json();
-      
+
       if (data.success) {
         setShowModal(false);
-        setNewTicket({ reason: "" });
+        setNewTicket({ reason: "", blockedTeammates: [] });
         await fetchTickets();
         toast.success('Blockage ticket created successfully!');
       } else {
@@ -101,7 +117,7 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
       });
 
       const data = await res.json();
-      
+
       if (data.success) {
         await fetchTickets();
         toast.success('Ticket deleted successfully!');
@@ -129,7 +145,7 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
           <AlertTriangle size={24} />
           Project Blockage Tickets
         </h2>
-        
+
         <button
           onClick={() => setShowModal(true)}
           className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 transition-colors"
@@ -169,6 +185,22 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
                     <p className="text-gray-700 dark:text-gray-300 mb-4">
                       {ticket.reason}
                     </p>
+
+                    {ticket.blockedTeammates && ticket.blockedTeammates.length > 0 && (
+                      <div className="mb-3">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Blocked by:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {ticket.blockedTeammates.map((teammate: string, index: number) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-xs rounded-full"
+                            >
+                              {teammate}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-1">
@@ -212,12 +244,47 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
               </label>
               <textarea
                 value={newTicket.reason}
-                onChange={(e) => setNewTicket({ reason: e.target.value })}
-                className="w-full px-3 py-2  dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 resize-none"
+                onChange={(e) => setNewTicket(prev => ({ ...prev, reason: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 resize-none"
                 rows={4}
                 placeholder="e.g., Frontend development is blocked because the design team hasn't provided the final UI mockups for the dashboard page."
                 disabled={creating}
               />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
+                Blocked Teammates
+              </label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
+                {teammates.map((teammate: any) => (
+                  <label key={teammate.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded">
+                    <input
+                      type="checkbox"
+                      checked={newTicket.blockedTeammates?.includes(teammate.user.name) ?? false}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setNewTicket(prev => ({
+                            ...prev,
+                            blockedTeammates: [...prev.blockedTeammates, teammate.user.name]
+                          }));
+                        } else {
+                          setNewTicket(prev => ({
+                            ...prev,
+                            blockedTeammates: prev.blockedTeammates.filter(name => name !== teammate.user.name)
+                          }));
+                        }
+                      }}
+                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      disabled={creating}
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{teammate.user.name}</span>
+                  </label>
+                ))}
+                {teammates.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 p-2">No teammates found</p>
+                )}
+              </div>
             </div>
 
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
@@ -230,9 +297,9 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
               <button
                 onClick={() => {
                   setShowModal(false);
-                  setNewTicket({ reason: "" });
+                  setNewTicket({ reason: "", blockedTeammates: [] });
                 }}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 disabled={creating}
               >
                 Cancel
@@ -240,9 +307,16 @@ export default function TicketsTab({ projectId }: { projectId: string }) {
               <button
                 onClick={createTicket}
                 disabled={creating || !newTicket.reason.trim()}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
               >
-                {creating ? 'Creating...' : 'Report Blockage'}
+                {creating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Creating...
+                  </>
+                ) : (
+                  'Report Blockage'
+                )}
               </button>
             </div>
           </div>

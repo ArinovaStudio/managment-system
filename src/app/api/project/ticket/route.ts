@@ -2,7 +2,7 @@ import db from "@/lib/client";
 
 export async function POST(req: Request) {
   try {
-    const { projectId, reportedBy, reason } = await req.json();
+    const { projectId, reportedBy, reason, blockedTeammates } = await req.json();
 
     if (!projectId || !reportedBy || !reason) {
       return Response.json(
@@ -12,7 +12,12 @@ export async function POST(req: Request) {
     }
 
     const ticket = await db.ticket.create({
-      data: { projectId, reportedBy, reason },
+      data: { 
+        projectId, 
+        reportedBy, 
+        reason, 
+        blockedTeammates: blockedTeammates || [] 
+      },
     });
 
     return Response.json({ success: true, ticket });

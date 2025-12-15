@@ -12,8 +12,10 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState(1); // 1: credentials, 2: otp
+  const [otp, setOtp] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleCredentials = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -22,15 +24,37 @@ export default function SignInForm() {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, action: "verify-credentials" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid credentials");
+
+      setOtp("");
+      setStep(2);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpSignin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, otp, action: "signin-with-otp" }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign in failed");
 
       window.location.href = "/";
-
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,16 +77,16 @@ export default function SignInForm() {
 
        
 
-          <form onSubmit={handleSubmit}>
+          {step === 1 ? (
+          <form onSubmit={handleCredentials}>
             <div className="space-y-6">
               <div>
                 <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
                 <Input
                   placeholder="adarsh@arinova.studio or emp-001"
                   type="text"
-                  value={email}
+                  defaultValue={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                 />
               </div>
 
@@ -72,9 +96,8 @@ export default function SignInForm() {
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    value={password}
+                    defaultValue={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -93,7 +116,7 @@ export default function SignInForm() {
 
               <div className="flex items-center justify-end">
                 <Link
-                  href="/reset-password"
+                  href="/forgot-password"
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Forgot password?
@@ -102,11 +125,42 @@ export default function SignInForm() {
 
               <div>
                 <Button type="submit" className="w-full" size="sm" disabled={loading || !email || !password}>
-                  {loading ? "Signing in..." : "Sign in"}
+                  {loading ? "Verifying..." : "Continue"}
                 </Button>
               </div>
             </div>
           </form>
+          ) : (
+          <form onSubmit={handleOtpSignin}>
+            <div className="space-y-6">
+              <div>
+                <Label>Enter OTP <span className="text-error-500">*</span></Label>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit OTP sent to your email"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  autoComplete="off"
+                  name="otp"
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              <div>
+                <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </div>
+              
+              <div>
+                <Button type="button" onClick={() => setStep(1)} className="w-full" variant="outline" size="sm">
+                  Back
+                </Button>
+              </div>
+            </div>
+          </form>
+          )}
 
         </div>
         <div className="mt-6">

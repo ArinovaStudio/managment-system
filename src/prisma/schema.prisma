@@ -251,15 +251,16 @@ model ProjectMember {
 }
 
 model Milestone {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   projectId   String
   title       String
   description String?
   dueDate     DateTime
+  status      MILESTONE_STATUS @default(PENDING)
   createdBy   String
-  createdAt   DateTime @default(now())
-  creator     User     @relation(fields: [createdBy], references: [id])
-  project     Project  @relation(fields: [projectId], references: [id])
+  createdAt   DateTime        @default(now())
+  creator     User            @relation(fields: [createdBy], references: [id])
+  project     Project         @relation(fields: [projectId], references: [id])
 }
 
 model Asset {
@@ -274,11 +275,12 @@ model Asset {
 }
 
 model Ticket {
-  id         String   @id @default(cuid())
-  projectId  String
-  reportedBy String
-  reason     String
-  createdAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  projectId        String
+  reportedBy       String
+  reason           String
+  blockedTeammates String[] @default([])
+  createdAt        DateTime @default(now())
 }
 
 model UsefulTip {
@@ -461,4 +463,11 @@ model OtpVerification {
 enum OtpType {
   SIGNUP
   FORGOT_PASSWORD
+}
+
+enum MILESTONE_STATUS {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

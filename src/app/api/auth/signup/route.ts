@@ -44,6 +44,12 @@ export async function POST(req: Request) {
     const dob = formData.get('dob') as string;
     const role = formData.get('role') as string;
     const image = formData.get('image') as File;
+    const otpVerified = formData.get('otpVerified') as string;
+    
+    // Ensure OTP was verified
+    if (otpVerified !== 'true') {
+      return NextResponse.json({ error: "OTP verification required" }, { status: 400 });
+    }
 
     let employeeId: string;
     

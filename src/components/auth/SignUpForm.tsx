@@ -11,6 +11,7 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [step, setStep] = useState(1); // 1: form, 2: otp
+  const [otpVerified, setOtpVerified] = useState(false);
   const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     name: "",
@@ -68,12 +69,15 @@ export default function SignUpForm() {
         throw new Error(verifyData.error || "OTP verification failed");
       }
 
+      setOtpVerified(true);
+
       // Then create account
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('password', formData.password);
       formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('otpVerified', 'true');
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -272,6 +276,8 @@ export default function SignUpForm() {
                     placeholder="Enter 6-digit OTP sent to your email"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
+                    autoComplete="off"
+                    name="otp"
                     required
                   />
                 </div>

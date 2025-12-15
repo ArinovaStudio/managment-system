@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     }
 }
 
-//set role + leader to a member
+// Add new member to project
 export async function POST(req: Request) {
     try {
         const { projectId, userId, role, isLeader } = await req.json();
@@ -45,22 +45,19 @@ export async function POST(req: Request) {
             );
         }
 
-        //  Find member using both IDs
+        // Check if member already exists
         const existingMember = await db.projectMember.findFirst({
-            where: {
-                projectId,
-                userId,
-            },
+            where: { projectId, userId },
         });
 
-        if (!existingMember) {
+        if (existingMember) {
             return Response.json(
-                { success: false, message: "Member not found for this project" },
-                { status: 404 }
+                { success: false, message: "User is already a member of this project" },
+                { status: 409 }
             );
         }
 
-        //  If Leader is updated to true → Set all others to false
+        // If adding as leader, remove leader status from others
         if (isLeader === true) {
             await db.projectMember.updateMany({
                 where: { projectId },
@@ -68,25 +65,106 @@ export async function POST(req: Request) {
             });
         }
 
-        //  Update the member
-        const updatedMember = await db.projectMember.update({
-            where: { id: existingMember.id },
+        // Create new member
+        const newMember = await db.projectMember.create({
             data: {
-                role,
-                isLeader,
+                projectId,
+                userId,
+                role: role || "Member",
+                isLeader: isLeader || false,
             },
         });
 
         return Response.json({
             success: true,
-            message: "Member updated successfully",
-            member: updatedMember,
+            message: "Member added successfully",
+            member: newMember,
         });
 
     } catch (error) {
         console.error(error);
         return Response.json(
-            { success: false, message: "Failed to update member", error },
+            { success: false, message: "Failed to add member", error },
+            { status: 500 }
+        );
+    }
+}
+
+// Update member role/leader status
+export async function PUT(req: Request) {
+    try {
+        const { projectId, userId, role, isLeader } = await req.json();
+
+        if (!projectId || !userId) {
+            return Response.json(
+                { success: false, message: "projectId and userId are required" },
+                { status: 400 }
+            );
+        }
+
+        const existingMember = await db.projectMember.findFirst({
+            where: { projectId, userId },
+        });
+
+        if (!existingMember) {
+            return Response.json(
+                { success: false, message: "Member not found" },
+                { status: 404 }
+            );
+        }
+
+        if (isLeader === true) {
+            await db.projectMember.updateMany({
+                where: { projectId },
+                data: { isLeader: false },
+            });
+        }
+
+        const updatedMember = await db.projectMember.update({
+            where: { id: existingMember.id },
+            data: { role, isLeader },
+        });
+
+        return Response.json({ success: true, member: updatedMember });
+    } catch (error) {
+        return Response.json(
+            { success: false, message: "Failed to update member" },
+            { status: 500 }
+        );
+    }
+}
+
+// Remove member from project
+export async function DELETE(req: Request) {
+    try {
+        const { projectId, userId } = await req.json();
+
+        if (!projectId || !userId) {
+            return Response.json(
+                { success: false, message: "projectId and userId are required" },
+                { status: 400 }
+            );
+        }
+
+        const existingMember = await db.projectMember.findFirst({
+            where: { projectId, userId },
+        });
+
+        if (!existingMember) {
+            return Response.json(
+                { success: false, message: "Member not found" },
+                { status: 404 }
+            );
+        }
+
+        await db.projectMember.delete({
+            where: { id: existingMember.id },
+        });
+
+        return Response.json({ success: true, message: "Member removed" });
+    } catch (error) {
+        return Response.json(
+            { success: false, message: "Failed to remove member" },
             { status: 500 }
         );
     }
