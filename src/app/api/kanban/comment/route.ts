@@ -75,6 +75,59 @@ export async function POST(req: Request) {
 
 
 
+// export async function GET(req: Request) {
+//   try {
+//     const { searchParams } = new URL(req.url);
+//     const taskId = searchParams.get("taskId");
+
+//     if (!taskId) {
+//       return NextResponse.json(
+//         { success: false, message: "taskId is required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const comments = await db.comment.findMany({
+//       where: { taskId },
+//       orderBy: { createdAt: "asc" },
+//       include: {
+//         user: {
+//           select: {
+//             id: true,
+//             name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     // 👇 convert DB data to frontend format
+//     const formattedComments = comments.map((c) => ({
+//       id: c.id,
+//       content: c.content,
+//       createdAt: c.createdAt,
+//       author: c.user?.name || "Unknown",
+//       avatar: c.user?.name
+//         ? c.user.name
+//             .split(" ")
+//             .map((n) => n[0])
+//             .join("")
+//             .toUpperCase()
+//         : "?",
+//     }));
+
+//     return NextResponse.json({
+//       success: true,
+//       comments: formattedComments,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { success: false, message: "Server error" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -82,7 +135,7 @@ export async function GET(req: Request) {
 
     if (!taskId) {
       return NextResponse.json(
-        { success: false, message: "taskId is required" },
+        { error: "taskId is required" },
         { status: 400 }
       );
     }
@@ -100,11 +153,13 @@ export async function GET(req: Request) {
       },
     });
 
-    // 👇 convert DB data to frontend format
-    const formattedComments = comments.map((c) => ({
+    // 🔁 Normalize data for frontend
+    const formatted = comments.map((c) => ({
       id: c.id,
       content: c.content,
       createdAt: c.createdAt,
+      userId: c.userId,
+      authorId: c.userId,
       author: c.user?.name || "Unknown",
       avatar: c.user?.name
         ? c.user.name
@@ -115,33 +170,68 @@ export async function GET(req: Request) {
         : "?",
     }));
 
-    return NextResponse.json({
-      success: true,
-      comments: formattedComments,
-    });
+    return NextResponse.json({ success: true, comments: formatted });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { success: false, message: "Server error" },
+      { error: "Server error" },
       { status: 500 }
     );
   }
 }
 
 
-export async function DELETE() {
+
+export async function DELETE(req: Request) {
   try {
-    const deleted = await db.comment.deleteMany({});
+    const { commentId } = await req.json();
+
+    if (!commentId) {
+      return NextResponse.json(
+        { error: "commentId is required" },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await db.comment.delete({
+      where: { id: commentId },
+    });
 
     return NextResponse.json(
-      { message: "Comment deleted successfully", deletedTask: deleted },
+      { success: true, message: "Comment deleted successfully", deleted },
       { status: 200 }
     );
-  } catch (error) {
-    console.error("Error deleting task:", error);
+  } catch (error: any) {
+    console.error("DELETE_COMMENT_ERROR:", error);
 
     return NextResponse.json(
-      { message: "Failed to delete task", error },
+      {
+        error: "Failed to delete comment",
+        details: error.message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function PUT(req: Request) {
+  try {
+    const { commentId, content } = await req.json();
+
+    if (!commentId || !content) {
+      return NextResponse.json({ success: false }, { status: 400 });
+    }
+
+    await db.comment.update({
+      where: { id: commentId },
+      data: { content },
+    });
+
+    return NextResponse.json({ success: true }); // ✅ REQUIRED
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, error: "Update failed" },
       { status: 500 }
     );
   }
