@@ -1,13 +1,10 @@
 "use client";
-import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { EyeCloseIcon, EyeIcon } from "@/icons";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState} from "react";
 import Link from "next/link";
-import { ScanFace, X } from "lucide-react";
+import { EyeClosedIcon, EyeIcon } from "lucide-react";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,9 +12,10 @@ export default function SignInForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [step, setStep] = useState(1); // 1: credentials, 2: otp
+  const [otp, setOtp] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleCredentials = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -26,15 +24,37 @@ export default function SignInForm() {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, action: "verify-credentials" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid credentials");
+
+      setOtp("");
+      setStep(2);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpSignin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, otp, action: "signin-with-otp" }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Sign in failed");
 
       window.location.href = "/";
-
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -51,20 +71,21 @@ export default function SignInForm() {
               Sign In
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign in!
+              Enter your email/employee ID and password to sign in!
             </p>
           </div>
 
        
 
-          <form onSubmit={handleSubmit}>
+          {step === 1 ? (
+          <form onSubmit={handleCredentials}>
             <div className="space-y-6">
               <div>
-                <Label>User ID <span className="text-error-500">*</span></Label>
+                <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
                 <Input
-                  placeholder="adarsh@arinova.studio"
-                  type="email"
-                  value={email}
+                  placeholder="adarsh@arinova.studio or emp-001"
+                  type="text"
+                  defaultValue={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
@@ -75,7 +96,7 @@ export default function SignInForm() {
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    value={password}
+                    defaultValue={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                   <span
@@ -85,7 +106,7 @@ export default function SignInForm() {
                     {showPassword ? (
                       <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                      <EyeClosedIcon className="fill-gray-500 dark:fill-gray-400" />
                     )}
                   </span>
                 </div>
@@ -95,7 +116,7 @@ export default function SignInForm() {
 
               <div className="flex items-center justify-end">
                 <Link
-                  href="/reset-password"
+                  href="/forgot-password"
                   className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
                   Forgot password?
@@ -103,12 +124,43 @@ export default function SignInForm() {
               </div>
 
               <div>
-                <Button type="submit" className="w-full" size="sm" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign in"}
+                <Button type="submit" className="w-full" size="sm" disabled={loading || !email || !password}>
+                  {loading ? "Verifying..." : "Continue"}
                 </Button>
               </div>
             </div>
           </form>
+          ) : (
+          <form onSubmit={handleOtpSignin}>
+            <div className="space-y-6">
+              <div>
+                <Label>Enter OTP <span className="text-error-500">*</span></Label>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit OTP sent to your email"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  autoComplete="off"
+                  name="otp"
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              <div>
+                <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </div>
+              
+              <div>
+                <Button type="button" onClick={() => setStep(1)} className="w-full" variant="outline" size="sm">
+                  Back
+                </Button>
+              </div>
+            </div>
+          </form>
+          )}
 
         </div>
         <div className="mt-6">

@@ -2,20 +2,54 @@ import { NextResponse } from "next/server";
 import db from "@/lib/client";
 import bcrypt from "bcryptjs";
 import { createToken } from "@/lib/jwt";
+import { generateAndSendOtp, verifyOtp } from "@/lib/otp-utils";
 
 export async function POST(req: Request) {
   try {
+    const contentType = req.headers.get('content-type');
+    
+    // Handle JSON requests (OTP operations)
+    if (contentType?.includes('application/json')) {
+      const body = await req.json();
+      const { action, email, otp } = body;
+
+      if (action === "send-otp") {
+        // Check if user already exists
+        const existing = await db.user.findUnique({ where: { email } });
+        if (existing) {
+          return NextResponse.json({ error: "User already exists" }, { status: 409 });
+        }
+
+        await generateAndSendOtp(email, "SIGNUP");
+        return NextResponse.json({ message: "OTP sent successfully" });
+      }
+
+      if (action === "verify-otp") {
+        const isValid = await verifyOtp(email, otp, "SIGNUP");
+        if (!isValid) {
+          return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 400 });
+        }
+        return NextResponse.json({ message: "OTP verified successfully" });
+      }
+    }
+
+    // Handle FormData requests (actual signup)
     const formData = await req.formData();
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const department = formData.get('department') as string;
     const phone = formData.get('phone') as string;
     const workingAs = formData.get('workingAs') as string;
     const bio = formData.get('bio') as string;
     const dob = formData.get('dob') as string;
     const role = formData.get('role') as string;
     const image = formData.get('image') as File;
+    const otpVerified = formData.get('otpVerified') as string;
+    
+    // Ensure OTP was verified
+    if (otpVerified !== 'true') {
+      return NextResponse.json({ error: "OTP verification required" }, { status: 400 });
+    }
 
     let employeeId: string;
     
@@ -53,28 +87,8 @@ export async function POST(req: Request) {
     if (lastEmployee?.employeeId) {
       const parts = lastEmployee.employeeId.split("-");
       const lastNumber = parseInt(parts[1], 10);
-      nextNumber = lastNumber + 1;
+      if (!isNaN(lastNumber)) nextNumber = lastNumber + 1;
     }
-    if (finalRole === "EMPLOYEE") {
-  // Find last employee with a valid employeeId
-  const lastEmployee = await db.user.findFirst({
-    where: {
-      role: "EMPLOYEE",
-      employeeId: { not: null },
-    },
-    orderBy: { createdAt: "desc" },
-    select: { employeeId: true },
-  });
-
-  let nextNumber = 1;
-
-  if (lastEmployee?.employeeId) {
-    const num = parseInt(lastEmployee.employeeId.split("-")[1], 10);
-    if (!isNaN(num)) nextNumber = num + 1;
-  }
-
-  employeeId = `emp-${String(nextNumber).padStart(3, "0")}`;
-}
 
 employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
 
@@ -84,7 +98,6 @@ employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
         email,
         password: hashedPassword,
         role: finalRole,
-        department,
         phone,
         workingAs,
         bio,

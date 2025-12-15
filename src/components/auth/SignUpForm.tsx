@@ -3,47 +3,81 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { ChevronLeftIcon, EyeClosedIcon, EyeIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [step, setStep] = useState(1); // 1: form, 2: otp
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     phone: "",
-    department: "",
-    workingAs: "",
-    bio: "",
-    dob: "",
     image: null
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!isChecked) {
       setError("Please accept terms and conditions");
       return;
     }
-    
+
     setLoading(true);
     setError("");
 
     try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, action: "send-otp" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+
+      setStep(2);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyAndSignup = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      // First verify OTP
+      const verifyRes = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, otp, action: "verify-otp" }),
+      });
+
+      if (!verifyRes.ok) {
+        const verifyData = await verifyRes.json();
+        throw new Error(verifyData.error || "OTP verification failed");
+      }
+
+      setOtpVerified(true);
+
+      // Then create account
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('password', formData.password);
       formDataToSend.append('phone', formData.phone);
-      formDataToSend.append('department', formData.department);
-      formDataToSend.append('workingAs', formData.workingAs);
-      formDataToSend.append('bio', formData.bio);
-      formDataToSend.append('dob', formData.dob);
+      formDataToSend.append('otpVerified', 'true');
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -85,7 +119,7 @@ export default function SignUpForm() {
             </p>
           </div>
           <div>
-            {/* <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
                   width="20"
@@ -136,8 +170,9 @@ export default function SignUpForm() {
                   Or
                 </span>
               </div>
-            </div> */}
-            <form onSubmit={handleSubmit}>
+            </div>
+            {step === 1 ? (
+            <form onSubmit={handleSendOtp}>
               <div className="space-y-5">
                 <div>
                   <Label>
@@ -147,11 +182,10 @@ export default function SignUpForm() {
                     type="text"
                     placeholder="Enter your full name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
-                {/* <!-- Email --> */}
                 <div>
                   <Label>
                     Email<span className="text-error-500">*</span>
@@ -160,11 +194,10 @@ export default function SignUpForm() {
                     type="email"
                     placeholder="Enter your email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
                 </div>
-                {/* <!-- Password --> */}
                 <div>
                   <Label>
                     Password<span className="text-error-500">*</span>
@@ -174,7 +207,7 @@ export default function SignUpForm() {
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
                     />
                     <span
@@ -184,55 +217,18 @@ export default function SignUpForm() {
                       {showPassword ? (
                         <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                       ) : (
-                        <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                        <EyeClosedIcon className="fill-gray-500 dark:fill-gray-400" />
                       )}
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div>
-                    <Label>Phone</Label>
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Department</Label>
-                    <Input
-                      type="text"
-                      placeholder="Enter your department"
-                      value={formData.department}
-                      onChange={(e) => setFormData({...formData, department: e.target.value})}
-                    />
-                  </div>
-                </div>
                 <div>
-                  <Label>Position</Label>
+                  <Label>Phone</Label>
                   <Input
-                    type="text"
-                    placeholder="Enter your position/role"
-                    value={formData.workingAs}
-                    onChange={(e) => setFormData({...formData, workingAs: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Bio</Label>
-                  <Input
-                    type="text"
-                    placeholder="Tell us about yourself"
-                    value={formData.bio}
-                    onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label>Date of Birth</Label>
-                  <Input
-                    type="date"
-                    value={formData.dob}
-                    onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
                 <div>
@@ -240,7 +236,7 @@ export default function SignUpForm() {
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setFormData({...formData, image: e.target.files?.[0] || null})}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
                   />
                 </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -264,12 +260,41 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <Button type="submit" className="w-full" size="sm" disabled={loading}>
-                    {loading ? "Creating account..." : "Sign Up"}
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || !formData.name || !formData.email || !formData.password || !isChecked}>
+                    {loading ? "Sending OTP..." : "Send OTP"}
                   </Button>
                 </div>
               </div>
             </form>
+            ) : (
+            <form onSubmit={handleVerifyAndSignup}>
+              <div className="space-y-5">
+                <div>
+                  <Label>Enter OTP <span className="text-error-500">*</span></Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter 6-digit OTP sent to your email"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    autoComplete="off"
+                    name="otp"
+                    required
+                  />
+                </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <div>
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
+                    {loading ? "Creating account..." : "Verify & Sign Up"}
+                  </Button>
+                </div>
+                <div>
+                  <Button type="button" onClick={() => setStep(1)} className="w-full" variant="outline" size="sm">
+                    Back to Form
+                  </Button>
+                </div>
+              </div>
+            </form>
+            )}
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowUp, User, X } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
+import LatestUpdates from "./LatestUpdates";
 
 
 type Member = {
@@ -122,11 +123,9 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         const data = await res.json();
         if (data.success && data.milestones) {
           const total = data.milestones.length;
-          const ongoing = data.milestones.filter((milestone: any) => {
-            const dueDate = new Date(milestone.dueDate);
-            const now = new Date();
-            return dueDate >= now;
-          }).length;
+          const ongoing = data.milestones.filter((milestone: any) => 
+            milestone.status === 'PENDING' || milestone.status === 'IN_PROGRESS'
+          ).length;
 
           setMilestones({ ongoing, total });
         }
@@ -305,7 +304,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             Work Done History
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Latest updates will appear here</p>
+          <LatestUpdates projectId={project.id} />
         </div>
       </div>
 

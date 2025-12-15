@@ -143,7 +143,7 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
                                 <label className="text-sm font-medium dark:text-white">
                                     Select Attendees ({selectedUsers.length} selected) *
                                 </label>
-                            </div> 
+                            </div>
 
                             {/* DROPDOWN BUTTON */}
                             <button

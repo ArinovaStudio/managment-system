@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicRoutes = ["/signin", "/signup", "/unauthorized"];
+const publicRoutes = ["/signin", "/signup", "/unauthorized", "/forgot-password"];
 
 // Employee blocked route keywords
 const employeeBlocked = [
@@ -15,9 +15,9 @@ const employeeBlocked = [
 
 // Role-wise safe home routes
 const roleHome: Record<string, string> = {
-  admin: "/",
-  employee: "/",
-  client: "/client",
+  ADMIN: "/",
+  EMPLOYEE: "/",
+  CLIENT: "/client",
 };
 
 export function middleware(req: NextRequest) {
@@ -41,7 +41,7 @@ export function middleware(req: NextRequest) {
      3️⃣ READ AUTH COOKIES
   -------------------------------------------------- */
   const token = req.cookies.get("token")?.value;
-  const role = req.cookies.get("role")?.value?.toLowerCase();
+  const role = req.cookies.get("role")?.value;
 
   /* -------------------------------------------------
      4️⃣ NOT LOGGED IN → SIGNIN
@@ -55,7 +55,7 @@ export function middleware(req: NextRequest) {
   /* -------------------------------------------------
      5️⃣ BLOCK SIGNIN / SIGNUP FOR LOGGED USERS
   -------------------------------------------------- */
-  if (publicRoutes.includes(pathname)) {
+  if (publicRoutes.includes(pathname) && token && role) {
     const url = req.nextUrl.clone();
     url.pathname = roleHome[role];
     return NextResponse.redirect(url);
@@ -72,10 +72,10 @@ export function middleware(req: NextRequest) {
      7️⃣ ADMIN RULES
      - Full access except /client/**
   -------------------------------------------------- */
-  if (role === "admin") {
+  if (role === "ADMIN") {
     if (pathname === "/client" || pathname.startsWith("/client/")) {
       const url = req.nextUrl.clone();
-      url.pathname = roleHome.admin;
+      url.pathname = roleHome.ADMIN;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -84,10 +84,10 @@ export function middleware(req: NextRequest) {
   /* -------------------------------------------------
      8️⃣ EMPLOYEE RULES
   -------------------------------------------------- */
-  if (role === "employee") {
+  if (role === "EMPLOYEE") {
     if (employeeBlocked.some((part) => pathname.includes(part))) {
       const url = req.nextUrl.clone();
-      url.pathname = roleHome.employee;
+      url.pathname = roleHome.EMPLOYEE;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -97,10 +97,10 @@ export function middleware(req: NextRequest) {
      9️⃣ CLIENT RULES
      - ONLY /client/**
   -------------------------------------------------- */
-  if (role === "client") {
+  if (role === "CLIENT") {
     if (!(pathname === "/client" || pathname.startsWith("/client/"))) {
       const url = req.nextUrl.clone();
-      url.pathname = roleHome.client;
+      url.pathname = roleHome.CLIENT;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();

@@ -36,6 +36,8 @@ export default function ProjectsPage() {
     supervisorAdmin: ''
   });
   const [createLoading, setCreateLoading] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchUser, setSearchUser] = useState("");
 
   useEffect(() => {
     fetchUserProjects();
@@ -143,6 +145,10 @@ export default function ProjectsPage() {
       </div>
     );
   }
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchUser.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -252,8 +258,8 @@ export default function ProjectsPage() {
                     <span>{project.progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                    <div 
-                      className="bg-blue-600 h-1.5 rounded-full transition-all" 
+                    <div
+                      className="bg-blue-600 h-1.5 rounded-full transition-all"
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
@@ -261,9 +267,9 @@ export default function ProjectsPage() {
 
                 {/* Basic Details Preview */}
                 {project.basicDetails && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                      {project.basicDetails}
-                    </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                    {project.basicDetails}
+                  </p>
                 )}
               </div>
             </Link>
@@ -274,9 +280,7 @@ export default function ProjectsPage() {
       {/* Create Project Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 ">
-          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto   [&::-webkit-scrollbar]:hidden 
-  [-ms-overflow-style:'none'] 
-  [scrollbar-width:'none']">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto   [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold dark:text-white">Create New Project</h2>
@@ -320,6 +324,7 @@ export default function ProjectsPage() {
                       <option value="static">Static Website</option>
                       <option value="mobile-app">Mobile App</option>
                       <option value="web-app">Web Application</option>
+                      <option value="web-app">Other</option>
                     </select>
                   </div>
 
@@ -431,30 +436,75 @@ export default function ProjectsPage() {
                       Team Members ({selectedMembers.length} selected)
                     </label>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                    {users.map((user) => (
-                      <div
-                        key={user.id}
-                        onClick={() => toggleMember(user.id)}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedMembers.includes(user.id)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-300 hover:border-gray-400 dark:border-gray-600'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-sm dark:text-white">{user.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.workingAs || 'Employee'}</p>
-                          </div>
-                          {selectedMembers.includes(user.id) && (
-                            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                              <Plus size={12} className="text-white rotate-45" />
+
+                  {/* DROPDOWN BUTTON */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="w-full text-left px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    {selectedMembers.length > 0
+                      ? `${selectedMembers.length} user(s) selected`
+                      : "Select Members"} ↓
+                  </button>
+
+                  {isDropdownOpen && (
+
+                    <div className="mt-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 p-2 max-h-64 overflow-y-auto">
+
+                      {/* SEARCH INPUT */}
+                      <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={searchUser}
+                        onChange={(e) => setSearchUser(e.target.value)}
+                        className="w-full mb-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                      />
+                      {/* USER LIST */}
+                      {filteredUsers.length === 0 ? (
+                        <p className="text-sm text-gray-500 px-2">No users found</p>
+                      ) : (
+                        filteredUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            onClick={() => toggleMember(user.id)}
+                            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all mb-1
+              ${selectedMembers.includes(user.id)
+                                ? "bg-blue-100 dark:bg-blue-900/30"
+                                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                              }
+            `}
+                          >
+                            <div>
+                              <p className="text-sm font-medium dark:text-white">
+                                {user.name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {user.workingAs || "Employee"}
+                              </p>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                            {selectedMembers.includes(user.id) && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <svg
+                                  className="w-3 h-3 text-white"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
@@ -486,8 +536,9 @@ export default function ProjectsPage() {
               </form>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </div >
+      )
+      }
+    </div >
   );
 }

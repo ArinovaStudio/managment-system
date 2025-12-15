@@ -1,3 +1,5 @@
+"use client";
+
 const ProjectStats = ({ analyticsData }: { analyticsData?: any }) => {
   const projects = analyticsData?.stats?.projects || 0;
   const pendingTasks = analyticsData?.stats?.pendingTasks || 0;

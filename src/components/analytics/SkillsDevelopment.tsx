@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import BarChartOne from "../charts/bar/BarChartOne";
 import ComponentCard from "../common/ComponentCard";
