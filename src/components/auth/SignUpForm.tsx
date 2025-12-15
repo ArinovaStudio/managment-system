@@ -182,7 +182,6 @@ export default function SignUpForm() {
                     required
                   />
                 </div>
-                {/* <!-- Email --> */}
                 <div>
                   <Label>
                     Email<span className="text-error-500">*</span>
@@ -195,7 +194,6 @@ export default function SignUpForm() {
                     required
                   />
                 </div>
-                {/* <!-- Password --> */}
                 <div>
                   <Label>
                     Password<span className="text-error-500">*</span>

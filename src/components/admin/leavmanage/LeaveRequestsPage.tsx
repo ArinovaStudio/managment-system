@@ -123,11 +123,27 @@ export default function LeaveRequestsPage() {
                                         <div className="flex flex-col w-full">
                                             <div className="flex justify-between w-full">
                                                 <h2 className="font-bold text-lg">{req.empName}</h2>
+
                                                 <p className="text-sm">{req.department}</p>
 
                                                 <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-100/20 text-[#0f8fe4]">
                                                     {totalDays} Days
                                                 </span>
+                                                <span
+                                                    className={`px-3 py-1 text-xs font-semibold rounded-full
+    ${req.status === "Pending"
+                                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"
+                                                            : req.status === "Approved"
+                                                                ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                                                                : req.status === "Rejected"
+                                                                    ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                                                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                                                        }
+  `}
+                                                >
+                                                    {req.status}
+                                                </span>
+
                                             </div>
 
                                             <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -161,29 +177,38 @@ export default function LeaveRequestsPage() {
 
                                     {/* EXPANDED SECTION */}
                                     {isOpen && (
-                                        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
-                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                {req.reason}
-                                            </p>
+                                        <div>
+                                            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
+                                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                    {req.reason}
+                                                </p>
+
+                                                {req.status === "Pending" && (
+                                                    <div className="flex justify-end gap-4 mt-3">
+                                                        <button
+                                                            onClick={() => updateLeaveStatus(req.id, "Approved")}
+                                                            className="text-sm text-[#0e78be] hover:text-blue-500"
+                                                        >
+                                                            Approve
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => updateLeaveStatus(req.id, "Rejected")}
+                                                            className="text-sm text-[#0e78be] hover:text-blue-500"
+                                                        >
+                                                            Deny
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                            </div>
+
+                                            {/* ACTION BUTTONS */}
+
                                         </div>
                                     )}
 
-                                    {/* ACTION BUTTONS */}
-                                    <div className="flex justify-end gap-4 mt-3">
-                                        <button
-                                            onClick={() => updateLeaveStatus(req.id, "Approved")}
-                                            className="text-sm text-[#0e78be] hover:text-blue-500"
-                                        >
-                                            Approve
-                                        </button>
 
-                                        <button
-                                            onClick={() => updateLeaveStatus(req.id, "Rejected")}
-                                            className="text-sm text-[#0e78be] hover:text-blue-500"
-                                        >
-                                            Deny
-                                        </button>
-                                    </div>
                                 </div>
                             );
                         })}

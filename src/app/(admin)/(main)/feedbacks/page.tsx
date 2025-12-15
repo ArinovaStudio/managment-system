@@ -142,7 +142,7 @@ export default function FeedbackForm() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setViewMode('view')}
-              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
             >
               My Feedbacks
             </button>
@@ -159,7 +159,7 @@ export default function FeedbackForm() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setViewMode('view')}
-              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+              className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'view' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
             >
               View Feedbacks
             </button>

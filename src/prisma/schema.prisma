@@ -11,29 +11,29 @@ model Users {
 }
 
 model User {
-  id              String            @id @default(cuid())
-  employeeId      String?           @unique
-  email           String            @unique
+  id              String           @id @default(cuid())
+  employeeId      String?          @unique
+  email           String           @unique
   name            String
   password        String
-  role            ROLES             @default(CLIENT)
+  role            ROLES            @default(CLIENT)
   workingAs       String?
   department      String?
   phone           String?
   bio             String?
   image           String?
   dob             String?
-  isLogin         Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  isLogin         Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
   faceDescriptor  String?
   breaks          Break[]
   clockRecords    ClockRecord[]
-  Documents       Docs[]            @relation("UserDocuments")
+  Documents       Docs[]           @relation("UserDocuments")
   meetingRequests MeetingRequest[]
   milestones      Milestone[]
   projectMembers  ProjectMember[]
-  
+
   leaves          UserLeaves?
   timezone        UserTimezone?
   workHours       WorkHours[]
@@ -42,6 +42,7 @@ model User {
   meetingAssigned MeetingAttendee[]
   leaveRequests   leaveReq[]
   todoTasks       TodoTask[]
+  comments        Comment[]
 }
 
 model Docs {
@@ -205,9 +206,10 @@ model Comment {
   id        String   @id @default(cuid())
   content   String
   taskId    String
-  userId    String?
+  userId    String
   createdAt DateTime @default(now())
   task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Project {
@@ -226,7 +228,6 @@ model Project {
   featureRequests FeatureRequest[]
   projectInfo     ProjectInfo?
   latestUpdates   LatestUpdate[]
-
 }
 
 model LatestUpdate {
