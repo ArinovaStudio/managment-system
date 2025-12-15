@@ -38,7 +38,7 @@ interface Task {
   dueDate: string;
   tags: string[];
   comments: Comment[];
-  attachments: Array<{ id: string; name: string; size: string; type: string }>;
+  attachments: Array<{ id: string; name: string; size: string; type: string, url: string; }>;
   status: 'assigned' | 'in-progress' | 'completed';
 }
 
@@ -500,16 +500,36 @@ const SidePanel: React.FC<{
 
               <div className="space-y-2">
                 {selectedTask.attachments?.map((file, id) => (
-                  <div key={file.id ?? id} className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-[#111] dark:border-gray-800 dark:hover:border-gray-700 transition-colors cursor-pointer group">
+                  <div
+                    key={file.id ?? id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-[#111] dark:border-gray-800 dark:hover:border-gray-700 transition-colors group"
+                  >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className="text-2xl">{getFileIcon(file.type)}</span>
+
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate text-gray-900 dark:text-white">{file.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-500">{file.size}</p>
+                        <p className="font-medium truncate text-gray-900 dark:text-white">
+                          {file.name}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500">
+                          {file.size}
+                        </p>
                       </div>
                     </div>
+
+                    {/* DOWNLOAD BUTTON */}
+                    <a
+                      href={file.url}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Download
+                    </a>
                   </div>
                 ))}
+
               </div>
             </div>
           )}
@@ -934,7 +954,7 @@ const KanbanBoard: React.FC = () => {
 
   const [currentUser, setCurrentUser] = useState<any>(null);
 
- 
+
 
 
   return (

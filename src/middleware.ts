@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const publicRoutes = ["/signin", "/signup", "/unauthorized"];
 
-// Employee blocked keywords
+// Employee blocked route keywords
 const employeeBlocked = [
   "client",
   "user",
@@ -13,66 +13,94 @@ const employeeBlocked = [
   "well-being-management",
 ];
 
+// Role-wise safe home routes
+const roleHome: Record<string, string> = {
+  admin: "/",
+  employee: "/",
+  client: "/client",
+};
+
 export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname.toLowerCase();
 
-  // Allow auth APIs
-  if (pathname.startsWith("/api/auth")) return NextResponse.next();
+  /* -------------------------------------------------
+     1️⃣ ALLOW ALL API ROUTES (CRITICAL)
+  -------------------------------------------------- */
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
 
-  // Read cookies
+  /* -------------------------------------------------
+     2️⃣ ALLOW PUBLIC ROUTES
+  -------------------------------------------------- */
+  if (publicRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  /* -------------------------------------------------
+     3️⃣ READ AUTH COOKIES
+  -------------------------------------------------- */
   const token = req.cookies.get("token")?.value;
   const role = req.cookies.get("role")?.value?.toLowerCase();
 
-  // ------------------------------------
-  // BLOCK SIGNIN/SIGNUP FOR LOGGED-IN USERS
-  // ------------------------------------
-  if (token && role && publicRoutes.includes(pathname)) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/";
-    return NextResponse.redirect(url);
-  }
-
-  // Public pages allowed when NOT logged in
-  if (publicRoutes.includes(pathname)) return NextResponse.next();
-
-  // Not logged in → redirect to signin
+  /* -------------------------------------------------
+     4️⃣ NOT LOGGED IN → SIGNIN
+  -------------------------------------------------- */
   if (!token || !role) {
     const url = req.nextUrl.clone();
     url.pathname = "/signin";
     return NextResponse.redirect(url);
   }
 
-  // ------------------------------------
-  // ADMIN — FULL ACCESS EXCEPT /client/**
-  // ------------------------------------
+  /* -------------------------------------------------
+     5️⃣ BLOCK SIGNIN / SIGNUP FOR LOGGED USERS
+  -------------------------------------------------- */
+  if (publicRoutes.includes(pathname)) {
+    const url = req.nextUrl.clone();
+    url.pathname = roleHome[role];
+    return NextResponse.redirect(url);
+  }
+
+  /* -------------------------------------------------
+     6️⃣ ALLOW ROLE HOME (PREVENT LOOP)
+  -------------------------------------------------- */
+  if (pathname === roleHome[role]) {
+    return NextResponse.next();
+  }
+
+  /* -------------------------------------------------
+     7️⃣ ADMIN RULES
+     - Full access except /client/**
+  -------------------------------------------------- */
   if (role === "admin") {
-    if (pathname.startsWith("/client")) {
+    if (pathname === "/client" || pathname.startsWith("/client/")) {
       const url = req.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = roleHome.admin;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
-  // ------------------------------------
-  // EMPLOYEE — LIMITED ACCESS
-  // ------------------------------------
+  /* -------------------------------------------------
+     8️⃣ EMPLOYEE RULES
+  -------------------------------------------------- */
   if (role === "employee") {
     if (employeeBlocked.some((part) => pathname.includes(part))) {
       const url = req.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = roleHome.employee;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
-  // ------------------------------------
-  // CLIENT — ONLY /client/** ALLOWED
-  // ------------------------------------
+  /* -------------------------------------------------
+     9️⃣ CLIENT RULES
+     - ONLY /client/**
+  -------------------------------------------------- */
   if (role === "client") {
-    if (!pathname.startsWith("/client")) {
+    if (!(pathname === "/client" || pathname.startsWith("/client/"))) {
       const url = req.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = roleHome.client;
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -83,6 +111,6 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|static|favicon.ico|api/auth|images|fonts).*)",
+    "/((?!_next|static|favicon.ico|images|fonts).*)",
   ],
 };

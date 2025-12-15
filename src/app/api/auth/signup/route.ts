@@ -16,6 +16,8 @@ export async function POST(req: Request) {
     const dob = formData.get('dob') as string;
     const role = formData.get('role') as string;
     const image = formData.get('image') as File;
+
+    let employeeId: string;
     
     let imageUrl = null;
     if (image && image.size > 0) {
@@ -74,7 +76,7 @@ export async function POST(req: Request) {
   employeeId = `emp-${String(nextNumber).padStart(3, "0")}`;
 }
 
-    const employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
+employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
 
     const user = await db.user.create({
       data: {

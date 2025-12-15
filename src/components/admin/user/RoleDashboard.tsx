@@ -3,6 +3,9 @@
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+
 
 type User = {
   id: string;
@@ -55,6 +58,11 @@ export default function RoleDashboard() {
   const [loading, setLoading] = useState(true);
   const [openCard, setOpenCard] = useState<string | null>(null);
 
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [saving, setSaving] = useState(false);
+
+
   // FETCH USERS FROM BACKEND
   useEffect(() => {
     async function loadUsers() {
@@ -83,6 +91,8 @@ export default function RoleDashboard() {
 
   return (
     <div className="p-6">
+
+      <Toaster position="top-right" />
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold uppercase">
@@ -174,6 +184,25 @@ export default function RoleDashboard() {
                         />
                       </div>
 
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditUser(u)}
+                          className="text-sm px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                        >
+                          Edit
+                        </button>
+
+                      </div>
+
+                      <div>
+
+                        <button
+                          onClick={() => setDeleteUser(u)}
+                          className="text-sm px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
                       <button
                         type="button"
                         onClick={() => setOpenCard(isOpen ? null : u.id)}
@@ -184,7 +213,222 @@ export default function RoleDashboard() {
                             }`}
                         />
                       </button>
+
                     </div>
+
+                    {editUser && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                          <h2 className="text-lg font-bold mb-4">Edit User</h2>
+
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              setSaving(true);
+
+                              const toastId = toast.loading("Updating user...");
+                              try {
+                                const res = await fetch("/api/auth/user", {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify(editUser),
+                                });
+
+                                const data = await res.json();
+
+                                if (!res.ok) {
+                                  toast.error(data.error || "Update failed", { id: toastId });
+                                  return;
+                                }
+
+                                setUsers((prev) =>
+                                  prev.map((u) => (u.id === editUser.id ? data.user ?? editUser : u))
+                                );
+
+                                toast.success("User updated successfully", { id: toastId });
+                                setEditUser(null);
+                              } catch {
+                                toast.error("Something went wrong", { id: toastId });
+                              } finally {
+                                setSaving(false);
+                              }
+
+
+                              setUsers((prev) =>
+                                prev.map((u) => (u.id === editUser.id ? editUser : u))
+                              );
+
+                              setSaving(false);
+                              setEditUser(null);
+                            }}
+                            className="space-y-3"
+                          >
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Name</label>
+                              <input
+                                className="w-full border px-3 py-2 rounded"
+                                value={editUser.name}
+                                onChange={(e) =>
+                                  setEditUser({ ...editUser, name: e.target.value })
+                                }
+                                placeholder="Enter name"
+                              />
+                            </div>
+
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Email</label>
+                              <input
+                                className="w-full border px-3 py-2 rounded"
+                                value={editUser.email}
+                                onChange={(e) =>
+                                  setEditUser({ ...editUser, email: e.target.value })
+                                }
+                                placeholder="Enter email"
+                              />
+                            </div>
+
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Phone</label>
+                              <input
+                                className="w-full border px-3 py-2 rounded"
+                                value={editUser.phone ?? ""}
+                                onChange={(e) =>
+                                  setEditUser({ ...editUser, phone: e.target.value })
+                                }
+                                placeholder="Enter phone number"
+                              />
+                            </div>
+
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Department</label>
+                              <input
+                                className="w-full border px-3 py-2 rounded"
+                                value={editUser.department ?? ""}
+                                onChange={(e) =>
+                                  setEditUser({ ...editUser, department: e.target.value })
+                                }
+                                placeholder="Enter department"
+                              />
+                            </div>
+
+
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Working As</label>
+                              <input
+                                className="w-full border px-3 py-2 rounded"
+                                value={editUser.workingAs ?? ""}
+                                onChange={(e) =>
+                                  setEditUser({ ...editUser, workingAs: e.target.value })
+                                }
+                                placeholder="e.g. Frontend Developer"
+                              />
+                            </div>
+
+
+                            <div className="flex justify-end gap-3 mt-4">
+                              <button
+                                type="button"
+                                onClick={() => setEditUser(null)}
+                                className="px-4 py-2 rounded border"
+                              >
+                                Cancel
+                              </button>
+
+                              <button
+                                type="submit"
+                                disabled={saving}
+                                className="px-4 py-2 rounded bg-blue-600 text-white"
+                              >
+                                {saving ? "Saving..." : "Save"}
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
+
+                    {deleteUser && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
+                          <h2 className="text-lg font-bold text-red-600">
+                            Delete User
+                          </h2>
+
+                          <p className="text-sm mt-2">
+                            Are you sure you want to delete{" "}
+                            <strong>{deleteUser.name}</strong>?
+                            This action cannot be undone.
+                          </p>
+
+                          <div className="flex justify-end gap-3 mt-5">
+                            {/* Cancel */}
+                            <button
+                              onClick={() => setDeleteUser(null)}
+                              className="
+      px-4 py-2 rounded-md border
+      text-gray-700 dark:text-gray-300
+      bg-white dark:bg-gray-800
+      hover:bg-gray-100 dark:hover:bg-gray-700
+      hover:border-gray-400
+      transition-all duration-200
+      active:scale-95
+      focus:outline-none focus:ring-2 focus:ring-gray-400/50
+    "
+                            >
+                              Cancel
+                            </button>
+
+                            {/* Delete */}
+                            <button
+                              onClick={async () => {
+                                const toastId = toast.loading("Deleting user...");
+                                try {
+                                  const res = await fetch("/api/auth/user", {
+                                    method: "DELETE",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ email: deleteUser.email }),
+                                  });
+
+                                  const data = await res.json();
+
+                                  if (!res.ok) {
+                                    toast.error(data.error || "Delete failed", { id: toastId });
+                                    return;
+                                  }
+
+                                  setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
+                                  toast.success("User deleted successfully", { id: toastId });
+                                  setDeleteUser(null);
+                                } catch {
+                                  toast.error("Something went wrong", { id: toastId });
+                                }
+
+
+
+                                setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
+                                setDeleteUser(null);
+                              }}
+                              className="
+      px-4 py-2 rounded-md
+      bg-red-600 text-white
+      hover:bg-red-700
+      transition-all duration-200
+      active:scale-95
+      focus:outline-none focus:ring-2 focus:ring-red-500/60
+    "
+                            >
+                              Delete
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+
+
 
                     {/* MAIN CONTENT (collapsed view) */}
                     {!isOpen && (
