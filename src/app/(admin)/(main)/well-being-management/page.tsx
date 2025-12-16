@@ -83,7 +83,12 @@ export default function page() {
                     description: newTip.description,
                     category: newTip.category
                 })
+
+                
+                
             });
+console.log(response);
+console.log("this is", newTip);
 
             if (response.ok) {
                 toast.success('Well-being tip created successfully!');
@@ -216,7 +221,6 @@ export default function page() {
                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                                         {item.title || 'Untitled'}
                                     </h3>
-
                                     <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">
                                         {item.description || 'No description'}
                                     </p>

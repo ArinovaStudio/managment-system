@@ -20,7 +20,8 @@ import {
   Users,
   Edit2,
   Trash2,
-  Save
+  Save,
+  SquarePen
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
@@ -72,23 +73,26 @@ type NewTaskShape = {
 const NewTaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
+  mode: "create" | "edit";
   newTask: NewTaskShape;
   setNewTask: (t: NewTaskShape) => void;
-  handleCreateTask: () => void;
+  handleSubmit: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
-}> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag }) => {
+}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
-      <Toaster position="top-right" />
+      {/* <Toaster position="top-right" /> */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full max-w-2xl rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#0a0a0a]">
         <div className="sticky top-0 z-10 border-b px-6 py-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Task</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {mode === "edit" ? "Edit Task" : "Create New Task"}
+            </h2>
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
               <X className="w-5 h-5" />
             </button>
@@ -240,9 +244,18 @@ const NewTaskModal: React.FC<{
             <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
               Cancel
             </button>
-            <button onClick={handleCreateTask} disabled={!newTask.title.trim()} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
+            {/* <button onClick={handleCreateTask} disabled={!newTask.title.trim()} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
               Create Task
+            </button> */}
+
+            <button
+              onClick={handleSubmit}
+              disabled={!newTask.title.trim()}
+              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg"
+            >
+              {mode === "edit" ? "Update Task" : "Create Task"}
             </button>
+
           </div>
         </div>
       </div>
@@ -253,6 +266,8 @@ const NewTaskModal: React.FC<{
 const SidePanel: React.FC<{
   selectedTask: Task | null;
   onClose: () => void;
+  onEditTask: (task: Task) => void;
+  onDeleteTask: (taskId: string) => void;
   commentText: string;
   setCommentText: (v: string) => void;
   handleAddComment: () => void;
@@ -264,15 +279,19 @@ const SidePanel: React.FC<{
   loading: boolean;
   reportCount: number;
   reportMessages: { message: string }[];
+  reportsLoading: boolean;
   currentUserId: string;
   handleEditComment: (commentId: string, newContent: string) => void;
   handleDeleteComment: (commentId: string) => void;
 }> = ({
   selectedTask,
   onClose,
+  onEditTask,
+  onDeleteTask,
   commentText,
   setCommentText,
   handleAddComment,
+  reportsLoading,
   loading,
   open,
   setOpen,
@@ -286,6 +305,9 @@ const SidePanel: React.FC<{
   handleDeleteComment
 }) => {
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<Task | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
     const [editContent, setEditContent] = useState('');
     const [deleteComment, setDeleteComment] = useState<{
       id: string;
@@ -345,12 +367,35 @@ const SidePanel: React.FC<{
 
           <div className="p-6 space-y-6">
             <div>
-              <div className="flex items-start justify-between mb-2">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTask.title}</h1>
-                <span className={`px-3 py-1 rounded-lg text-sm font-medium border ${priorityClasses[selectedTask.priority]}`}>
-                  <Flag className="w-3 h-3 inline mr-1" />
-                  {selectedTask.priority}
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <div className='flex gap-3'>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTask.title}</h1>
+                  <span className={`px-2 py-1 rounded-lg text-sm font-medium border ${priorityClasses[selectedTask.priority]}`}>
+                    <Flag className="w-3 h-3 inline mr-1" />
+                    {selectedTask.priority}
+                  </span>
+                </div>
+                <div className='flex  items-center '>
+                  <div>
+                    <button
+                      className=" px-3 py-1.5 rounded-md"
+                      onClick={() => {
+                        if (!selectedTask) return;
+                        onEditTask(selectedTask);
+                      }}
+                    >
+                      <SquarePen size={19} className='text-gray-400 hover:text-blue-600' />
+                    </button>
+
+                  </div>
+                  <div ><button
+                    className="  px-3 py-1.5 rounded-md"
+                    onClick={() => setConfirmDelete(selectedTask)}
+                  >
+                    <Trash2 size={19} className='text-gray-400 hover:text-red-700' />
+                  </button>
+                  </div>
+                </div>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">Task ID: #{selectedTask.id}</p>
             </div>
@@ -416,16 +461,16 @@ const SidePanel: React.FC<{
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                 <div className="flex-1">
                   <h3 className="font-semibold mb-1 text-red-700 dark:text-red-400">
-                    {reportCount === 0
+                    {reportMessages.length === 0
                       ? "Report an Issue"
-                      : `${reportCount} issue${reportCount > 1 ? "s" : ""} reported`}
+                      : `${reportMessages.length} issue${reportMessages.length > 1 ? "s" : ""} reported`}
                   </h3>
                   <p className="text-sm mb-3 text-red-600/70 dark:text-red-300/70">
                     {reportCount === 0
                       ? "Found a problem? Let us know and we'll help resolve it."
                       : "Issue reported. Team will review soon."}
                   </p>
-                  {reportCount > 0 && (
+                  {/* {reportMessages.length > 0 && (
                     <div className="space-y-2 mb-3">
                       {reportMessages.map((msg, index) => (
                         <div
@@ -433,18 +478,44 @@ const SidePanel: React.FC<{
                           className="text-sm p-2 rounded-md bg-red-100/70 dark:bg-red-500/10 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
                         >
                           • {msg.message}
+
+                        </div>
+
+
+                      ))}
+
+                    </div>
+                  )} */}
+
+                  {/* Reports Section */}
+                  {reportsLoading ? (
+                    <div className="text-sm text-red-700 dark:text-red-300 mb-3">
+                      Loading reports...
+                    </div>
+                  ) : reportMessages.length > 0 ? (
+                    <div className="space-y-2 mb-3">
+                      {reportMessages.map((msg, index) => (
+                        <div
+                          key={index}
+                          className="text-sm p-2 rounded-md  text-red-700 dark:text-red-300 border"
+                        >
+                          {msg.message}
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                      No issues reported for this task.
+                    </div>
                   )}
-                  {reportCount === 0 && (
-                    <button
-                      onClick={() => setOpen(true)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300"
-                    >
-                      Report Issue
-                    </button>
-                  )}
+
+                  <button
+                    onClick={() => setOpen(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300"
+                  >
+                    Report Issue
+                  </button>
+
                 </div>
               </div>
             </div>
@@ -642,6 +713,45 @@ const SidePanel: React.FC<{
           </div>
         </div>
 
+        {/* DELETE TASK MODAL */}
+        {confirmDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white dark:bg-[#111] rounded-xl p-6 w-full max-w-sm shadow-xl">
+              <h3 className="text-lg font-bold text-red-600 mb-2">
+                Delete Task
+              </h3>
+
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-5">
+                Are you sure you want to delete
+                <span className="font-semibold"> “{confirmDelete.title}”</span>?
+                <br />
+                This action cannot be undone.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  disabled={deleting}
+                  onClick={() => {
+                    if (!selectedTask) return;
+                    onDeleteTask(selectedTask.id);
+                  }}
+                  className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Comment Delete Modal */}
         {deleteComment && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm shadow-xl">
@@ -726,8 +836,15 @@ const KanbanBoard: React.FC = () => {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const [taskMode, setTaskMode] = useState<"create" | "edit">("create");
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const [reportsLoading, setReportsLoading] = useState(false);
+
+
 
   useEffect(() => {
     fetchUserRole();
@@ -771,6 +888,8 @@ const KanbanBoard: React.FC = () => {
       const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
       const res = await fetch(url);
       const data = await res.json();
+      console.log("data of tasks", data);
+
 
       if (data.success && data.tasks) {
         setTasks(data.tasks);
@@ -821,6 +940,104 @@ const KanbanBoard: React.FC = () => {
   const handleDragStart = (task: Task) => {
     setDraggedTask(task);
   };
+
+  const handleUpdateTask = async () => {
+    if (!taskToEdit) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("id", taskToEdit.id);
+      formData.append("title", newTask.title.trim());
+      formData.append("description", newTask.description.trim());
+      formData.append("assignee", newTask.assignee);
+      formData.append("priority", newTask.priority);
+      formData.append("dueDate", newTask.dueDate);
+      formData.append("status", newTask.status);
+      formData.append("tags", newTask.tags.join(","));
+
+      if (newTask.attachmentFile) {
+        formData.append("attachment", newTask.attachmentFile);
+      }
+
+      const res = await fetch("/api/kanban/task", {
+        method: "PUT",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error("Update failed");
+        return;
+      }
+
+      setTasks(prev =>
+        prev.map(t => (t.id === data.task.id ? data.task : t))
+      );
+
+      setSelectedTask(data.task);
+      setShowNewTaskModal(false);
+      setTaskMode("create");
+      setTaskToEdit(null);
+      toast.success("Task updated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  };
+
+
+  const handleSubmitTask = async () => {
+    if (taskMode === "edit") {
+      await handleUpdateTask();
+    } else {
+      await handleCreateTask();
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setTaskMode("edit");
+    setTaskToEdit(task);
+
+    setNewTask({
+      title: task.title,
+      description: task.description,
+      assignee: task.assignee,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      tags: task.tags,
+      status: task.status,
+      attachmentFile: null,
+    });
+
+    setShowNewTaskModal(true);
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const res = await fetch("/api/kanban/task", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to delete task");
+        return;
+      }
+
+      toast.success("Task deleted successfully");
+
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setSelectedTask(null);
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Something went wrong");
+    }
+  };
+
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -980,26 +1197,35 @@ const KanbanBoard: React.FC = () => {
 
   //   fetchReports();
   // }, [selectedTask]);
+  const fetchReports = async (taskId: string) => {
+    try {
+      setReportsLoading(true);
+      setReportMessages([]);
 
+      const res = await fetch(`/api/kanban/report?taskId=${taskId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setReportCount(data.count || 0);
+        setReportMessages(data.messages || []);
+        console.log("fetch done");
+        console.log(reportMessages);
+
+
+      }
+    } catch (err) {
+      console.error("Failed to fetch reports:", err);
+    } finally {
+      setReportsLoading(false);
+    }
+  };
 
   useEffect(() => {
-  if (!selectedTask) return;
-  const fetchReports = async (taskId: string) => {
-  try {
-    const res = await fetch(`/api/kanban/report?taskId=${taskId}`);
-    const data = await res.json();
+    if (!selectedTask) return;
+    fetchReports(selectedTask.id);
+    console.log("i ma selected", selectedTask);
 
-    if (data.success) {
-      setReportCount(data.count || 0);
-      setReportMessages(data.messages || []);
-    }
-  } catch (err) {
-    console.error("Failed to fetch reports:", err);
-  }
-};
-
-  fetchReports(selectedTask.id);
-}, [selectedTask]);
+  }, [selectedTask?.id]);
 
   const handleCreateTask = async () => {
     if (!newTask.title.trim()) return;
@@ -1108,8 +1334,8 @@ const KanbanBoard: React.FC = () => {
     } catch (err) {
       console.error("Report error:", err);
       toast.error("Something went wrongg");
-      console.log("this is the error" ,err.message);
-      
+      console.log("this is the error", err.message);
+
     } finally {
       setLoading(false);
     }
@@ -1138,8 +1364,8 @@ const KanbanBoard: React.FC = () => {
                   onChange={(e) => setSelectedEmployee(e.target.value)}
                   className="px-4 py-2 rounded-lg border bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Employees (My Tasks)</option>
-                  {employees.map((emp) => (
+                  <option value="__ME__">My Tasks</option>
+                  {employees.map(emp => (
                     <option key={emp.id} value={emp.name}>
                       {emp.name} - {emp.employeeId}
                     </option>
@@ -1218,8 +1444,8 @@ const KanbanBoard: React.FC = () => {
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-2">
                       <div className={`p-2 rounded-lg ${column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
-                          column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
-                            'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                        column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
+                          'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
                         }`}>
                         <Icon className="w-5 h-5" />
                       </div>
@@ -1233,53 +1459,70 @@ const KanbanBoard: React.FC = () => {
                     onDrop={() => handleDrop(column.id as Task['status'])}
                     className={`flex-1 space-y-3 min-h-[200px] p-1 rounded-lg ${draggedTask && draggedTask.status !== column.id ? 'bg-gray-100/50 dark:bg-gray-800/30' : ''}`}
                   >
-                    {columnTasks.map(task => (
-                      <div
-                        key={task.id}
-                        draggable
-                        onDragStart={() => handleDragStart(task)}
-                        onClick={() => setSelectedTaskId(task.id)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all bg-white dark:bg-gray-800/[0.5] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 ${draggedTask?.id === task.id ? 'opacity-50' : ''}`}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <h3 className="font-semibold text-gray-600 dark:text-white line-clamp-2">{task.title}</h3>
-                          <span className={`px-2 py-1 rounded-md text-xs font-medium border ${priorityClasses[task.priority]} flex-shrink-0 ml-2`}>
-                            {task.priority}
-                          </span>
-                        </div>
+                    {columnTasks
+                      .filter(task => {
+                        // ADMIN logic
+                        if (userRole === "ADMIN") {
+                          // My Tasks
+                          if (selectedEmployee === "__ME__" || !selectedEmployee) {
+                            return task.assignee === currentUser?.name;
+                          }
 
-                        <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{task.description}</p>
+                          // Selected employee
+                          return task.assignee === selectedEmployee;
+                        }
 
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {task.tags.map(tag => (
-                            <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
-                              {tag}
+                        // EMPLOYEE logic
+                        return task.assignee === currentUser?.name;
+                      })
+
+                      .map(task => (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={() => handleDragStart(task)}
+                          onClick={() => setSelectedTaskId(task.id)}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all bg-white dark:bg-gray-800/[0.5] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 ${draggedTask?.id === task.id ? 'opacity-50' : ''}`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="font-semibold text-gray-600 dark:text-white line-clamp-2">{task.title}</h3>
+                            <span className={`px-2 py-1 rounded-md text-xs font-medium border ${priorityClasses[task.priority]} flex-shrink-0 ml-2`}>
+                              {task.priority}
                             </span>
-                          ))}
-                        </div>
+                          </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <MessageSquare className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                              <span className="text-sm text-gray-600 dark:text-gray-400">{task.comments?.length}</span>
-                            </div>
-                            {task.attachments.length > 0 && (
+                          <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{task.description}</p>
+
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {task.tags.map(tag => (
+                              <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+                            <div className="flex items-center gap-3">
                               <div className="flex items-center gap-1">
-                                <Paperclip className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">{task.attachments.length}</span>
+                                <MessageSquare className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{task.comments?.length}</span>
                               </div>
-                            )}
-                          </div>
+                              {task.attachments.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Paperclip className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">{task.attachments.length}</span>
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-blue-500 to-green-500 text-white">
-                              {task.assigneeAvatar}
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-blue-500 to-green-500 text-white">
+                                {task.assigneeAvatar}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               );
@@ -1291,9 +1534,12 @@ const KanbanBoard: React.FC = () => {
       <SidePanel
         selectedTask={selectedTask}
         onClose={() => setSelectedTask(null)}
+        onEditTask={handleEditTask}
+        onDeleteTask={handleDeleteTask}
         commentText={commentText}
         setCommentText={setCommentText}
         handleAddComment={handleAddComment}
+        reportsLoading={reportsLoading}
         loading={loading}
         open={open}
         setOpen={setOpen}
@@ -1309,13 +1555,19 @@ const KanbanBoard: React.FC = () => {
 
       <NewTaskModal
         isOpen={showNewTaskModal}
-        onClose={() => setShowNewTaskModal(false)}
+        onClose={() => {
+          setShowNewTaskModal(false);
+          setTaskMode("create");
+          setTaskToEdit(null);
+        }}
+        mode={taskMode}
         newTask={newTask}
         setNewTask={setNewTask}
-        handleCreateTask={handleCreateTask}
+        handleSubmit={handleSubmitTask}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
       />
+
     </div>
   );
 };

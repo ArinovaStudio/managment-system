@@ -26,6 +26,7 @@ export async function POST(req: Request, res: Response) {
             data: {
                 title, 
                 answer: answer || description,
+                category,
                 likes: 0,
                 dislikes: 0
             }
@@ -35,6 +36,8 @@ export async function POST(req: Request, res: Response) {
         }
     }
     catch(e) {
+        console.log(e.message);
+        
             return NextResponse.json({"message": "failed", "error": e}, {status: 500})
     }
 }

@@ -32,8 +32,8 @@ export default function MilestoneTab({ projectId }: any) {
     try {
       const res = await fetch('/api/auth/me');
       const data = await res.json();
-      
-      
+
+
       if (res.ok && data.success) {
         setCurrentUser(data.user);
       } else {
@@ -176,12 +176,12 @@ export default function MilestoneTab({ projectId }: any) {
 
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Milestones</h2>
-        
+
         {/* Debug info */}
         <div className="text-xs text-gray-500 mb-2">
           User: {currentUser?.name || 'Not loaded'} | Role: {currentUser?.role || 'Unknown'}
         </div>
-        
+
         {(currentUser?.role === 'ADMIN' || currentUser?.role === 'EMPLOYEE') && (
           <button
             onClick={() => setOpen(true)}
@@ -214,9 +214,9 @@ export default function MilestoneTab({ projectId }: any) {
               default: return { bg: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-500/20', text: 'text-yellow-500', badge: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800' };
             }
           };
-          
+
           const statusColors = getStatusColor(m.status || 'PENDING');
-          
+
           return (
             <div
               key={m.id}
@@ -226,24 +226,7 @@ export default function MilestoneTab({ projectId }: any) {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{m.title}</h3>
 
                 <div className="flex items-center gap-2">
-                  {(currentUser?.role === 'ADMIN' || currentUser?.role === 'EMPLOYEE') && (
-                    <div className="flex items-center gap-1 mr-2">
-                      <button
-                        onClick={() => openEditModal(m)}
-                        className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
-                        title="Edit milestone"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      <button
-                        onClick={() => deleteMilestone(m.id)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Delete milestone"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  )}
+
                   <Flag size={16} className={statusColors.text} />
                   <span className={`text-xs px-3 py-1 rounded-lg border ${statusColors.badge}`}>
                     {m.status || 'PENDING'}
@@ -260,10 +243,33 @@ export default function MilestoneTab({ projectId }: any) {
                 <div className="text-xs text-gray-400">
                   Due: {new Date(m.dueDate).toLocaleDateString()}
                 </div>
-                <div className={`text-xs font-medium ${statusColors.text}`}>
-                  {m.status === 'COMPLETED' ? '✓ Completed' :
-                   m.status === 'IN_PROGRESS' ? '⏳ In Progress' :
-                   m.status === 'CANCELLED' ? '✗ Cancelled' : '⏸ Pending'}
+                <div className="flex gap-3 items-center">
+                  <div className={`text-xs font-medium ${statusColors.text}`}>
+                    {m.status === 'COMPLETED' ? '✓ Completed' :
+                      m.status === 'IN_PROGRESS' ? '⏳ In Progress' :
+                        m.status === 'CANCELLED' ? '✗ Cancelled' : '⏸ Pending'}
+                  </div>
+
+                  <div>
+                    {(currentUser?.role === 'ADMIN' || currentUser?.role === 'EMPLOYEE') && (
+                      <div className="flex items-center gap-1 mr-2">
+                        <button
+                          onClick={() => openEditModal(m)}
+                          className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                          title="Edit milestone"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          onClick={() => deleteMilestone(m.id)}
+                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Delete milestone"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

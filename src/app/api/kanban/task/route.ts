@@ -1,6 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import db from "@/lib/client";
 import cloudinary from "@/lib/cloudinary";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -120,20 +123,76 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// export async function PUT(req: NextRequest) {
+//   try {
+//     const { id, status } = await req.json();
+
+//     if (!id || !status) {
+//       return NextResponse.json(
+//         { error: "Missing required fields" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const updatedTask = await db.task.update({
+//       where: { id },
+//       data: { status },
+//     });
+
+//     return NextResponse.json({ success: true, task: updatedTask });
+//   } catch (error) {
+//     console.error("Error updating task:", error);
+//     return NextResponse.json(
+//       { error: "Internal Server Error" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
 export async function PUT(req: NextRequest) {
   try {
-    const { id, status } = await req.json();
+    const contentType = req.headers.get("content-type") || "";
 
-    if (!id || !status) {
+    let id: string;
+    let data: any = {};
+
+    if (contentType.includes("application/json")) {
+      // Drag & drop (status only)
+      const body = await req.json();
+      id = body.id;
+      data.status = body.status;
+    } else {
+      // Edit task modal (full update)
+      const formData = await req.formData();
+
+      id = formData.get("id") as string;
+
+      data = {
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        assignee: formData.get("assignee") as string,
+        priority: formData.get("priority") as string,
+        status: formData.get("status") as string,
+        dueDate: new Date(formData.get("dueDate") as string),
+        tags: (formData.get("tags") as string)
+          ?.split(",")
+          .map(t => t.trim()),
+      };
+    }
+
+    if (!id) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Task ID missing" },
         { status: 400 }
       );
     }
 
     const updatedTask = await db.task.update({
       where: { id },
-      data: { status },
+      data,
     });
 
     return NextResponse.json({ success: true, task: updatedTask });
@@ -146,19 +205,43 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+
+
+export async function DELETE(req: NextRequest) {
   try {
-    const deleted = await db.task.deleteMany({});
+    const { id } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "Task ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const deletedTask = await db.task.delete({
+      where: { id },
+    });
 
     return NextResponse.json(
-      { message: "Task deleted successfully", deletedTask: deleted },
+      {
+        message: "Task deleted successfully",
+        task: deletedTask,
+      },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting task:", error);
 
+    // Prisma record not found
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { message: "Task not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "Failed to delete task", error },
+      { message: "Failed to delete task" },
       { status: 500 }
     );
   }
