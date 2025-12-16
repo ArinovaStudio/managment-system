@@ -115,7 +115,7 @@ export default function WorkHoursCard() {
                 >
                   {/* Working Hours Text */}
                   <span className="text-[12px] text-white font-bold block mt-5 w-full text-center">
-                    {item.hours > 0 ? `${item.hours.toFixed(1)}h` : "-"}
+                    {item.hours > 0 ? `${item.hours.toFixed(1)}h` : ""}
                   </span>
 
                 </div>

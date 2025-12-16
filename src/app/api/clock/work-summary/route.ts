@@ -2,6 +2,48 @@ import { getUserId } from "@/lib/auth";
 import db from "@/lib/client";
 import { NextResponse } from "next/server";
 
+export async function GET(req: Request) {
+  try {
+    const userId = await getUserId(req);
+    
+    // Get work summaries from the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const workSummaries = await db.workHours.findMany({
+      where: {
+        summary: {
+          not: null
+        },
+        date: {
+          gte: thirtyDaysAgo
+        }
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            workingAs: true,
+            image: true,
+            department: true
+          }
+        }
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    });
+
+    return NextResponse.json({ success: true, reports: workSummaries });
+  } catch (error: any) {
+    console.error('Failed to fetch daily reports:', error);
+    return NextResponse.json(
+      { error: error.message || "Failed to fetch daily reports" },
+      { status: error.message === "Unauthorized" ? 401 : 500 }
+    );
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const userId = await getUserId(req);
