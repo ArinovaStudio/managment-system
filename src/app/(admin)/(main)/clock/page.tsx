@@ -225,6 +225,12 @@ function Clock() {
   };
 
   const handleBreakAction = async (breakType: string, action: 'start' | 'end') => {
+    // Check if user is logged in before allowing break actions
+    if (!userStatus?.isLoggedIn) {
+      toast.error('Please clock in first before taking a break');
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await fetch('/api/clock/break', {
@@ -897,7 +903,7 @@ function Clock() {
             </div>
 
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Camera not available. Please enter your password to authenticate.
+              Please enter your password to Login.
             </p>
 
             <input
@@ -921,7 +927,7 @@ function Clock() {
                 disabled={authLoading}
                 className="flex-1 py-2 px-4 bg-sky-400 text-white rounded-lg hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105"
               >
-                {authLoading ? 'Authenticating...' : 'Authenticate'}
+                {authLoading ? 'logging in...' : 'Login'}
               </button>
             </div>
           </div>
