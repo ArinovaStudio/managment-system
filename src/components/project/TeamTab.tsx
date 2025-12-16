@@ -176,7 +176,21 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                 )}
               </div>
 
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex mt-10 items-end gap-2">
+                <div>
+                  <button
+                  onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
+                  className={`flex items-center gap-1 px-3 py-1 rounded text-xs ${
+                    m.isLeader
+                      ? "bg-yellow-400/70 text-black"
+                      : "bg-gray-400/30 text-white"
+                  }`}
+                >
+                  <ShieldCheck size={14} />
+                  {m.isLeader ? "Remove Leader" : "Make Leader"}
+                </button>
+                </div>
+
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
@@ -196,18 +210,6 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                     <Trash2 size={14} />
                   </button>
                 </div>
-                
-                <button
-                  onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded text-xs ${
-                    m.isLeader
-                      ? "bg-yellow-400/70 text-black"
-                      : "bg-gray-400/30 text-white"
-                  }`}
-                >
-                  <ShieldCheck size={14} />
-                  {m.isLeader ? "Remove Leader" : "Make Leader"}
-                </button>
               </div>
             </div>
           </div>
