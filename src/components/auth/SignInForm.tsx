@@ -2,7 +2,7 @@
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import React, { useState} from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { EyeClosedIcon, EyeIcon } from "lucide-react";
 
@@ -75,91 +75,87 @@ export default function SignInForm() {
             </p>
           </div>
 
-       
+
 
           {step === 1 ? (
-          <form onSubmit={handleCredentials}>
-            <div className="space-y-6">
-              <div>
-                <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
-                <Input
-                  placeholder="adarsh@arinova.studio or emp-001"
-                  type="text"
-                  defaultValue={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label>Password <span className="text-error-500">*</span></Label>
-                <div className="relative">
+            <form onSubmit={handleCredentials}>
+              <div className="space-y-6">
+                <div>
+                  <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    defaultValue={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="adarsh@arinova.studio or emp-001"
+                    type="text"
+                    defaultValue={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
-                  <span
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                </div>
+
+                <div>
+                  <Label>Password <span className="text-error-500">*</span></Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      defaultValue={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <span
+                      className="absolute right-3 top-3 cursor-pointer"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {!showPassword ? <EyeClosedIcon /> : <EyeIcon />}
+                    </span>
+                  </div>
+                </div>
+
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                <div className="flex items-center justify-end">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
-                    {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                    ) : (
-                      <EyeClosedIcon className="fill-gray-500 dark:fill-gray-400" />
-                    )}
-                  </span>
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <div>
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || !email || !password}>
+                    {loading ? "Verifying..." : "Continue"}
+                  </Button>
                 </div>
               </div>
-
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-
-              <div className="flex items-center justify-end">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              <div>
-                <Button type="submit" className="w-full" size="sm" disabled={loading || !email || !password}>
-                  {loading ? "Verifying..." : "Continue"}
-                </Button>
-              </div>
-            </div>
-          </form>
+            </form>
           ) : (
-          <form onSubmit={handleOtpSignin}>
-            <div className="space-y-6">
-              <div>
-                <Label>Enter OTP <span className="text-error-500">*</span></Label>
-                <Input
-                  type="text"
-                  placeholder="Enter 6-digit OTP sent to your email"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  autoComplete="off"
-                  name="otp"
-                />
-              </div>
+            <form onSubmit={handleOtpSignin}>
+              <div className="space-y-6">
+                <div>
+                  <Label>Enter OTP <span className="text-error-500">*</span></Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter 6-digit OTP sent to your email"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    autoComplete="off"
+                    name="otp"
+                  />
+                </div>
 
-              {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-500 text-sm">{error}</p>}
 
-              <div>
-                <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
+                <div>
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </div>
+
+                <div>
+                  <Button type="button" onClick={() => setStep(1)} className="w-full" variant="outline" size="sm">
+                    Back
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <Button type="button" onClick={() => setStep(1)} className="w-full" variant="outline" size="sm">
-                  Back
-                </Button>
-              </div>
-            </div>
-          </form>
+            </form>
           )}
 
         </div>

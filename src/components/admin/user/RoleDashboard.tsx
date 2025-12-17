@@ -1,7 +1,8 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Eye, Plus } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
@@ -60,7 +61,12 @@ export default function RoleDashboard() {
 
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [addUser, setAddUser] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
   const [saving, setSaving] = useState(false);
+
+  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Other'];
+  const positions = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'UI/UX Designer', 'Product Manager', 'Marketing Manager', 'Sales Executive', 'HR Manager', 'Other'];
 
 
   // FETCH USERS FROM BACKEND
@@ -99,8 +105,18 @@ export default function RoleDashboard() {
           {selectedRole} ({filteredUsers.length})
         </h1>
 
-        {/* ROLE SWITCH BUTTONS */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {/* ADD USER BUTTON */}
+          <button
+            onClick={() => setAddUser(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Plus size={20} />
+            Add User
+          </button>
+
+          {/* ROLE SWITCH BUTTONS */}
+          <div className="flex gap-3">
           {["EMPLOYEE", "ADMIN", "CLIENT"].map((role) => (
             <button
               key={role}
@@ -115,8 +131,153 @@ export default function RoleDashboard() {
               {role}
             </button>
           ))}
+          </div>
         </div>
       </div>
+
+      {/* ADD USER MODAL */}
+      {addUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4">Add New User</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setSaving(true);
+                const toastId = toast.loading("Creating user...");
+                try {
+                  const res = await fetch("/api/auth/signup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(newUser),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) {
+                    toast.error(data.error || "Failed to create user", { id: toastId });
+                    return;
+                  }
+                  setUsers((prev) => [...prev, data.user]);
+                  toast.success("User created successfully", { id: toastId });
+                  setAddUser(false);
+                  setNewUser({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
+                } catch {
+                  toast.error("Something went wrong", { id: toastId });
+                } finally {
+                  setSaving(false);
+                }
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-sm font-medium mb-1">Name *</label>
+                <input
+                  required
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  placeholder="Enter name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email *</label>
+                <input
+                  required
+                  type="email"
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  placeholder="Enter email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Password *</label>
+                <input
+                  required
+                  type="password"
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="Enter password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Role *</label>
+                <select
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                >
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="CLIENT">Client</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Department</label>
+                <select
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.department}
+                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                >
+                  <option value="">Select or type below</option>
+                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+                <input
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2"
+                  value={newUser.department}
+                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                  placeholder="Or type custom department"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Position</label>
+                <select
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.workingAs}
+                  onChange={(e) => setNewUser({ ...newUser, workingAs: e.target.value })}
+                >
+                  <option value="">Select or type below</option>
+                  {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <input
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2"
+                  value={newUser.workingAs}
+                  onChange={(e) => setNewUser({ ...newUser, workingAs: e.target.value })}
+                  placeholder="Or type custom position"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone</label>
+                <input
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddUser(false);
+                    setNewUser({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
+                  }}
+                  className="px-4 py-2 rounded border dark:border-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {saving ? "Creating..." : "Create User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* LOADING */}
       {loading && (
@@ -164,7 +325,7 @@ export default function RoleDashboard() {
                 return (
                   <div
                     key={u.id}
-                    className="p-4 border rounded shadow bg-white dark:bg-gray-900 dark:border-gray-700 transition-all duration-200 self-start"
+                    className="p-4 border rounded shadow bg-white dark:bg-gray-900 dark:border-gray-700 transition-all duration-200 self-start hover:shadow-lg"
                   >
                     {/* HEADER (always visible) */}
                     <div className="flex justify-between items-center">
@@ -185,19 +346,28 @@ export default function RoleDashboard() {
                       </div>
 
                       <div className="flex gap-2">
+                        <Link
+                          href={`/user/${u.name}`}
+                          className="text-sm px-3 py-1 rounded bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
+                          title="View Profile"
+                        >
+                          <Eye size={14} />
+                          View
+                        </Link>
                         <button
-                          onClick={() => setEditUser(u)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditUser(u);
+                          }}
                           className="text-sm px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
                         >
                           Edit
                         </button>
-
-                      </div>
-
-                      <div>
-
                         <button
-                          onClick={() => setDeleteUser(u)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteUser(u);
+                          }}
                           className="text-sm px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
                         >
                           Delete
@@ -216,8 +386,8 @@ export default function RoleDashboard() {
 
                     </div>
 
-                    {editUser && (
-                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    {editUser && editUser.id === u.id && (
+                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
                           <h2 className="text-lg font-bold mb-4">Edit User</h2>
 
@@ -252,14 +422,6 @@ export default function RoleDashboard() {
                               } finally {
                                 setSaving(false);
                               }
-
-
-                              setUsers((prev) =>
-                                prev.map((u) => (u.id === editUser.id ? editUser : u))
-                              );
-
-                              setSaving(false);
-                              setEditUser(null);
                             }}
                             className="space-y-3"
                           >
@@ -304,26 +466,37 @@ export default function RoleDashboard() {
 
                             <div>
                               <label className="block text-sm font-medium mb-1">Department</label>
-                              <input
-                                className="w-full border px-3 py-2 rounded"
+                              <select
+                                className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
                                 value={editUser.department ?? ""}
-                                onChange={(e) =>
-                                  setEditUser({ ...editUser, department: e.target.value })
-                                }
-                                placeholder="Enter department"
+                                onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}
+                              >
+                                <option value="">Select or type below</option>
+                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                              </select>
+                              <input
+                                className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2"
+                                value={editUser.department ?? ""}
+                                onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}
+                                placeholder="Or type custom department"
                               />
                             </div>
 
-
                             <div>
-                              <label className="block text-sm font-medium mb-1">Working As</label>
-                              <input
-                                className="w-full border px-3 py-2 rounded"
+                              <label className="block text-sm font-medium mb-1">Position</label>
+                              <select
+                                className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
                                 value={editUser.workingAs ?? ""}
-                                onChange={(e) =>
-                                  setEditUser({ ...editUser, workingAs: e.target.value })
-                                }
-                                placeholder="e.g. Frontend Developer"
+                                onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}
+                              >
+                                <option value="">Select or type below</option>
+                                {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                              </select>
+                              <input
+                                className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2"
+                                value={editUser.workingAs ?? ""}
+                                onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}
+                                placeholder="Or type custom position"
                               />
                             </div>
 
@@ -350,7 +523,7 @@ export default function RoleDashboard() {
                       </div>
                     )}
 
-                    {deleteUser && (
+                    {deleteUser && deleteUser.id === u.id && (
                       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
                           <h2 className="text-lg font-bold text-red-600">
@@ -405,11 +578,6 @@ export default function RoleDashboard() {
                                 } catch {
                                   toast.error("Something went wrong", { id: toastId });
                                 }
-
-
-
-                                setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
-                                setDeleteUser(null);
                               }}
                               className="
       px-4 py-2 rounded-md

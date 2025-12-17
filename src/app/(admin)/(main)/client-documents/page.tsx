@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, FileText, Check, X } from "lucide-react";
+import { Upload, FileText, Check, X, Eye } from "lucide-react";
 
 export default function AdminDocuments() {
     const [pendingDocs, setPendingDocs] = useState([
@@ -10,6 +10,7 @@ export default function AdminDocuments() {
             client: "Aritra Dhank",
             project: "Dashboard UI",
             fileName: "requirements.pdf",
+            fileUrl: "/documents/requirements.pdf",
             uploadedAt: "2025-02-10",
         },
         {
@@ -17,6 +18,7 @@ export default function AdminDocuments() {
             client: "John Doe",
             project: "API System",
             fileName: "api-schema.docx",
+            fileUrl: "/documents/api-schema.docx",
             uploadedAt: "2025-02-11",
         },
     ]);
@@ -26,6 +28,7 @@ export default function AdminDocuments() {
             id: 10,
             project: "E-Commerce App",
             fileName: "ui-wireframe.pdf",
+            fileUrl: "/documents/ui-wireframe.pdf",
             uploadedAt: "2025-01-28",
         },
     ]);
@@ -41,7 +44,7 @@ export default function AdminDocuments() {
 
         setApprovedDocs((prev) => [
             ...prev,
-            { id: Date.now(), project: doc.project, fileName: doc.fileName, uploadedAt: doc.uploadedAt },
+            { id: Date.now(), project: doc.project, fileName: doc.fileName, fileUrl: doc.fileUrl, uploadedAt: doc.uploadedAt },
         ]);
 
         setPendingDocs((prev) => prev.filter((d) => d.id !== id));
@@ -60,6 +63,7 @@ export default function AdminDocuments() {
                 id: Date.now(),
                 project: newProject,
                 fileName: newFile.name,
+                fileUrl: URL.createObjectURL(newFile),
                 uploadedAt: new Date().toISOString().split("T")[0],
             },
         ]);
@@ -67,6 +71,10 @@ export default function AdminDocuments() {
         setNewProject("");
         setNewFile(null);
         setAddModal(false);
+    };
+
+    const viewDocument = (fileUrl: string, fileName: string) => {
+        window.open(fileUrl, '_blank');
     };
 
     return (
@@ -115,27 +123,22 @@ export default function AdminDocuments() {
 
                                 <div className="flex gap-2">
                                     <button
+                                        onClick={() => viewDocument(doc.fileUrl, doc.fileName)}
+                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-blue-600/30 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 hover:bg-blue-600/40 dark:hover:bg-blue-500/30 transition"
+                                    >
+                                        <Eye size={16} /> View
+                                    </button>
+
+                                    <button
                                         onClick={() => approveDoc(doc.id)}
-                                        className="
-      px-3 py-2 rounded-lg text-sm flex items-center gap-1
-      bg-green-600/30 text-green-700
-      dark:bg-green-500/20 dark:text-green-300
-      hover:bg-green-600/40 dark:hover:bg-green-500/30
-      transition
-    "
+                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-green-600/30 text-green-700 dark:bg-green-500/20 dark:text-green-300 hover:bg-green-600/40 dark:hover:bg-green-500/30 transition"
                                     >
                                         <Check size={16} /> Approve
                                     </button>
 
                                     <button
                                         onClick={() => rejectDoc(doc.id)}
-                                        className="
-      px-3 py-2 rounded-lg text-sm flex items-center gap-1
-      bg-red-600/30 text-red-700
-      dark:bg-red-500/20 dark:text-red-300
-      hover:bg-red-600/40 dark:hover:bg-red-500/30
-      transition
-    "
+                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-red-600/30 text-red-700 dark:bg-red-500/20 dark:text-red-300 hover:bg-red-600/40 dark:hover:bg-red-500/30 transition"
                                     >
                                         <X size={16} /> Reject
                                     </button>
@@ -174,7 +177,12 @@ export default function AdminDocuments() {
                                 <p className="text-xs text-gray-500 dark:text-gray-500">{doc.uploadedAt}</p>
                             </div>
 
-                            <FileText className="text-gray-600 dark:text-gray-400" />
+                            <button
+                                onClick={() => viewDocument(doc.fileUrl, doc.fileName)}
+                                className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-blue-600/30 text-blue-700 dark:blue-500/20 dark:text-blue-300 hover:bg-blue-600/40 dark:hover:bg-blue-500/30 transition"
+                            >
+                                <Eye size={16} /> View
+                            </button>
                         </div>
                     ))}
                 </div>

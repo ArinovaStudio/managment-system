@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Clock, User, AlertCircle, Plus, Users } from "lucide-react";
+import { Calendar, Clock, User, AlertCircle, Plus, Users, Trash2 } from "lucide-react";
 import CreateMeetingModal from "@/components/meetings/CreateMeetingModal";
 
 interface Meeting {
@@ -19,6 +19,7 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchMeetings = async () => {
     const userRes = await fetch('/api/user');
@@ -34,6 +35,25 @@ export default function MeetingsPage() {
       setMeetings(data.meetings);
     }
     setLoading(false);
+  };
+
+  const deleteMeeting = async (meetingId: string) => {
+    if (!confirm('Are you sure you want to delete this meeting?')) return;
+    
+    setDeletingId(meetingId);
+    try {
+      const res = await fetch(`/api/meetings?id=${meetingId}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        setMeetings(meetings.filter(m => m.id !== meetingId));
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   useEffect(() => {
@@ -143,9 +163,19 @@ export default function MeetingsPage() {
 
               {isAdmin && (
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Created by: <span className="text-blue-600 dark:text-blue-400 font-medium">{typeof meeting.createdBy === 'object' ? meeting.createdBy.name : meeting.createdBy}</span>
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Created by: <span className="text-blue-600 dark:text-blue-400 font-medium">{typeof meeting.createdBy === 'object' ? meeting.createdBy.name : meeting.createdBy}</span>
+                    </p>
+                    <button
+                      onClick={() => deleteMeeting(meeting.id)}
+                      disabled={deletingId === meeting.id}
+                      className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
+                      title="Delete meeting"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

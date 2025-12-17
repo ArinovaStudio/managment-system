@@ -38,6 +38,7 @@ export default function ProjectsPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchUser, setSearchUser] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     fetchUserProjects();
@@ -49,9 +50,10 @@ export default function ProjectsPage() {
       const userResponse = await fetch('/api/user');
       const userData = await userResponse.json();
 
-      const isAdmin = userData.user && userData.user.role === 'ADMIN';
+      const adminStatus = userData.user && userData.user.role === 'ADMIN';
+      setIsAdmin(adminStatus);
 
-      const response = await fetch(`/api/project${isAdmin ? '' : '?userOnly=true'}`);
+      const response = await fetch(`/api/project${adminStatus ? '' : '?userOnly=true'}`);
       const data = await response.json();
       if (data.success) {
         setProjects(data.projects);
@@ -176,13 +178,15 @@ export default function ProjectsPage() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="w-[50%] inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus size={20} />
-            New Project
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="w-[50%] inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus size={20} />
+              New Project
+            </button>
+          )}
 
           <div className="relative w-8">
             {/* The displayed filter icon */}

@@ -26,7 +26,7 @@ export default function SignUpForm() {
       setError("Please accept terms and conditions");
       return;
     }
-    
+
     setLoading(true);
     setError("");
 
@@ -77,7 +77,7 @@ export default function SignUpForm() {
             </p>
           </div>
           <div>
-           
+
             <form onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div>
@@ -88,7 +88,7 @@ export default function SignUpForm() {
                     type="text"
                     placeholder="Enter your full name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                   />
                 </div>
@@ -101,7 +101,7 @@ export default function SignUpForm() {
                     type="email"
                     placeholder="Enter your email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
                 </div>
@@ -115,38 +115,32 @@ export default function SignUpForm() {
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
                     />
                     <span
+                      className="absolute right-3 top-3 cursor-pointer"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                     >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                      ) : (
-                        <EyeClosedIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}
+                      {!showPassword ? <EyeClosedIcon /> : <EyeIcon />}
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  <div>
-                    <Label>Phone</Label>
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    />
-                  </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
                 </div>
                 <div>
                   <Label>Profile Picture</Label>
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setFormData({...formData, image: e.target.files?.[0] || null})}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
                   />
                 </div>
                 {error && <p className="text-red-500 text-sm">{error}</p>}
