@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Users, Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import { Users, Calendar, TrendingUp, BarChart3, Mail, Building2, Award } from "lucide-react";
 import dynamic from 'next/dynamic';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
@@ -63,61 +63,105 @@ export default function UserProfilePage() {
     }
   }
 
-  if (loading) return <p className="p-6 text-gray-500">Loading user...</p>;
-  if (!user) return <p className="p-6 text-red-500">User not found.</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  );
+  if (!user) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-red-500 text-lg">User not found.</p>
+    </div>
+  );
 
   const projects = user.projectMembers || [];
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
 
       {/* PROFILE HEADER */}
-      <div className="flex items-center gap-6 mb-8">
-        <Image
-          src={user.image ?? "/default-avatar.png"}
-          alt={user.name}
-          width={96}
-          height={96}
-          className="rounded-full h-30 w-30 object-cover"
-        />
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-8 shadow-lg">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div className="relative">
+            <Image
+              src={user.image ?? "/default-avatar.png"}
+              alt={user.name}
+              width={120}
+              height={120}
+              className="rounded-full h-30 w-30 object-cover border-4 border-white shadow-xl"
+            />
+            <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
+          </div>
 
-        <div>
-          <h1 className="text-3xl font-bold">{user.name}</h1>
-          <p className="text-gray-500">{user.email}</p>
-          <p className="text-sm text-gray-400">
-            Department: {user.department || "N/A"}
-          </p>
+          <div className="flex-1 text-center md:text-left">
+            <h1 className="text-3xl font-bold text-white mb-2">{user.name}</h1>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-blue-100 justify-center md:justify-start">
+                <Mail size={16} />
+                <span>{user.email}</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-100 justify-center md:justify-start">
+                <Building2 size={16} />
+                <span>{user.department || "N/A"}</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-100 justify-center md:justify-start">
+                <Award size={16} />
+                <span className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">{user.role || "Employee"}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center min-w-[100px]">
+              <p className="text-2xl font-bold text-white">{projects.length}</p>
+              <p className="text-blue-100 text-sm">Projects</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center min-w-[100px]">
+              <p className="text-2xl font-bold text-white">{performanceData.length}</p>
+              <p className="text-blue-100 text-sm">Reviews</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* TABS */}
-      <div className="flex gap-4 mb-6 border-b">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1 inline-flex gap-1">
         <button
           onClick={() => setActiveTab('projects')}
-          className={`pb-2 px-1 ${activeTab === 'projects' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
+            activeTab === 'projects'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
         >
-          <div className="flex items-center gap-2">
-            <Users size={16} />
-            Projects
-          </div>
+          <Users size={18} />
+          Projects
         </button>
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`pb-2 px-1 ${activeTab === 'analytics' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
+            activeTab === 'analytics'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
         >
-          <div className="flex items-center gap-2">
-            <TrendingUp size={16} />
-            Performance Analytics
-          </div>
+          <TrendingUp size={18} />
+          Performance Analytics
         </button>
       </div>
 
       {/* CONTENT */}
       {activeTab === 'projects' ? (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Assigned Projects</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Assigned Projects</h2>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{projects.length} total</span>
+          </div>
           {projects.length === 0 ? (
-            <p className="text-gray-500">No assigned projects</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+              <Users size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">No assigned projects</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -132,63 +176,69 @@ export default function UserProfilePage() {
                 href={`/user/${user.name}/${project.id}`}
                 className="block"
               >
-                <div className="bg-white dark:bg-gray-800 rounded-lg border p-6 hover:shadow-lg transition-all">
+                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group">
 
                   {/* Header */}
-                  <div className="flex justify-between mb-3">
-                    <h3 className="text-lg font-semibold">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {project.name}
                     </h3>
 
-                    <span className={`px-2 py-1 text-xs rounded ${getPriorityColor(project.priority)}`}>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getPriorityColor(project.priority)}`}>
                       {project.priority}
                     </span>
                   </div>
 
                   {/* Summary */}
-                  <p className="text-sm text-gray-400 mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                     {project.summary || "No summary available"}
                   </p>
 
                   {/* Stats */}
-                  <div className="flex justify-between text-sm text-gray-500 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Users size={16} />
-                      {members.length} members
+                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users size={16} className="text-blue-500" />
+                      <span className="font-medium">{members.length}</span> members
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <Calendar size={16} />
+                    <div className="flex items-center gap-2">
+                      <Calendar size={16} className="text-green-500" />
                       {new Date(project.createdAt).toLocaleDateString()}
                     </div>
                   </div>
 
                   {/* PROGRESS */}
-                  <div className="mb-3">
-                    <div className="text-xs mb-1">{project.progress ?? 0}%</div>
-                    <div className="bg-gray-200 h-1.5 rounded-full">
+                  <div className="mb-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
+                      <span className="text-xs font-bold text-blue-600">{project.progress ?? 0}%</span>
+                    </div>
+                    <div className="bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-blue-600 h-1.5 rounded-full"
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${project.progress ?? 0}%` }}
                       />
                     </div>
                   </div>
 
-                  {/* MEMBERS LIST PREVIEW (FIXED FEATURE 🔥) */}
+                  {/* MEMBERS LIST PREVIEW */}
                   {members.length > 0 && (
-                    <div className="flex -space-x-2 mt-3">
-                      {members.slice(0, 5).map((member: any) => (
-                        <Image
-                          key={member.user.id}
-                          src={member.user.image || "/default-avatar.png"}
-                          alt={member.user.name}
-                          width={28}
-                          height={28}
-                          className="rounded-full h-8 w-8 border object-cover"
-                        />
-                      ))}
+                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex -space-x-2">
+                        {members.slice(0, 5).map((member: any) => (
+                          <Image
+                            key={member.user.id}
+                            src={member.user.image || "/default-avatar.png"}
+                            alt={member.user.name}
+                            width={32}
+                            height={32}
+                            className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
+                            title={member.user.name}
+                          />
+                        ))}
+                      </div>
                       {members.length > 5 && (
-                        <span className="text-xs text-gray-400 ml-3">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                           +{members.length - 5} more
                         </span>
                       )}
@@ -197,10 +247,19 @@ export default function UserProfilePage() {
 
                   {/* EXTRA INFO */}
                   {info && (
-                    <div className="text-xs text-gray-400 mt-3 space-y-1">
-                      <p><strong>Budget:</strong> {info.budget || "—"}</p>
-                      <p><strong>Type:</strong> {info.projectType || "—"}</p>
-                      <p><strong>Supervisor:</strong> {info.supervisorAdmin || "—"}</p>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="font-medium text-gray-700 dark:text-gray-300">Budget</p>
+                        <p>{info.budget || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-700 dark:text-gray-300">Type</p>
+                        <p>{info.projectType || "—"}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="font-medium text-gray-700 dark:text-gray-300">Supervisor</p>
+                        <p>{info.supervisorAdmin || "—"}</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -212,7 +271,7 @@ export default function UserProfilePage() {
         </div>
       ) : (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Performance Analytics</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Performance Analytics</h2>
           {performanceData.length === 0 ? (
             <div className="text-center py-12">
               <BarChart3 size={48} className="mx-auto text-gray-400 mb-4" />

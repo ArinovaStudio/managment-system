@@ -40,7 +40,7 @@ export default function WellBeingPage() {
         const mappedData = (data.wellBeing || []).map(item => ({
           ...item,
           description: item.answer || item.description,
-          category: item.category || 'General'
+          category: item.category || 'Tips'
         }));
         setWellBeingData(mappedData);
       }

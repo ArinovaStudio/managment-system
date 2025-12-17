@@ -83,3 +83,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch meetings" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const token = (await cookies()).get("token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const payload: any = verifyToken(token);
+    const userId = payload.userId || payload.id;
+
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Only admin can delete meetings" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const meetingId = searchParams.get("id");
+
+    if (!meetingId) {
+      return NextResponse.json({ error: "Meeting ID required" }, { status: 400 });
+    }
+
+    await db.meeting.delete({ where: { id: meetingId } });
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error("DELETE MEETING ERROR:", error);
+    return NextResponse.json({ error: "Failed to delete meeting" }, { status: 500 });
+  }
+}

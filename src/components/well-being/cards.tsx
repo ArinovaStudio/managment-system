@@ -36,7 +36,41 @@ export const WaterIntakeCard = () => {
   const [progress, setProgress] = useState(0);
   const [hovered, setHovered] = useState(false);
 
-  const handleDrink = () => setProgress((p) => Math.min(p + 0.25, 1));
+  useEffect(() => {
+    fetchWaterIntake();
+  }, []);
+
+  const fetchWaterIntake = async () => {
+    try {
+      const res = await fetch('/api/well-being', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProgress(data.amount || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch water intake:', error);
+    }
+  };
+
+  const handleDrink = async () => {
+    try {
+      const res = await fetch('/api/well-being', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add', amount: 250 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProgress(data.amount);
+      }
+    } catch (error) {
+      console.error('Failed to update water intake:', error);
+    }
+  };
 
   return (
     <Card title="Drink Water (2L)">
@@ -67,14 +101,14 @@ export const WaterIntakeCard = () => {
                   ],
                 }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                style={{ transform: `translateY(${100 - progress * 100}%)` }}
+                style={{ transform: `translateY(${100 - (progress / 2000) * 100}%)` }}
               />
             </motion.svg>
           )}
         </AnimatePresence>
         <Droplets className="text-blue-600 z-10 mb-1" size={32} />
         <p className="z-10 dark:text-white text-gray-700 text-sm">
-          {Math.round(progress)}ml / 2000ml
+          {progress}ml / 2000ml
         </p>
         <p className="z-10 dark:text-white text-gray-600 text-sm captalize my-2 mb-3">
           Drink at least 2L. water during working hours.

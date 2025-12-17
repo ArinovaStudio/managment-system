@@ -58,8 +58,20 @@ model well {
   id       String @id @default(cuid())
   title    String
   answer   String
+  category String @default("Tips")
   likes    Int    @default(0)
   dislikes Int    @default(0)
+}
+
+model WaterIntake {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Int      @default(0)
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
 }
 
 model feedback {
