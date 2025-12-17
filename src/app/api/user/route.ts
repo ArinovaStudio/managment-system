@@ -18,6 +18,9 @@ export async function GET(req: Request) {
           department: true,
           role: true,
           employeeId: true,
+          isLogin: true,
+          clockRecords: true,
+          workHours: true,
         },
         orderBy: { name: 'asc' }
       });
@@ -54,6 +57,9 @@ export async function GET(req: Request) {
         workingAs: true,
         createdAt: true,
         updatedAt: true,
+        isLogin: true,
+        clockRecords: true,
+        workHours: true,
       },
     });
 

@@ -94,34 +94,34 @@ export async function POST(req: NextRequest) {
 }
 
 
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const projectId = searchParams.get("projectId");
-    const assignee = searchParams.get("assignee");
+// export async function GET(req: NextRequest) {
+//   try {
+//     const { searchParams } = new URL(req.url);
+//     const projectId = searchParams.get("projectId");
+//     const assignee = searchParams.get("assignee");
 
-    const tasks = await db.task.findMany({
-      where: {
-        ...(projectId && { projectId }),
-        ...(assignee && { assignee })
-      },
-      orderBy: { createdAt: "desc" },
-    });
+//     const tasks = await db.task.findMany({
+//       where: {
+//         ...(projectId && { projectId }),
+//         ...(assignee && { assignee })
+//       },
+//       orderBy: { createdAt: "desc" },
+//     });
 
 
-    const formatted = tasks.map((task) => ({
-      ...task,
-      attachments: task.attachments ?? [],
-      comments: task.comments ?? [],
-      dueDate: task.dueDate?.toISOString().split("T")[0],
-    }));
+//     const formatted = tasks.map((task) => ({
+//       ...task,
+//       attachments: task.attachments ?? [],
+//       comments: task.comments ?? [],
+//       dueDate: task.dueDate?.toISOString().split("T")[0],
+//     }));
 
-    return NextResponse.json({ tasks: formatted }, { status: 200 });
-  } catch (error) {
-    console.error("ERROR FETCHING TASKS:", error);
-    return NextResponse.json({ message: "Failed to fetch tasks", error }, { status: 500 });
-  }
-}
+//     return NextResponse.json({ tasks: formatted }, { status: 200 });
+//   } catch (error) {
+//     console.error("ERROR FETCHING TASKS:", error);
+//     return NextResponse.json({ message: "Failed to fetch tasks", error }, { status: 500 });
+//   }
+// }
 
 // export async function PUT(req: NextRequest) {
 //   try {
@@ -149,6 +149,72 @@ export async function GET(req: NextRequest) {
 //   }
 // }
 
+export async function GET(req: Request) {
+  try {
+    const cookieStore = await cookies();
+
+    const token = cookieStore.get("token")?.value;
+
+
+        if (!token) {
+          return NextResponse.json(
+            { success: false, message: "No token found" },
+            { status: 401 }
+          );
+        }
+    
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
+        
+
+    const userId = decoded.userId;
+    const userName = decoded.Name;
+    const userRole = decoded.role; // ADMIN | EMPLOYEE
+
+    if (!userId  || !userRole) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get("id");
+    const assigneeFromQuery = searchParams.get("assignee");
+
+    let whereClause: any = {
+      ...(projectId && { projectId }),
+    };
+
+    if (userRole === "ADMIN") {
+      // Admin explicitly selects an employee
+      if (assigneeFromQuery) {
+        whereClause.assignee = assigneeFromQuery;
+      } else {
+        // First load → admin sees only own tasks
+        whereClause.assignee = userName;
+      }
+    } else {
+      // Employee → always self
+      whereClause.assignee = userName;
+    }
+
+    const tasks = await db.task.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(
+      { success: true, tasks },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("TASK FETCH ERROR:", error);
+    return NextResponse.json(
+      { message: "Failed to fetch tasks" },
+      { status: 500 }
+    );
+  }
+}
 
 
 

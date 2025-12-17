@@ -13,7 +13,7 @@ export default function UserDropdown() {
     fetch('/api/user', { credentials: 'include' })
       .then(res => res.ok ? res.json() : null)
       .then(data => data && setUser(data.user))
-      .catch(() => { });
+      .catch(() => { });      
   }, []);
 
   const handleLogout = async () => {
@@ -29,20 +29,41 @@ export default function UserDropdown() {
   function closeDropdown() {
     setIsOpen(false);
   }
+
+  console.log("hello user ",user);
+  
   return (
     <div className="relative">
       <button
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <Image
-            src={user?.image || "/images/user/default.png"}
-            width={80}
-            height={80}
-            alt="user"
-          />
-        </span>
+        
+        <span className="relative mr-3 overflow-visible rounded-full h-11 w-11 flex items-center justify-center bg-blue-600 text-white text-sm font-semibold">
+  {user?.image ? (
+    <Image
+      src={user.image}
+      width={80}
+      height={80}
+      alt="user"
+      className="h-full w-full object-cover rounded-full"
+    />
+  ) : (
+    <span className="uppercase">
+      {user?.name?.charAt(0) || "U"}
+    </span>
+  )}
+
+  {/* Online / Offline dot */}
+  <span
+    className={`absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 ${
+      user?.isLogin ? "bg-green-500" : "bg-red-500"
+    }`}
+  />
+</span>
+
+
+
 
         <span className="block mr-1 font-medium text-theme-sm">{user?.name || 'User'}</span>
 
@@ -105,7 +126,7 @@ export default function UserDropdown() {
               Edit profile
             </DropdownItem>
           </li>
-          <li>
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -129,8 +150,8 @@ export default function UserDropdown() {
               </svg>
               Account settings
             </DropdownItem>
-          </li>
-          <li>
+          </li> */}
+          {/* <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
@@ -154,7 +175,7 @@ export default function UserDropdown() {
               </svg>
               Support
             </DropdownItem>
-          </li>
+          </li> */}
         </ul>
         <button
           onClick={handleLogout}

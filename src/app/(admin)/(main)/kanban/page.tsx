@@ -21,7 +21,9 @@ import {
   Edit2,
   Trash2,
   Save,
-  SquarePen
+  SquarePen,
+  Download,
+  Eye
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
@@ -587,10 +589,28 @@ const SidePanel: React.FC<{
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md"
                       >
-                        Download
+                         <Eye className='hover:text-blue-400' />
                       </a>
+                      <button
+                        onClick={async () => {
+                          const res = await fetch(file.url);
+                          const blob = await res.blob();
+
+                          const a = document.createElement("a");
+                          a.href = URL.createObjectURL(blob);
+                          a.download = file.name;
+                          a.click();
+
+                          URL.revokeObjectURL(a.href);
+                        }}
+                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md 00"
+                      >
+                        <Download className='hover:text-green-300' />
+                      </button>
+
+
                     </div>
                   ))}
                 </div>
@@ -852,7 +872,7 @@ const KanbanBoard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedEmployee === "") {
+    if (!selectedEmployee || selectedEmployee === "__ME__") {
       fetchTasks();
     } else {
       fetchTasks(selectedEmployee);
@@ -882,22 +902,50 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  // const fetchTasks = async (employeeName?: string) => {
+  //   try {
+  //     console.log("Employee lest see" ,employeeName);
+  //     const employee = "Raj"
+  //     setTasksLoading(true);
+  //     const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
+  //     console.log("Employee lest see" ,employee);
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     console.log("data of tasks", data);
+
+
+  //     if (data.success && data.tasks) {
+  //       setTasks(data.tasks);
+  //     } else if (data.tasks) {
+  //       setTasks(data.tasks);
+  //     } else {
+  //       setTasks([]);
+  //     }
+  //   } catch (err) {
+  //     console.error("Kanban Fetch Error:", err);
+  //     setTasks([]);
+  //   } finally {
+  //     setTasksLoading(false);
+  //   }
+  // };
+
   const fetchTasks = async (employeeName?: string) => {
     try {
       setTasksLoading(true);
-      const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
-      const res = await fetch(url);
-      const data = await res.json();
-      console.log("data of tasks", data);
 
+      const url = new URL("/api/kanban/task", window.location.origin);
 
-      if (data.success && data.tasks) {
-        setTasks(data.tasks);
-      } else if (data.tasks) {
-        setTasks(data.tasks);
-      } else {
-        setTasks([]);
+      if (employeeName && employeeName !== "__ME__") {
+        url.searchParams.set("assignee", employeeName);
       }
+
+      const res = await fetch(url.toString(), {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      setTasks(data.tasks ?? []);
     } catch (err) {
       console.error("Kanban Fetch Error:", err);
       setTasks([]);
@@ -905,6 +953,7 @@ const KanbanBoard: React.FC = () => {
       setTasksLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (!selectedTaskId) return;
@@ -1341,6 +1390,19 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  const filterTasksByUser = (task: Task) => {
+    if (userRole === "ADMIN") {
+      if (selectedEmployee === "__ME__" || !selectedEmployee) {
+        return task.assignee === currentUser?.name;
+      }
+      return task.assignee === selectedEmployee;
+    }
+
+    // EMPLOYEE
+    return task.assignee === currentUser?.name;
+  };
+
+
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -1451,7 +1513,7 @@ const KanbanBoard: React.FC = () => {
                       </div>
                       <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
                     </div>
-                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
+                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4"> {columnTasks.filter(filterTasksByUser).length}</h2>
                   </div>
 
                   <div
