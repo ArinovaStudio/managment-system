@@ -29,8 +29,6 @@ export default function UserDropdown() {
   function closeDropdown() {
     setIsOpen(false);
   }
-
-  console.log("hello user ",user);
   
   return (
     <div className="relative">
