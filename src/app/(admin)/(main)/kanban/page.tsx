@@ -70,6 +70,7 @@ type NewTaskShape = {
   tags: string[];
   status: 'assigned' | 'in-progress' | 'completed';
   attachmentFile: File | null;
+  projectId: string;
 };
 
 const NewTaskModal: React.FC<{
@@ -81,7 +82,9 @@ const NewTaskModal: React.FC<{
   handleSubmit: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
-}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag }) => {
+  projectsLoading: boolean;
+  projects: { id: string; name: string }[];
+}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects }) => {
   if (!isOpen) return null;
 
   return (
@@ -183,6 +186,35 @@ const NewTaskModal: React.FC<{
               </select>
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+              Project *
+            </label>
+
+            <select
+              value={newTask.projectId}
+              disabled={projectsLoading}
+              onChange={(e) =>
+                setNewTask({ ...newTask, projectId: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111]
+      border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white
+      focus:outline-none focus:ring-2 focus:ring-blue-500
+      disabled:opacity-60"
+            >
+              <option value="">
+                {projectsLoading ? "Loading projects..." : "Select a project"}
+              </option>
+
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
 
           <div>
             <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Tags</label>
@@ -591,7 +623,7 @@ const SidePanel: React.FC<{
                         rel="noopener noreferrer"
                         className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md"
                       >
-                         <Eye className='hover:text-blue-400' />
+                        <Eye className='hover:text-blue-400' />
                       </a>
                       <button
                         onClick={async () => {
@@ -850,7 +882,8 @@ const KanbanBoard: React.FC = () => {
     dueDate: '',
     tags: [],
     status: 'assigned',
-    attachmentFile: null
+    attachmentFile: null,
+    projectId: '',
   });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -864,7 +897,25 @@ const KanbanBoard: React.FC = () => {
 
   const [reportsLoading, setReportsLoading] = useState(false);
 
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const res = await fetch("/api/project"); // your projects API
+      const data = await res.json();
+      setProjects(data.projects || []);
+    } catch (err) {
+      console.error("Failed to load projects", err);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   useEffect(() => {
     fetchUserRole();
@@ -1057,6 +1108,7 @@ const KanbanBoard: React.FC = () => {
       tags: task.tags,
       status: task.status,
       attachmentFile: null,
+      projectId: "",
     });
 
     setShowNewTaskModal(true);
@@ -1282,7 +1334,7 @@ const KanbanBoard: React.FC = () => {
     try {
       const formData = new FormData();
 
-      const assigneeName = selectedEmployee || newTask.assignee || "Unassigned";
+      const assigneeName = newTask.assignee || "Unassigned";
 
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
@@ -1332,6 +1384,7 @@ const KanbanBoard: React.FC = () => {
         tags: [],
         status: "assigned",
         attachmentFile: null,
+        projectId: "",
       });
 
     } catch (error) {
@@ -1628,6 +1681,8 @@ const KanbanBoard: React.FC = () => {
         handleSubmit={handleSubmitTask}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
+        projectsLoading={projectsLoading}
+        projects={projects}
       />
 
     </div>

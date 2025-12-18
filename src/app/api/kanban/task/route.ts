@@ -178,7 +178,8 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const projectId = searchParams.get("id");
+    const projectId = searchParams.get("projectId");
+    
     const assigneeFromQuery = searchParams.get("assignee");
 
     let whereClause: any = {

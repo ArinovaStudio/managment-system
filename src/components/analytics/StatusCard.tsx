@@ -13,10 +13,10 @@ const StatusCard = () => {
 
   const checkUserStatus = async () => {
     try {
-      const response = await fetch('/api/clock/break');
+      const response = await fetch('/api/auth/signup');
       const data = await response.json();
-      setIsOnBreak(!!data.activeBreak);
-      setIsOnline(!data.activeBreak);
+      setIsOnBreak(data.isLogin);
+      setIsOnline(data.isLogin);
     } catch (error) {
       console.error('Failed to check user status:', error);
     }

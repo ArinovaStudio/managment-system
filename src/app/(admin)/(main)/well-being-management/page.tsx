@@ -12,6 +12,10 @@ export default function page() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
 
     useEffect(() => {
         fetchUser();
@@ -84,11 +88,11 @@ export default function page() {
                     category: newTip.category
                 })
 
-                
-                
+
+
             });
-console.log(response);
-console.log("this is", newTip);
+            console.log(response);
+            console.log("this is", newTip);
 
             if (response.ok) {
                 toast.success('Well-being tip created successfully!');
@@ -106,15 +110,45 @@ console.log("this is", newTip);
         }
     };
 
-    const deleteTip = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this tip?')) return;
+    // const deleteTip = async (id: string) => {
+    //     if (!window.confirm('Are you sure you want to delete this tip?')) return;
+
+    //     try {
+    //         const response = await fetch('/api/well-being', {
+    //             method: 'DELETE',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             credentials: 'include',
+    //             body: JSON.stringify({ id })
+    //         });
+
+    //         if (response.ok) {
+    //             toast.success('Tip deleted successfully!');
+    //             await fetchWellBeingData();
+    //         } else {
+    //             toast.error('Failed to delete tip');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error deleting tip:', error);
+    //         toast.error('Error deleting tip');
+    //     }
+    // };
+
+    const openDeleteModal = (id: string) => {
+        setDeletingId(id);
+        setDeleteModalOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deletingId) return;
+
+        setIsDeleting(true);
 
         try {
             const response = await fetch('/api/well-being', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ id })
+                body: JSON.stringify({ id: deletingId })
             });
 
             if (response.ok) {
@@ -126,8 +160,13 @@ console.log("this is", newTip);
         } catch (error) {
             console.error('Error deleting tip:', error);
             toast.error('Error deleting tip');
+        } finally {
+            setIsDeleting(false);
+            setDeleteModalOpen(false);
+            setDeletingId(null);
         }
     };
+
 
     const filteredData = wellBeingData.filter(item =>
         item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -211,7 +250,7 @@ console.log("this is", newTip);
                                 <>
                                     <div className="flex items-start justify-between mb-3">
                                         <button
-                                            onClick={() => deleteTip(item.id)}
+                                            onClick={() => openDeleteModal(item.id)}
                                             className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                                         >
                                             <Trash2 size={14} />
@@ -247,7 +286,7 @@ console.log("this is", newTip);
                                             {new Date(item.createdAt || Date.now()).toLocaleDateString()}
                                         </span>
                                         <button
-                                            onClick={() => deleteTip(item.id)}
+                                            onClick={() => openDeleteModal(item.id)}
                                             className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                                         >
                                             <Trash2 size={14} />
@@ -347,6 +386,50 @@ console.log("this is", newTip);
                         </div>
                     </div>
                 )}
+
+
+                {deleteModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                        <div className="bg-white dark:bg-gray-900 w-full max-w-sm p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl">
+
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                Confirm Deletion
+                            </h3>
+
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                                Are you sure you want to delete this well-being tip?
+                                This action cannot be undone.
+                            </p>
+
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        if (!isDeleting) {
+                                            setDeleteModalOpen(false);
+                                            setDeletingId(null);
+                                        }
+                                    }}
+                                    disabled={isDeleting}
+                                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors flex items-center gap-2"
+                                >
+                                    {isDeleting && (
+                                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                    )}
+                                    {isDeleting ? "Deleting..." : "Delete"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </div>
         );
     }

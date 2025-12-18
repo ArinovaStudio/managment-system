@@ -11,6 +11,7 @@ const Feedback = () => {
         if (response.ok) {
           const data = await response.json();
           setFeedbacks(data.feedbacks || []);
+          
         }
       } catch (error) {
         console.error('Failed to fetch feedbacks:', error);
