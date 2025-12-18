@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Quote, Check, AlertCircle } from "lucide-react";
+import { Quote, Check, AlertCircle, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface SharedQuote {
@@ -34,6 +34,23 @@ export default function QuotesPage() {
       fetchQuotes();
     } else {
       toast.error("Failed to select quote");
+    }
+  };
+
+  const deleteQuote = async (quoteId: string) => {
+    if (!confirm('Are you sure you want to delete this quote?')) return;
+
+    const res = await fetch('/api/quotes', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quoteId })
+    });
+
+    if (res.ok) {
+      toast.success("Quote deleted successfully");
+      fetchQuotes();
+    } else {
+      toast.error("Failed to delete quote");
     }
   };
 
@@ -84,19 +101,29 @@ export default function QuotesPage() {
                   </p>
                 </div>
                 
-                {q.isSelected ? (
-                  <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
-                    <Check size={16} />
-                    Selected
-                  </div>
-                ) : (
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => selectQuote(q.id)}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    onClick={() => deleteQuote(q.id)}
+                    className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                    title="Delete quote"
                   >
-                    Select
+                    <Trash2 size={16} />
                   </button>
-                )}
+                  
+                  {q.isSelected ? (
+                    <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                      <Check size={16} />
+                      Selected
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => selectQuote(q.id)}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Select
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

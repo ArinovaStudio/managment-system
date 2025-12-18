@@ -39,25 +39,25 @@ export default function Banner() {
 
   return (
     <>
-    <div className="w-full h-56 bg-gradient-to-br from-blue-700 to-blue-300 dark:to-blue-900 rounded-3xl p-6 py-8 relative">
-      <div className="hidden sm:block right-4 -top-6 h-[120%] w-1/3 absolute">
-      <img 
-      src={"/images/brand/well-being.png"}
-      alt="Illustration"
-      className="w-full h-full object-contain"
-      />
+    <div className="w-full h-56 bg-gradient-to-br from-blue-700 to-blue-300 dark:to-blue-900 rounded-3xl p-6 py-8 relative overflow-hidden">
+      <div className="hidden lg:block absolute right-4 -top-6 h-[120%] w-1/3">
+        <img 
+          src={"/images/brand/well-being.png"}
+          alt="Illustration"
+          className="w-full h-full object-contain"
+        />
       </div>
-      <h1 className="text-4xl text-white font-bold">We Care For Your Health</h1>
-      <p className="text-white text-xl font-normal mt-2">When your health is good only then work is goood. </p>
-      <div className="w-5/6 flex justify-start items-center gap-4 mt-4">
-       {
-        weekDates.map((items) => (
-       <div key={items.day} className={`h-20 ${isToday(items.fullDate) ? 'bg-white text-blue-600' : "bg-white/20 text-white"} px-3 p-4  rounded-xl`}>
-       <h1 className="font-bold text-2xl">{items.date}</h1>
-       <p className="text-xs font-medium">{items.day}</p>
-       </div>
-        ))
-       }
+      <div className="relative z-10">
+        <h1 className="text-2xl md:text-4xl text-white font-bold">We Care For Your Health</h1>
+        <p className="text-white text-lg md:text-xl font-normal mt-2">When your health is good only then work is good.</p>
+        <div className="w-full lg:w-5/6 flex justify-start items-center gap-2 md:gap-4 mt-4 overflow-x-auto">
+          {weekDates.map((items) => (
+            <div key={items.day} className={`h-16 md:h-20 min-w-[60px] md:min-w-[80px] ${isToday(items.fullDate) ? 'bg-white text-blue-600' : "bg-white/20 text-white"} px-2 md:px-3 py-2 md:py-4 rounded-xl flex-shrink-0`}>
+              <h1 className="font-bold text-lg md:text-2xl text-center">{items.date}</h1>
+              <p className="text-xs font-medium text-center truncate">{items.day.slice(0, 3)}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
     </>

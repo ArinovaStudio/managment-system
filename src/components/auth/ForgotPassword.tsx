@@ -5,6 +5,7 @@ import Button from "@/components/ui/button/Button";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 const ForgotPassword = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +54,7 @@ const ForgotPassword = () => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Failed to reset password");
 
-            alert("Password reset successfully!");
+            toast.success("Password reset successfully!");
             window.location.href = "/signin";
         } catch (err) {
             setError(err.message);

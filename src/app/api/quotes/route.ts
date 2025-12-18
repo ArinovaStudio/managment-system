@@ -97,3 +97,27 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Failed to select quote" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const token = (await cookies()).get("token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const payload: any = verifyToken(token);
+    const userId = payload.userId || payload.id;
+    const user = await db.user.findUnique({ where: { id: userId } });
+
+    if (user?.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Only admin can delete quotes" }, { status: 403 });
+    }
+
+    const { quoteId } = await req.json();
+    if (!quoteId) return NextResponse.json({ error: "Quote ID required" }, { status: 400 });
+
+    await db.sharedQuote.delete({ where: { id: quoteId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete quote" }, { status: 500 });
+  }
+}

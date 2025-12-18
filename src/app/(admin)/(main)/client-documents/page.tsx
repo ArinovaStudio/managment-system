@@ -1,80 +1,76 @@
 "use client";
 
-import React, { useState } from "react";
-import { Upload, FileText, Check, X, Eye } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Upload, FileText, Check, X, Eye, Plus, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminDocuments() {
-    const [pendingDocs, setPendingDocs] = useState([
-        {
-            id: 1,
-            client: "Aritra Dhank",
-            project: "Dashboard UI",
-            fileName: "requirements.pdf",
-            fileUrl: "/documents/requirements.pdf",
-            uploadedAt: "2025-02-10",
-        },
-        {
-            id: 2,
-            client: "John Doe",
-            project: "API System",
-            fileName: "api-schema.docx",
-            fileUrl: "/documents/api-schema.docx",
-            uploadedAt: "2025-02-11",
-        },
-    ]);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const [approvedDocs, setApprovedDocs] = useState([
-        {
-            id: 10,
-            project: "E-Commerce App",
-            fileName: "ui-wireframe.pdf",
-            fileUrl: "/documents/ui-wireframe.pdf",
-            uploadedAt: "2025-01-28",
-        },
-    ]);
-
-    // Modal control
     const [addModal, setAddModal] = useState(false);
-    const [newProject, setNewProject] = useState("");
-    const [newFile, setNewFile] = useState<File | null>(null);
+    const [newDoc, setNewDoc] = useState({ title: "", file: null });
 
-    const approveDoc = (id: number) => {
-        const doc = pendingDocs.find((d) => d.id === id);
-        if (!doc) return;
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
 
-        setApprovedDocs((prev) => [
-            ...prev,
-            { id: Date.now(), project: doc.project, fileName: doc.fileName, fileUrl: doc.fileUrl, uploadedAt: doc.uploadedAt },
-        ]);
-
-        setPendingDocs((prev) => prev.filter((d) => d.id !== id));
+    const fetchDocuments = async () => {
+        try {
+            const res = await fetch('/api/client/documents');
+            const data = await res.json();
+            if (data.success) {
+                setDocuments(data.documents);
+            }
+        } catch (error) {
+            toast.error('Failed to fetch documents');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const rejectDoc = (id: number) => {
-        setPendingDocs((prev) => prev.filter((d) => d.id !== id));
+    const addDocument = async () => {
+        if (!newDoc.title || !newDoc.file) {
+            toast.error('Please fill all fields');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', newDoc.title);
+        formData.append('file', newDoc.file);
+
+        try {
+            const res = await fetch('/api/client/documents', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                toast.success('Document uploaded successfully');
+                setAddModal(false);
+                setNewDoc({ title: "", file: null });
+                fetchDocuments();
+            }
+        } catch (error) {
+            toast.error('Failed to upload document');
+        }
     };
 
-    const addDocument = () => {
-        if (!newProject || !newFile) return;
+    const deleteDocument = async (id: string) => {
+        if (!confirm('Delete this document?')) return;
 
-        setApprovedDocs((prev) => [
-            ...prev,
-            {
-                id: Date.now(),
-                project: newProject,
-                fileName: newFile.name,
-                fileUrl: URL.createObjectURL(newFile),
-                uploadedAt: new Date().toISOString().split("T")[0],
-            },
-        ]);
-
-        setNewProject("");
-        setNewFile(null);
-        setAddModal(false);
-    };
-
-    const viewDocument = (fileUrl: string, fileName: string) => {
-        window.open(fileUrl, '_blank');
+        try {
+            const res = await fetch('/api/client/documents', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                toast.success('Document deleted');
+                fetchDocuments();
+            }
+        } catch (error) {
+            toast.error('Failed to delete document');
+        }
     };
 
     return (
@@ -86,107 +82,64 @@ export default function AdminDocuments() {
                     Documents Management
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                    Approve client documents and manage all project files.
+                    Client documents and manage all project files.
                 </p>
             </div>
 
-            {/* Pending Documents */}
-            <section>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                        Pending Approval
-                    </h2>
+            {loading ? (
+                <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-
-                <div className="grid gap-4">
-                    {pendingDocs.length === 0 && (
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">
-                            No pending documents.
-                        </p>
-                    )}
-
-                    {pendingDocs.map((doc) => (
-                        <div
-                            key={doc.id}
-                            className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm"
+            ) : (
+                <section>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                            Documents ({documents.length})
+                        </h2>
+                        <button
+                            onClick={() => setAddModal(true)}
+                            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm flex items-center gap-2"
                         >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="font-medium text-gray-900 dark:text-white">{doc.fileName}</p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        {doc.project} — Uploaded by {doc.client}
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-500">
-                                        {doc.uploadedAt}
-                                    </p>
-                                </div>
+                            <Plus size={18} /> Add Document
+                        </button>
+                    </div>
 
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => viewDocument(doc.fileUrl, doc.fileName)}
-                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-blue-600/30 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 hover:bg-blue-600/40 dark:hover:bg-blue-500/30 transition"
-                                    >
-                                        <Eye size={16} /> View
-                                    </button>
-
-                                    <button
-                                        onClick={() => approveDoc(doc.id)}
-                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-green-600/30 text-green-700 dark:bg-green-500/20 dark:text-green-300 hover:bg-green-600/40 dark:hover:bg-green-500/30 transition"
-                                    >
-                                        <Check size={16} /> Approve
-                                    </button>
-
-                                    <button
-                                        onClick={() => rejectDoc(doc.id)}
-                                        className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-red-600/30 text-red-700 dark:bg-red-500/20 dark:text-red-300 hover:bg-red-600/40 dark:hover:bg-red-500/30 transition"
-                                    >
-                                        <X size={16} /> Reject
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Project Documents */}
-            <section>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                        Project Documents
-                    </h2>
-
-                    <button
-                        onClick={() => setAddModal(true)}
-                        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm flex items-center gap-2"
-                    >
-                        <Upload size={18} /> Add Document
-                    </button>
-                </div>
-
-                <div className="grid gap-4">
-                    {approvedDocs.map((doc) => (
-                        <div
-                            key={doc.id}
-                            className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex justify-between items-center"
-                        >
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white">{doc.fileName}</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">{doc.project}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">{doc.uploadedAt}</p>
-                            </div>
-
-                            <button
-                                onClick={() => viewDocument(doc.fileUrl, doc.fileName)}
-                                className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-blue-600/30 text-blue-700 dark:blue-500/20 dark:text-blue-300 hover:bg-blue-600/40 dark:hover:bg-blue-500/30 transition"
+                    <div className="grid gap-4">
+                        {documents.map((doc) => (
+                            <div
+                                key={doc.id}
+                                className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm"
                             >
-                                <Eye size={16} /> View
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </section>
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="text-blue-600" size={20} />
+                                        <div>
+                                            <p className="font-medium text-gray-900 dark:text-white">{doc.title}</p>
+                                            <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <a
+                                            href={doc.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-blue-600/30 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 hover:bg-blue-600/40 dark:hover:bg-blue-500/30 transition"
+                                        >
+                                            <Eye size={16} /> View
+                                        </a>
+                                        <button
+                                            onClick={() => deleteDocument(doc.id)}
+                                            className="px-3 py-2 rounded-lg text-sm flex items-center gap-1 bg-red-600/30 text-red-700 dark:bg-red-500/20 dark:text-red-300 hover:bg-red-600/40 dark:hover:bg-red-500/30 transition"
+                                        >
+                                            <Trash2 size={16} /> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Add Document Modal */}
             {/* Add Document Modal */}
@@ -198,41 +151,27 @@ export default function AdminDocuments() {
                             Add New Document
                         </h2>
 
-                        {/* Project Selector */}
-                        <label className="text-sm text-gray-600 dark:text-gray-400">Select Project</label>
-                        <select
-                            value={newProject}
-                            onChange={(e) => setNewProject(e.target.value)}
-                            className="
-          w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800
-          border border-gray-300 dark:border-gray-700
-          text-gray-900 dark:text-white
-          focus:ring-2 focus:ring-blue-500 outline-none
-        "
-                        >
-                            <option value="">-- Select a project --</option>
-                            <option value="Dashboard UI">Dashboard UI</option>
-                            <option value="API System">API System</option>
-                            <option value="E-Commerce App">E-Commerce App</option>
-                            <option value="Portfolio Website">Portfolio Website</option>
-                        </select>
-
-                        {/* File Upload (Disabled until project selected) */}
-                        <div className="mt-4">
-                            <label className="text-sm text-gray-600 dark:text-gray-400">Upload File</label>
-
-                            <input
-                                type="file"
-                                disabled={!newProject}
-                                onChange={(e) => setNewFile(e.target.files?.[0] || null)}
-                                className={`
-            w-full p-3 mt-1 rounded-lg 
-            bg-gray-50 dark:bg-gray-800
-            border border-gray-300 dark:border-gray-700
-            text-gray-900 dark:text-white
-            ${!newProject ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
-          `}
-                            />
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Document Title</label>
+                                <input
+                                    type="text"
+                                    value={newDoc.title}
+                                    onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
+                                    className="w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Enter document title"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Upload File</label>
+                                <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                                    onChange={(e) => setNewDoc({ ...newDoc, file: e.target.files?.[0] || null })}
+                                    className="w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG, TXT</p>
+                            </div>
                         </div>
 
                         {/* Action Buttons */}
@@ -246,14 +185,12 @@ export default function AdminDocuments() {
 
                             <button
                                 onClick={addDocument}
-                                disabled={!newProject || !newFile}
-                                className={`
-            px-4 py-2 rounded-lg text-sm text-white
-            ${!newProject || !newFile
+                                disabled={!newDoc.title || !newDoc.file}
+                                className={`px-4 py-2 rounded-lg text-sm text-white ${
+                                    !newDoc.title || !newDoc.file
                                         ? "bg-blue-600/40 cursor-not-allowed"
                                         : "bg-blue-600 hover:bg-blue-700"
-                                    }
-          `}
+                                }`}
                             >
                                 Add Document
                             </button>

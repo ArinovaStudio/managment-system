@@ -147,7 +147,7 @@ function Clock() {
       setTimezone(data.timezone);
     } catch (error) {
       console.error('Failed to update timezone:', error);
-      alert('Failed to update timezone');
+      toast.error('Failed to update timezone');
     }
   }
 
