@@ -117,20 +117,20 @@ export default function RoleDashboard() {
 
           {/* ROLE SWITCH BUTTONS */}
           <div className="flex gap-3">
-          {["EMPLOYEE", "ADMIN", "CLIENT"].map((role) => (
-            <button
-              key={role}
-              onClick={() => setSelectedRole(role)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all duration-200
+            {["EMPLOYEE", "ADMIN", "CLIENT"].map((role) => (
+              <button
+                key={role}
+                onClick={() => setSelectedRole(role)}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200
                 ${selectedRole === role
-                  ? "bg-blue-600 text-white border-blue-700 shadow-lg scale-105"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300"
-                }
+                    ? "bg-blue-600 text-white border-blue-700 shadow-lg scale-105"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300"
+                  }
               `}
-            >
-              {role}
-            </button>
-          ))}
+              >
+                {role}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -146,20 +146,32 @@ export default function RoleDashboard() {
                 setSaving(true);
                 const toastId = toast.loading("Creating user...");
                 try {
-                  const res = await fetch("/api/auth/signup", {
+                  const res = await fetch("/api/admin/user", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(newUser),
                   });
+
                   const data = await res.json();
+
                   if (!res.ok) {
                     toast.error(data.error || "Failed to create user", { id: toastId });
                     return;
                   }
+
                   setUsers((prev) => [...prev, data.user]);
                   toast.success("User created successfully", { id: toastId });
                   setAddUser(false);
-                  setNewUser({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
+                  setNewUser({
+                    name: "",
+                    email: "",
+                    password: "",
+                    role: "EMPLOYEE",
+                    department: "",
+                    workingAs: "",
+                    phone: "",
+                  });
+
                 } catch {
                   toast.error("Something went wrong", { id: toastId });
                 } finally {
