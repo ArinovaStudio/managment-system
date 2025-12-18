@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Wrapper from "@/layout/Wrapper";
+import toast from "react-hot-toast";
 
 interface LeaveRequest {
   id: string;
@@ -392,7 +393,7 @@ function AddLeaveForm({
     e.preventDefault();
 
     if (!employeeName || !employeeId) {
-      alert("User data not loaded. Please wait and try again.");
+      toast.error("User data not loaded. Please wait and try again.");
       return;
     }
 

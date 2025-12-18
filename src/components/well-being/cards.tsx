@@ -20,7 +20,7 @@ const Card = ({
 }) => (
   <motion.div
     whileHover={{ scale: 1.02 }}
-    className="w-[48%] h-52 text-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] px-5 py-5 shadow-sm overflow-hidden relative flex flex-col justify-between"
+    className="w-full h-52 text-center rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] px-5 py-5 shadow-sm overflow-hidden relative flex flex-col justify-between"
   >
     <div className="flex-1 flex flex-col justify-center items-center">{children}</div>
     <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 text-center mt-3">
@@ -334,7 +334,7 @@ export const ScreenTimeCard = () => {
 // ---------- 🧩 Default Export ----------
 export default function WellBeingSection() {
   return (
-    <div className="w-2/5 mt-4 h-full flex flex-wrap justify-between items-start gap-4">
+    <div className="w-full mt-4 h-full grid grid-cols-1 md:grid-cols-2 gap-4">
       <WaterIntakeCard />
       <StretchCard />
       <PostureCard />

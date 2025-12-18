@@ -1,15 +1,10 @@
 "use client";
 import Banner from "@/components/well-being/banner";
 import Health from "@/components/well-being/Health";
-import React, { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { useState, useEffect } from "react";
 
 export default function WellBeingPage() {
   const [wellBeingData, setWellBeingData] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [newTip, setNewTip] = useState({ title: "", description: "", category: "" });
-  const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
