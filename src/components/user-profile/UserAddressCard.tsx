@@ -68,7 +68,7 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
 
               <div>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                  Created At
+                  Joined us on
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                   {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available"}

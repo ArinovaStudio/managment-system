@@ -107,15 +107,12 @@ const NewTaskModal: React.FC<{
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Assignee</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <input
-                  type="text"
-                  value={newTask.assignee}
-                  onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-                  placeholder="Assign to..."
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              <div className="flex items-center gap-2 pl-1">
+                <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {newTask.assignee || "Loading..."}
+                </p>
+                <p>{newTask.assignee ? `(${newTask.title})` : ""}</p>
               </div>
             </div>
             <div>
@@ -137,15 +134,14 @@ const NewTaskModal: React.FC<{
                   <button
                     key={priority}
                     onClick={() => setNewTask({ ...newTask, priority })}
-                    className={`flex-1 px-4 py-3 rounded-lg border font-medium capitalize transition-all ${
-                      newTask.priority === priority
+                    className={`flex-1 px-4 py-3 rounded-lg border font-medium capitalize transition-all ${newTask.priority === priority
                         ? priority === 'low'
                           ? 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/50'
                           : priority === 'medium'
                             ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/50'
                             : 'bg-red-100 text-red-700 border-red-300 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/50'
                         : 'bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-700'
-                    }`}
+                      }`}
                   >
                     {priority}
                   </button>
@@ -332,15 +328,24 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
     attachmentFile: null
   });
   const [tasks, setTasks] = useState<Task[]>([]);
+  console.log("i am running");
+
 
   useEffect(() => {
     fetchTasks();
+    console.log("this is the project id", projectId);
+
+
   }, [projectId]);
 
   const fetchTasks = async () => {
     try {
+      console.log("fetch tas calledd");
+
       const res = await fetch(`/api/kanban/task?projectId=${projectId}`);
       const data = await res.json();
+      console.log("fetched tasks data", data);
+
       if (data.tasks) setTasks(data.tasks);
     } catch (err) {
       console.error("Failed to load tasks", err);
@@ -426,9 +431,13 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
     try {
       const formData = new FormData();
+
+      const assigneeName = newTask.assignee || "Unassigned";
+
+
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
-      formData.append("assignee", newTask.assignee || "Unassigned");
+      formData.append("assignee", assigneeName);
       formData.append("assigneeAvatar", newTask.assignee ? newTask.assignee.split(" ").map(n => n[0]).join("").toUpperCase() : "");
       formData.append("priority", newTask.priority);
       formData.append("dueDate", newTask.dueDate);
@@ -478,8 +487,8 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
     setNewTask({ ...newTask, tags: newTask.tags.filter(tag => tag !== tagToRemove) });
   };
 
-  const filteredTasks = tasks.filter(task => 
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredTasks = tasks.filter(task =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     task.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -521,11 +530,10 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
               <div key={column.id} className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-800">
                   <div className="flex items-center gap-2">
-                    <div className={`p-2 rounded-lg ${
-                      column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
-                      column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
-                      'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
-                    }`}>
+                    <div className={`p-2 rounded-lg ${column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
+                        column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
+                          'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                      }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                     <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
@@ -533,22 +541,20 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
                   <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
                 </div>
 
-                <div 
-                  onDragOver={handleDragOver} 
-                  onDrop={() => handleDrop(column.id as Task['status'])} 
-                  className={`flex-1 space-y-3 min-h-[200px] p-1 rounded-lg ${
-                    draggedTask && draggedTask.status !== column.id ? 'bg-gray-100/50 dark:bg-gray-800/30' : ''
-                  }`}
+                <div
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(column.id as Task['status'])}
+                  className={`flex-1 space-y-3 min-h-[200px] p-1 rounded-lg ${draggedTask && draggedTask.status !== column.id ? 'bg-gray-100/50 dark:bg-gray-800/30' : ''
+                    }`}
                 >
                   {columnTasks.map(task => (
-                    <div 
-                      key={task.id} 
-                      draggable 
-                      onDragStart={() => handleDragStart(task)} 
-                      onClick={() => setSelectedTask(task)} 
-                      className={`p-4 rounded-xl border cursor-pointer transition-all bg-white dark:bg-gray-800/[0.5] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 ${
-                        draggedTask?.id === task.id ? 'opacity-50' : ''
-                      }`}
+                    <div
+                      key={task.id}
+                      draggable
+                      onDragStart={() => handleDragStart(task)}
+                      onClick={() => setSelectedTask(task)}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all bg-white dark:bg-gray-800/[0.5] border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-lg hover:shadow-blue-500/10 dark:hover:shadow-blue-500/5 ${draggedTask?.id === task.id ? 'opacity-50' : ''
+                        }`}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <h3 className="font-semibold text-gray-600 dark:text-white line-clamp-2">{task.title}</h3>
@@ -600,14 +606,14 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
         handleAddComment={handleAddComment}
       />
 
-      <NewTaskModal 
-        isOpen={showNewTaskModal} 
-        onClose={() => setShowNewTaskModal(false)} 
-        newTask={newTask} 
-        setNewTask={setNewTask} 
-        handleCreateTask={handleCreateTask} 
-        handleAddTag={handleAddTag} 
-        handleRemoveTag={handleRemoveTag} 
+      <NewTaskModal
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        newTask={newTask}
+        setNewTask={setNewTask}
+        handleCreateTask={handleCreateTask}
+        handleAddTag={handleAddTag}
+        handleRemoveTag={handleRemoveTag}
       />
     </div>
   );

@@ -10,6 +10,7 @@ interface User {
     phone?: string;
     department?: string;
     workingAs?: string;
+    image?: string | null;
 }
 
 export async function PATCH(req: Request) {
@@ -23,6 +24,7 @@ export async function PATCH(req: Request) {
       phone,
       department,
       workingAs,
+      image,
     } = body as User;
 
     /* ---------------- Validation ---------------- */
@@ -61,6 +63,7 @@ export async function PATCH(req: Request) {
         phone: phone || null,
         department: department || null,
         workingAs: workingAs || null,
+        image: image || null,
       },
     });
 

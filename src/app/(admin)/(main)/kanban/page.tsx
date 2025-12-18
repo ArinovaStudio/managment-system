@@ -21,7 +21,9 @@ import {
   Edit2,
   Trash2,
   Save,
-  SquarePen
+  SquarePen,
+  Download,
+  Eye
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
@@ -68,6 +70,7 @@ type NewTaskShape = {
   tags: string[];
   status: 'assigned' | 'in-progress' | 'completed';
   attachmentFile: File | null;
+  projectId: string;
 };
 
 const NewTaskModal: React.FC<{
@@ -79,7 +82,9 @@ const NewTaskModal: React.FC<{
   handleSubmit: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
-}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag }) => {
+  projectsLoading: boolean;
+  projects: { id: string; name: string }[];
+}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects }) => {
   if (!isOpen) return null;
 
   return (
@@ -181,6 +186,35 @@ const NewTaskModal: React.FC<{
               </select>
             </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+              Project *
+            </label>
+
+            <select
+              value={newTask.projectId}
+              disabled={projectsLoading}
+              onChange={(e) =>
+                setNewTask({ ...newTask, projectId: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111]
+      border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white
+      focus:outline-none focus:ring-2 focus:ring-blue-500
+      disabled:opacity-60"
+            >
+              <option value="">
+                {projectsLoading ? "Loading projects..." : "Select a project"}
+              </option>
+
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
 
           <div>
             <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Tags</label>
@@ -587,10 +621,28 @@ const SidePanel: React.FC<{
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md"
                       >
-                        Download
+                        <Eye className='hover:text-blue-400' />
                       </a>
+                      <button
+                        onClick={async () => {
+                          const res = await fetch(file.url);
+                          const blob = await res.blob();
+
+                          const a = document.createElement("a");
+                          a.href = URL.createObjectURL(blob);
+                          a.download = file.name;
+                          a.click();
+
+                          URL.revokeObjectURL(a.href);
+                        }}
+                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md 00"
+                      >
+                        <Download className='hover:text-green-300' />
+                      </button>
+
+
                     </div>
                   ))}
                 </div>
@@ -830,7 +882,8 @@ const KanbanBoard: React.FC = () => {
     dueDate: '',
     tags: [],
     status: 'assigned',
-    attachmentFile: null
+    attachmentFile: null,
+    projectId: '',
   });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -844,7 +897,25 @@ const KanbanBoard: React.FC = () => {
 
   const [reportsLoading, setReportsLoading] = useState(false);
 
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const res = await fetch("/api/project"); // your projects API
+      const data = await res.json();
+      setProjects(data.projects || []);
+    } catch (err) {
+      console.error("Failed to load projects", err);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   useEffect(() => {
     fetchUserRole();
@@ -852,7 +923,7 @@ const KanbanBoard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedEmployee === "") {
+    if (!selectedEmployee || selectedEmployee === "__ME__") {
       fetchTasks();
     } else {
       fetchTasks(selectedEmployee);
@@ -882,22 +953,50 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  // const fetchTasks = async (employeeName?: string) => {
+  //   try {
+  //     console.log("Employee lest see" ,employeeName);
+  //     const employee = "Raj"
+  //     setTasksLoading(true);
+  //     const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
+  //     console.log("Employee lest see" ,employee);
+  //     const res = await fetch(url);
+  //     const data = await res.json();
+  //     console.log("data of tasks", data);
+
+
+  //     if (data.success && data.tasks) {
+  //       setTasks(data.tasks);
+  //     } else if (data.tasks) {
+  //       setTasks(data.tasks);
+  //     } else {
+  //       setTasks([]);
+  //     }
+  //   } catch (err) {
+  //     console.error("Kanban Fetch Error:", err);
+  //     setTasks([]);
+  //   } finally {
+  //     setTasksLoading(false);
+  //   }
+  // };
+
   const fetchTasks = async (employeeName?: string) => {
     try {
       setTasksLoading(true);
-      const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
-      const res = await fetch(url);
-      const data = await res.json();
-      console.log("data of tasks", data);
 
+      const url = new URL("/api/kanban/task", window.location.origin);
 
-      if (data.success && data.tasks) {
-        setTasks(data.tasks);
-      } else if (data.tasks) {
-        setTasks(data.tasks);
-      } else {
-        setTasks([]);
+      if (employeeName && employeeName !== "__ME__") {
+        url.searchParams.set("assignee", employeeName);
       }
+
+      const res = await fetch(url.toString(), {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      setTasks(data.tasks ?? []);
     } catch (err) {
       console.error("Kanban Fetch Error:", err);
       setTasks([]);
@@ -905,6 +1004,7 @@ const KanbanBoard: React.FC = () => {
       setTasksLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (!selectedTaskId) return;
@@ -1008,6 +1108,7 @@ const KanbanBoard: React.FC = () => {
       tags: task.tags,
       status: task.status,
       attachmentFile: null,
+      projectId: "",
     });
 
     setShowNewTaskModal(true);
@@ -1233,7 +1334,7 @@ const KanbanBoard: React.FC = () => {
     try {
       const formData = new FormData();
 
-      const assigneeName = selectedEmployee || newTask.assignee || "Unassigned";
+      const assigneeName = newTask.assignee || "Unassigned";
 
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
@@ -1283,6 +1384,7 @@ const KanbanBoard: React.FC = () => {
         tags: [],
         status: "assigned",
         attachmentFile: null,
+        projectId: "",
       });
 
     } catch (error) {
@@ -1340,6 +1442,19 @@ const KanbanBoard: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const filterTasksByUser = (task: Task) => {
+    if (userRole === "ADMIN") {
+      if (selectedEmployee === "__ME__" || !selectedEmployee) {
+        return task.assignee === currentUser?.name;
+      }
+      return task.assignee === selectedEmployee;
+    }
+
+    // EMPLOYEE
+    return task.assignee === currentUser?.name;
+  };
+
 
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1451,7 +1566,7 @@ const KanbanBoard: React.FC = () => {
                       </div>
                       <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
                     </div>
-                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4">{columnTasks.length}</h2>
+                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4"> {columnTasks.filter(filterTasksByUser).length}</h2>
                   </div>
 
                   <div
@@ -1566,6 +1681,8 @@ const KanbanBoard: React.FC = () => {
         handleSubmit={handleSubmitTask}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
+        projectsLoading={projectsLoading}
+        projects={projects}
       />
 
     </div>

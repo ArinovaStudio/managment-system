@@ -150,7 +150,7 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
             <div className="h-[450px] overflow-y-auto px-2 pb-3">
               
               {/* SOCIAL LINKS */}
-              <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
+              {/* <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
                 Social Links
               </h5>
 
@@ -172,7 +172,7 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                     />
                   </div>
                 ))}
-              </div>
+              </div> */}
 
               {/* PERSONAL INFO */}
               <h5 className="mt-7 mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
@@ -180,7 +180,7 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
               </h5>
 
               <div className="grid grid-cols-1 gap-y-5 lg:grid-cols-2 gap-x-6">
-                <div className="lg:col-span-2">
+                <div className="">
                   <Label>Full Name</Label>
                   <Input
                     type="text"
@@ -202,7 +202,7 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                   />
                 </div>
 
-                <div>
+                {/* <div>
                   <Label>Department</Label>
                   <Input
                     type="text"
@@ -211,9 +211,9 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                       setFormData({ ...formData, department: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
 
-                <div>
+                {/* <div>
                   <Label>Position</Label>
                   <Input
                     type="text"
@@ -222,9 +222,9 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                       setFormData({ ...formData, workingAs: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
 
-                <div>
+                {/* <div>
                   <Label>Date of Birth</Label>
                   <Input
                     type="date"
@@ -233,18 +233,28 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                       setFormData({ ...formData, dob: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
 
                 <div className="lg:col-span-2">
-                  <Label>Bio</Label>
-                  <Input
-                    type="text"
-                    value={formData.bio}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bio: e.target.value })
-                    }
-                  />
-                </div>
+  <Label>Bio</Label>
+  <textarea
+    value={formData.bio}
+    onChange={(e) =>
+      setFormData({ ...formData, bio: e.target.value })
+    }
+    rows={5}
+    placeholder="Write a short bio..."
+    className="
+      w-full rounded-lg border px-3 py-2
+      text-gray-900 dark:text-white
+      
+      border-gray-300 dark:border-gray-800
+      resize-y
+      focus:outline-none focus:ring-2 focus:ring-blue-500
+    "
+  />
+</div>
+
               </div>
             </div>
 

@@ -13,6 +13,8 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [memberRole, setMemberRole] = useState("");
 
+  const [usersLoading, setUsersLoading] = useState(false);
+
   useEffect(() => {
     if (projectId) fetchMembers();
   }, [projectId]);
@@ -48,7 +50,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
 
   const removeMember = async (userId: string) => {
     if (!confirm('Remove this member from the project?')) return;
-    
+
     try {
       await fetch(`/api/project/member`, {
         method: "DELETE",
@@ -64,29 +66,51 @@ export default function TeamTab({ projectId }: { projectId: string }) {
 
   const saveRole = async () => {
     if (!editingMember || !newRole.trim()) return;
-    
+
     await updateRole(editingMember.userId, newRole, editingMember.isLeader);
     setEditingMember(null);
     setNewRole("");
   };
 
+  // const fetchAvailableUsers = async () => {
+  //   try {
+  //     const res = await fetch('/api/auth/signup');
+  //     const data = await res.json();
+  //     if (data.users) {
+  //       const currentMemberIds = members.map(m => m.userId);
+  //       const available = data.users.filter(u => !currentMemberIds.includes(u.id));
+  //       setAvailableUsers(available);
+  //     }
+  //   } catch (err) {
+  //     console.error('Failed to fetch users:', err);
+  //   }
+  // };
+
   const fetchAvailableUsers = async () => {
+    setUsersLoading(true);
+
     try {
       const res = await fetch('/api/auth/signup');
       const data = await res.json();
+
       if (data.users) {
         const currentMemberIds = members.map(m => m.userId);
-        const available = data.users.filter(u => !currentMemberIds.includes(u.id));
+        const available = data.users.filter(
+          u => !currentMemberIds.includes(u.id)
+        );
         setAvailableUsers(available);
       }
     } catch (err) {
       console.error('Failed to fetch users:', err);
+    } finally {
+      setUsersLoading(false);
     }
   };
 
+
   const addMember = async () => {
     if (!selectedUser) return;
-    
+
     try {
       await fetch('/api/project/member', {
         method: 'POST',
@@ -98,7 +122,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
           isLeader: false
         })
       });
-      
+
       setShowAddModal(false);
       setSelectedUser('');
       setMemberRole('');
@@ -179,16 +203,15 @@ export default function TeamTab({ projectId }: { projectId: string }) {
               <div className="flex mt-10 items-end gap-2">
                 <div>
                   <button
-                  onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded text-xs ${
-                    m.isLeader
-                      ? "bg-yellow-400/70 text-black"
-                      : "bg-gray-400/30 text-white"
-                  }`}
-                >
-                  <ShieldCheck size={14} />
-                  {m.isLeader ? "Remove Leader" : "Make Leader"}
-                </button>
+                    onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
+                    className={`flex items-center gap-1 px-3 py-1 rounded text-xs ${m.isLeader
+                        ? "bg-yellow-400/70 text-black"
+                        : "bg-gray-400/30 text-white"
+                      }`}
+                  >
+                    <ShieldCheck size={14} />
+                    {m.isLeader ? "Remove Leader" : "Make Leader"}
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -221,11 +244,11 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xl">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Team Member</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Select User</label>
-                <select
+                {/* <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
@@ -234,9 +257,37 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   {availableUsers.map(user => (
                     <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
                   ))}
+                </select> */}
+
+                <select
+                  value={selectedUser}
+                  onChange={(e) => setSelectedUser(e.target.value)}
+                  disabled={usersLoading}
+                  className={`w-full px-3 py-2 rounded-lg border
+    ${usersLoading
+                      ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                      : "bg-white dark:bg-gray-800"}
+    border-gray-300 dark:border-gray-700
+    text-gray-900 dark:text-white
+    focus:ring-2 focus:ring-blue-500`}
+                >
+                  {usersLoading ? (
+                    <option value="">Loading users...</option>
+                  ) : (
+                    <>
+                      <option value="">Choose a user...</option>
+                      {availableUsers.map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} ({user.email})
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
+
+
               </div>
-              
+
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Role</label>
                 <input
@@ -248,7 +299,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => {
