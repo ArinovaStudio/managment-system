@@ -85,6 +85,16 @@ model feedback {
   employeeId  String?
 }
 
+model clientfeedback {
+  id      String  @id @default(cuid())
+  type    String
+  project String
+  message String
+  byName  String
+  userId  String
+  email   String?
+}
+
 model leaveReq {
   id         String   @id @default(cuid())
   status     STATUS   @default(Pending)

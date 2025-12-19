@@ -1,33 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import { clientDemoData } from "../demodata"
+import { Toaster, toast } from "react-hot-toast";
 
 const { feedback } = clientDemoData
 
 export default function FeedbacksPage() {
-    const [feedbacks, setFeedbacks] = useState(feedback);
+    const [feedbacks, setFeedbacks] = useState<any[]>([]);
     const [newFeedback, setNewFeedback] = useState("");
-    const [feedbackType, setFeedbackType] = useState("project");
+    const [feedbackType, setFeedbackType] = useState("");
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
-        if (!newFeedback.trim()) return;
+        setLoading(true);
 
-        const newEntry = {
-            id: feedbacks.length + 1,
-            type: feedbackType,
-            message: newFeedback,
-            date: new Date().toISOString().split("T")[0],
-        };
+        try {
+            const response = await fetch('/api/feedbacks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    type: feedbackType,
+                    message: newFeedback,
+                    byName: user?.name,
+                    userId: user?.id,
+                })
+            });
 
-        setFeedbacks([newEntry, ...feedbacks]);
-        setNewFeedback("");
+            if (response.ok) {
+                toast.success('Feedback submitted successfully!');
+                setFeedbackType('');
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Failed to submit feedback');
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            toast.error('Error submitting feedback');
+        } finally {
+            setLoading(false);
+        }
     };
+    const fetchAllFeedbacks = async () => {
+        try {
+            const response = await fetch('/api/feedbacks?all=true');
+            if (response.ok) {
+                const data = await response.json();
+                console.log("see the feedbackclient", data);
+
+                setFeedbacks(data.feedbacks || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch feedbacks:', error);
+        }
+    };
+
+    const fetchUser = async () => {
+        const res = await fetch("/api/user");
+        const data = await res.json();
+
+
+
+        if (data.user) {
+            setUser(data.user);
+            console.log(user);
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+        fetchAllFeedbacks();
+    }, []);
 
     return (
         <div className="space-y-8">
+            <Toaster position="top-right" />
             {/* Title */}
             <div>
                 <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -102,10 +153,11 @@ export default function FeedbacksPage() {
                     {/* Submit Button */}
                     <button
                         type="submit"
+                        disabled={loading}
                         className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-all"
                     >
                         <Send className="w-4 h-4" />
-                        Submit Feedback
+                        {loading ? 'Subbmitting...' : 'Submit Feedback'}
                     </button>
                 </form>
             </div>
