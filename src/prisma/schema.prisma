@@ -196,6 +196,7 @@ model Task {
   assigneeAvatar String?
   priority       String
   dueDate        DateTime
+  employeeId     String?
   tags           String[]
   attachments    Json[]    @default([])
   status         String
@@ -263,16 +264,16 @@ model ProjectMember {
 }
 
 model Milestone {
-  id          String          @id @default(cuid())
+  id          String           @id @default(cuid())
   projectId   String
   title       String
   description String?
   dueDate     DateTime
   status      MILESTONE_STATUS @default(PENDING)
   createdBy   String
-  createdAt   DateTime        @default(now())
-  creator     User            @relation(fields: [createdBy], references: [id])
-  project     Project         @relation(fields: [projectId], references: [id])
+  createdAt   DateTime         @default(now())
+  creator     User             @relation(fields: [createdBy], references: [id])
+  project     Project          @relation(fields: [projectId], references: [id])
 }
 
 model Asset {
@@ -325,8 +326,8 @@ model FeatureRequest {
   description String
   createdAt   DateTime @default(now())
   status      String   @default("pending")
-  client  User    @relation(fields: [clientId], references: [id])
-  project Project @relation(fields: [projectId], references: [id])
+  client      User     @relation(fields: [clientId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
 }
 
 model ProjectInfo {
@@ -469,7 +470,7 @@ model OtpVerification {
   type      OtpType
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
+
   @@index([email, type])
 }
 

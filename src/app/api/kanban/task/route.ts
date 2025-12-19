@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const assignee = formData.get("assignee") as string;
+    const employeeId = formData.get("employeeId") as string;
     const assigneeAvatar = formData.get("assigneeAvatar") as string;
     const priority = (formData.get("priority") as string)?.trim();
     const dueDate = formData.get("dueDate") as string;
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
         title,
         description,
         assignee,
+        employeeId,
         assigneeAvatar,
         priority,
         dueDate: new Date(dueDate),
@@ -156,31 +158,44 @@ export async function GET(req: Request) {
     const token = cookieStore.get("token")?.value;
 
 
-        if (!token) {
-          return NextResponse.json(
-            { success: false, message: "No token found" },
-            { status: 401 }
-          );
-        }
-    
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
-        
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "No token found" },
+        { status: 401 }
+      );
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
+
 
     const userId = decoded.userId;
     const userName = decoded.Name;
     const userRole = decoded.role; // ADMIN | EMPLOYEE
 
-    if (!userId  || !userRole) {
+    if (!userId || !userRole) {
       return NextResponse.json(
         { message: "Unauthorized" },
         { status: 401 }
       );
     }
 
+    console.log("this is my ", userId);
+
+
+    const userr = await db.user.findUnique({
+      where: {
+        id: userId,
+      },
+    })
+    console.log("this is my empid ", userr.employeeId);
+
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
-    
-    const assigneeFromQuery = searchParams.get("assignee");
+
+    const employeeIdFromQuery = searchParams.get("employeeId");
+
+    console.log(employeeIdFromQuery);
+
 
     let whereClause: any = {
       ...(projectId && { projectId }),
@@ -188,21 +203,26 @@ export async function GET(req: Request) {
 
     if (userRole === "ADMIN") {
       // Admin explicitly selects an employee
-      if (assigneeFromQuery) {
-        whereClause.assignee = assigneeFromQuery;
+      if (employeeIdFromQuery) {
+        whereClause.employeeId = employeeIdFromQuery;
       } else {
         // First load → admin sees only own tasks
-        whereClause.assignee = userName;
+        whereClause.employeeId = employeeIdFromQuery || userName;
       }
     } else {
       // Employee → always self
-      whereClause.assignee = userName;
+      whereClause.employeeId = employeeIdFromQuery || userr.employeeId;
     }
 
     const tasks = await db.task.findMany({
       where: whereClause,
       orderBy: { createdAt: "desc" },
     });
+
+    console.log(tasks);
+    console.log(whereClause);
+
+
 
     return NextResponse.json(
       { success: true, tasks },

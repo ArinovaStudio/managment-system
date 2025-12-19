@@ -84,7 +84,7 @@ const NewTaskModal: React.FC<{
   handleRemoveTag: (tag: string) => void;
   projectsLoading: boolean;
   projects: { id: string; name: string }[];
-}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects }) => {
+}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
   if (!isOpen) return null;
 
   return (
@@ -889,9 +889,9 @@ const KanbanBoard: React.FC = () => {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("__ME__");
   const [currentUser, setCurrentUser] = useState<any>(null);
-
+  const [taskemployee, settaskemployee] = useState<any>(null);
   const [taskMode, setTaskMode] = useState<"create" | "edit">("create");
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
@@ -923,10 +923,12 @@ const KanbanBoard: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedEmployee || selectedEmployee === "__ME__") {
-      fetchTasks();
+    if (selectedEmployee === "__ME__") {
+      fetchTasks(currentUser?.employeeId);
+      settaskemployee(currentUser?.employeeId);
     } else {
       fetchTasks(selectedEmployee);
+      settaskemployee(selectedEmployee);
     }
   }, [selectedEmployee]);
 
@@ -987,7 +989,7 @@ const KanbanBoard: React.FC = () => {
       const url = new URL("/api/kanban/task", window.location.origin);
 
       if (employeeName && employeeName !== "__ME__") {
-        url.searchParams.set("assignee", employeeName);
+        url.searchParams.set("employeeId", employeeName);
       }
 
       const res = await fetch(url.toString(), {
@@ -1334,11 +1336,16 @@ const KanbanBoard: React.FC = () => {
     try {
       const formData = new FormData();
 
+      console.log(currentUser.employeeId);
+
+
       const assigneeName = newTask.assignee || "Unassigned";
+      const employeeId = taskemployee || currentUser.employeeId || "";
 
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
       formData.append("assignee", assigneeName);
+      formData.append("employeeId", employeeId);
 
       formData.append(
         "assigneeAvatar",
@@ -1443,17 +1450,17 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
-  const filterTasksByUser = (task: Task) => {
-    if (userRole === "ADMIN") {
-      if (selectedEmployee === "__ME__" || !selectedEmployee) {
-        return task.assignee === currentUser?.name;
-      }
-      return task.assignee === selectedEmployee;
-    }
+  // const filterTasksByUser = (task: Task) => {
+  //   if (userRole === "ADMIN") {
+  //     if (selectedEmployee === "__ME__" || !selectedEmployee) {
+  //       return task.assignee === currentUser?.name;
+  //     }
+  //     return task.assignee === selectedEmployee;
+  //   }
 
-    // EMPLOYEE
-    return task.assignee === currentUser?.name;
-  };
+  //   // EMPLOYEE
+  //   return task.assignee === currentUser?.name;
+  // };
 
 
   const filteredTasks = tasks.filter(task =>
@@ -1481,7 +1488,7 @@ const KanbanBoard: React.FC = () => {
                 >
                   <option value="__ME__">My Tasks</option>
                   {employees.map(emp => (
-                    <option key={emp.id} value={emp.name}>
+                    <option key={emp.id} value={emp.employeeId}>
                       {emp.name} - {emp.employeeId}
                     </option>
                   ))}
@@ -1566,7 +1573,7 @@ const KanbanBoard: React.FC = () => {
                       </div>
                       <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{column.title}</h2>
                     </div>
-                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4"> {columnTasks.filter(filterTasksByUser).length}</h2>
+                    <h2 className="font-medium text-base text-gray-600 dark:text-white mr-4"> {columnTasks.length}</h2>
                   </div>
 
                   <div
@@ -1574,24 +1581,7 @@ const KanbanBoard: React.FC = () => {
                     onDrop={() => handleDrop(column.id as Task['status'])}
                     className={`flex-1 space-y-3 min-h-[200px] p-1 rounded-lg ${draggedTask && draggedTask.status !== column.id ? 'bg-gray-100/50 dark:bg-gray-800/30' : ''}`}
                   >
-                    {columnTasks
-                      .filter(task => {
-                        // ADMIN logic
-                        if (userRole === "ADMIN") {
-                          // My Tasks
-                          if (selectedEmployee === "__ME__" || !selectedEmployee) {
-                            return task.assignee === currentUser?.name;
-                          }
-
-                          // Selected employee
-                          return task.assignee === selectedEmployee;
-                        }
-
-                        // EMPLOYEE logic
-                        return task.assignee === currentUser?.name;
-                      })
-
-                      .map(task => (
+                    {columnTasks.map(task => (
                         <div
                           key={task.id}
                           draggable

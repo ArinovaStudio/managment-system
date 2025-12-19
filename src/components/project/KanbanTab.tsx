@@ -68,7 +68,8 @@ const NewTaskModal: React.FC<{
   handleCreateTask: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
-}> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag }) => {
+  currentUser: { name: string } | null;
+}> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag, currentUser }) => {
   if (!isOpen) return null;
 
   return (
@@ -110,9 +111,8 @@ const NewTaskModal: React.FC<{
               <div className="flex items-center gap-2 pl-1">
                 <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <p className="text-gray-900 dark:text-white font-medium">
-                  {newTask.assignee || "Loading..."}
+                  {currentUser?.name || newTask.assignee || "Loading..."}
                 </p>
-                <p>{newTask.assignee ? `(${newTask.title})` : ""}</p>
               </div>
             </div>
             <div>
@@ -317,6 +317,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
   const [commentText, setCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name: string } | null>(null);
   const [newTask, setNewTask] = useState<NewTaskShape>({
     title: '',
     description: '',
@@ -337,6 +338,22 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
 
   }, [projectId]);
+
+  useEffect(() => {
+  fetch("/api/user", { credentials: "include" })
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (data?.user) {
+        setCurrentUser(data.user);
+        setNewTask(prev => ({
+          ...prev,
+          assignee: data.user.name,
+        }));
+      }
+    })
+    .catch(() => {});
+}, []);
+
 
   const fetchTasks = async () => {
     try {
@@ -612,6 +629,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
         newTask={newTask}
         setNewTask={setNewTask}
         handleCreateTask={handleCreateTask}
+        currentUser={currentUser}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
       />
