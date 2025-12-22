@@ -1,15 +1,17 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
-export const createToken = (payload: any) => {
+export interface AppJwtPayload extends JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export const createToken = (payload: AppJwtPayload) => {
   return jwt.sign(payload, process.env.JWT_SECRET!, {
     expiresIn: "7d",
   });
 };
 
-export const verifyToken = (token: string) => {
-  return jwt.verify(token, process.env.JWT_SECRET!);
+export const verifyToken = (token: string): AppJwtPayload => {
+  return jwt.verify(token, process.env.JWT_SECRET!) as AppJwtPayload;
 };
-
-  export function deleteTokenCookie() {
-  return `token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
-}

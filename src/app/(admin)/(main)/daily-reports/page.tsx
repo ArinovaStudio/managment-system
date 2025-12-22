@@ -31,7 +31,10 @@ const DailyReports = () => {
         try {
             const res = await fetch('/api/clock/work-summary');
             const data = await res.json();
-            if (data.success) setReports(data.reports);
+
+            if (data.success) {
+                setReports(data.reports);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -60,6 +63,10 @@ const DailyReports = () => {
             cardBg: 'bg-blue-50'
         };
     };
+
+    const activeUsers = reports.filter(
+        (report) => report.clockOut === "-" || !report.summary
+    );
 
     if (loading) {
         return (
@@ -98,26 +105,30 @@ const DailyReports = () => {
 
             {/* TOP HORIZONTAL TEAM ROW */}
             <div className="flex gap-4 relative overflow-x-auto no-scrollbar pb-2">
-                {reports.map((report) => {
+                {activeUsers.map((report) => {
                     const status = getStatusClasses(report.user.workingAs);
 
                     return (
                         <div
                             key={`${report.id}-horizontal`}
-                            className=" min-w-[260px]"
+                            className="min-w-[260px]"
                         >
-                            {/* Role Badge - Floating outside at top */}
-                            <span className={`relative top-2 left-25 ${status.badge} text-[11px] px-1 py-1 rounded-full z-10 shadow-sm`}>
+                            {/* Role Badge */}
+                            <span
+                                className={`relative top-2 left-25 ${status.badge} text-[11px] px-1 py-1 rounded-full z-10 shadow-sm`}
+                            >
                                 {report.user.workingAs}
                             </span>
 
-                            {/* Card Container */}
-                            <div className={`flex bg-white items-center gap-3 rounded-full border-2 ${status.ring} ${status.cardBg} dark:bg-gray-800 shadow-sm px-4 py-3`}>
+                            {/* Card */}
+                            <div
+                                className={`flex bg-white items-center gap-3 rounded-full border-2 ${status.ring} ${status.cardBg} dark:bg-gray-800 shadow-sm px-4 py-3`}
+                            >
                                 <div
-                                    className={`ring-2 ${status.ring} rounded-full w-10 h-10 overflow-hidden flex items-center justify-center flex-shrink-0`}
+                                    className={`ring-2 ${status.ring} rounded-full w-10 h-10 overflow-hidden`}
                                 >
                                     <Image
-                                        src={report.user.image || '/images/user/user-01.png'}
+                                        src={report.user.image || "/images/user/user-01.png"}
                                         alt={report.user.name}
                                         width={48}
                                         height={48}
@@ -125,18 +136,25 @@ const DailyReports = () => {
                                     />
                                 </div>
 
-
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{report.user.name}</p>
-                                    <p className="text-[11px] text-gray-600 dark:text-gray-400">{report.user.workingAs}</p>
+                                    <p className="font-semibold text-sm truncate">
+                                        {report.user.name}
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                        {report.user.workingAs}
+                                    </p>
                                 </div>
 
-                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex-shrink-0">{report.clockOut}</span>
+                                {/* Still clocked in */}
+                                <span className="text-sm font-semibold text-orange-600">
+                                    Working…
+                                </span>
                             </div>
                         </div>
                     );
                 })}
             </div>
+
 
             {/* REPORT CARDS GRID */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -164,9 +182,14 @@ const DailyReports = () => {
 
 
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-gray-900 dark:text-white">{report.user.name}</h3>
+                                    <div className="font-semibold flex justify-between text-gray-900 dark:text-white">
+                                        {report.user.name}
+                                        <span className="text-[13px]  text-gray-500 dark:text-gray-400">
+                                            {report.clockIn} - {report.clockOut}
+                                        </span>
+                                    </div>
                                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                        {report.user.department} • {report.user.workingAs} 
+                                        {report.user.department} • {report.user.workingAs}
                                     </p>
                                 </div>
                             </div>
