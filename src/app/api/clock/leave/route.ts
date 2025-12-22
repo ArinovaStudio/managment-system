@@ -15,10 +15,10 @@ export async function GET(req: Request) {
             leaves = await db.userLeaves.create({
                 data: {
                     userId,
-                    remaining: 10,
-                    emergency: 10,
-                    sick: 10,
-                    total: 30
+                    remaining: 8,
+                    emergency: 3,
+                    sick: 5,
+                    total: 8
                 }
             });
         }

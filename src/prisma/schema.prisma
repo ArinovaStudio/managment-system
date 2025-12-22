@@ -135,10 +135,10 @@ model UserTimezone {
 model UserLeaves {
   id        String   @id @default(cuid())
   userId    String   @unique
-  remaining Int      @default(10)
-  emergency Int      @default(10)
-  sick      Int      @default(10)
-  total     Int      @default(30)
+  remaining Int      @default(8)
+  emergency Int      @default(3)
+  sick      Int      @default(5)
+  total     Int      @default(8)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
