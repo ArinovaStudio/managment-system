@@ -128,26 +128,26 @@ export default function UserProfilePage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1 inline-flex gap-1">
         <button
           onClick={() => setActiveTab('projects')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
-            activeTab === 'projects'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${activeTab === 'projects'
+            ? 'bg-blue-600 text-white shadow-md'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
         >
           <Users size={18} />
           Projects
         </button>
-        <button
-          onClick={() => setActiveTab('analytics')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${
-            activeTab === 'analytics'
+        {user.role === 'EMPLOYEE' ? (
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-md font-medium transition-all ${activeTab === 'analytics'
               ? 'bg-blue-600 text-white shadow-md'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
-        >
-          <TrendingUp size={18} />
-          Performance Analytics
-        </button>
+              }`}
+          >
+            <TrendingUp size={18} />
+            Performance Analytics
+          </button>
+        ) : null}
       </div>
 
       {/* CONTENT */}
@@ -165,107 +165,107 @@ export default function UserProfilePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-          {projects.map((pm: any) => {
-            const project = pm.project;
-            const info = project?.projectInfo;
-            const members = project?.members || [];
+              {projects.map((pm: any) => {
+                const project = pm.project;
+                const info = project?.projectInfo;
+                const members = project?.members || [];
 
-            return (
-              <Link
-                key={project.id}
-                href={`/user/${user.name}/${project.id}`}
-                className="block"
-              >
-                <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group">
+                return (
+                  <Link
+                    key={project.id}
+                    href={`/user/${user.name}/${project.id}`}
+                    className="block"
+                  >
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group">
 
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {project.name}
-                    </h3>
+                      {/* Header */}
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {project.name}
+                        </h3>
 
-                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${getPriorityColor(project.priority)}`}>
-                      {project.priority}
-                    </span>
-                  </div>
-
-                  {/* Summary */}
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                    {project.summary || "No summary available"}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Users size={16} className="text-blue-500" />
-                      <span className="font-medium">{members.length}</span> members
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Calendar size={16} className="text-green-500" />
-                      {new Date(project.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  {/* PROGRESS */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
-                      <span className="text-xs font-bold text-blue-600">{project.progress ?? 0}%</span>
-                    </div>
-                    <div className="bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${project.progress ?? 0}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* MEMBERS LIST PREVIEW */}
-                  {members.length > 0 && (
-                    <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex -space-x-2">
-                        {members.slice(0, 5).map((member: any) => (
-                          <Image
-                            key={member.user.id}
-                            src={member.user.image || "/default-avatar.png"}
-                            alt={member.user.name}
-                            width={32}
-                            height={32}
-                            className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
-                            title={member.user.name}
-                          />
-                        ))}
-                      </div>
-                      {members.length > 5 && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                          +{members.length - 5} more
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getPriorityColor(project.priority)}`}>
+                          {project.priority}
                         </span>
+                      </div>
+
+                      {/* Summary */}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                        {project.summary || "No summary available"}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <div className="flex items-center gap-2">
+                          <Users size={16} className="text-blue-500" />
+                          <span className="font-medium">{members.length}</span> members
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Calendar size={16} className="text-green-500" />
+                          {new Date(project.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+
+                      {/* PROGRESS */}
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Progress</span>
+                          <span className="text-xs font-bold text-blue-600">{project.progress ?? 0}%</span>
+                        </div>
+                        <div className="bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${project.progress ?? 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* MEMBERS LIST PREVIEW */}
+                      {members.length > 0 && (
+                        <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <div className="flex -space-x-2">
+                            {members.slice(0, 5).map((member: any) => (
+                              <Image
+                                key={member.user.id}
+                                src={member.user.image || "/default-avatar.png"}
+                                alt={member.user.name}
+                                width={32}
+                                height={32}
+                                className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
+                                title={member.user.name}
+                              />
+                            ))}
+                          </div>
+                          {members.length > 5 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                              +{members.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* EXTRA INFO */}
+                      {info && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-2">
+                          <div>
+                            <p className="font-medium text-gray-700 dark:text-gray-300">Budget</p>
+                            <p>{info.budget || "—"}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-700 dark:text-gray-300">Type</p>
+                            <p>{info.projectType || "—"}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="font-medium text-gray-700 dark:text-gray-300">Supervisor</p>
+                            <p>{info.supervisorAdmin || "—"}</p>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  )}
-
-                  {/* EXTRA INFO */}
-                  {info && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="font-medium text-gray-700 dark:text-gray-300">Budget</p>
-                        <p>{info.budget || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-700 dark:text-gray-300">Type</p>
-                        <p>{info.projectType || "—"}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="font-medium text-gray-700 dark:text-gray-300">Supervisor</p>
-                        <p>{info.supervisorAdmin || "—"}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
