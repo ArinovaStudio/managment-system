@@ -5,8 +5,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const getEmployees = searchParams.get('employees');
     const getAll = searchParams.get('all');
-
-    console.log("helooo here i am runningg ");
     
     if (getEmployees === 'true') {
         try {
@@ -41,7 +39,6 @@ export async function GET(req: Request) {
         try {
             const { getUserId } = await import('@/lib/auth');
             const userId = await getUserId(req);
-            console.log("helooo here i am ", userId);
             
             
             const feedbacks = await db.feedback.findMany({

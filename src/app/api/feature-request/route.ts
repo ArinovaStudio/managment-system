@@ -2,7 +2,7 @@ import db from "@/lib/client";
 
 export async function POST(req: Request) {
     try {
-        const { clientId, projectId, title, description } = await req.json();
+        const { clientId, projectId, title, description, projectname } = await req.json();
 
         if (!clientId || !projectId || !title || !description) {
             return Response.json({ error: "Missing fields" }, { status: 400 });
@@ -33,7 +33,8 @@ export async function POST(req: Request) {
                 clientId,
                 projectId,
                 title,
-                description
+                description,
+                projectname
             }
         });
 
@@ -49,26 +50,47 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const projectId = searchParams.get("projectId");
+        const userId = searchParams.get("userId");
+        const getAll = searchParams.get('all');
 
-        if (!projectId) {
-            return Response.json({ error: "projectId is required" }, { status: 400 });
+        if (userId) {
+            if (!userId) {
+                return Response.json({ error: "projectId is required" }, { status: 400 });
+            }
+
+            const list = await db.featureRequest.findMany({
+
+                where: { clientId: userId },
+                orderBy: { createdAt: "desc" },
+                include: {
+                    project: true,
+                },
+            });
+
+            // Check if project exists
+            // const project = await db.project.findUnique({ where: { id: list.projectId } });
+
+            // if (!project) {
+            //     return Response.json(
+            //         { error: "project not found (invalid project)" },
+            //         { status: 404 }
+            //     );
+            // }
+
+            console.log(list,"this is list");
+            
+
+            return Response.json({ features: list }, { status: 200 });
         }
-        // Check if project exists
-        const project = await db.project.findUnique({ where: { id: projectId } });
 
-        if (!project) {
-            return Response.json(
-                { error: "project not found (invalid project)" },
-                { status: 404 }
-            );
+        if (getAll === 'true') {
+            const list = await db.featureRequest.findMany({
+                orderBy: { createdAt: "desc" }
+            });
+            return Response.json({ features: list }, { status: 200 });
+
         }
-        const list = await db.featureRequest.findMany({
-            where: { projectId },
-            orderBy: { createdAt: "desc" }
-        });
 
-        return Response.json({ features: list }, { status: 200 });
     } catch (err) {
         return Response.json({ error: err }, { status: 500 });
     }
@@ -76,6 +98,6 @@ export async function GET(req: Request) {
 
 
 export async function DELETE() {
-  await db.featureRequest.deleteMany();
-  return Response.json({ message: "All feature requests deleted" });
+    await db.featureRequest.deleteMany();
+    return Response.json({ message: "All feature requests deleted" });
 }

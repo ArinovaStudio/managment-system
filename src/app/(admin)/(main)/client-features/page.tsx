@@ -143,7 +143,7 @@ export default function AdminFeaturesPage() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Lightbulb className="text-yellow-500" size={20} />
+                  {/* <Lightbulb className="text-yellow-500" size={20} /> */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {feature.title}
@@ -176,7 +176,7 @@ export default function AdminFeaturesPage() {
 
               {userRole && (
                 <div className="flex ">
-                  <div className="mt-4 flex gap-2">
+                  {/* <div className="mt-4 flex gap-2">
                     <button
                       onClick={() => updateFeatureStatus(feature.id, "accepted")}
                       className="px-3 py-1 bg-blue-50 dark:bg-blue-500/20 text-blue-500 rounded-lg text-sm"
@@ -190,7 +190,36 @@ export default function AdminFeaturesPage() {
                     >
                       {feature.status === "rejected" ? "Rejected" : "Reject"}
                     </button>
+                  </div> */}
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => updateFeatureStatus(feature.id, "accepted")}
+                      disabled={feature.status === "accepted"}
+                      className={`px-3 py-1 rounded-lg text-sm transition-all
+      ${feature.status === "accepted"
+                          ? "bg-blue-600 text-white cursor-not-allowed"
+                          : "bg-blue-50 dark:bg-blue-500/20 text-blue-500 hover:bg-blue-100"
+                        }
+    `}
+                    >
+                      {feature.status === "accepted" ? "Accepted" : "Accept"}
+                    </button>
+
+                    <button
+                      onClick={() => updateFeatureStatus(feature.id, "rejected")}
+                      disabled={feature.status === "rejected"}
+                      className={`px-3 py-1 rounded-lg text-sm transition-all
+      ${feature.status === "rejected"
+                          ? "bg-red-800 text-white  cursor-not-allowed"
+                          : "bg-red-50 dark:bg-red-600/20 text-red-400 hover:bg-red-100"
+                        }
+    `}
+                    >
+                      {feature.status === "rejected" ? "Rejected" : "Reject"}
+                    </button>
                   </div>
+
 
                   <div className="flex-1 flex justify-end items-end gap-2">
                     <button

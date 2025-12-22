@@ -88,7 +88,7 @@ model feedback {
 model clientfeedback {
   id      String  @id @default(cuid())
   type    String
-  project String
+  project String?
   message String
   byName  String
   userId  String
