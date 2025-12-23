@@ -16,9 +16,7 @@ export default function FeatureRequestPage() {
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setLoading(true);
-        const selectedProjectObj = projects.find(
-            (p) => p.project.id === selectedProject
-        );
+        
         try {
             const response = await fetch('/api/feature-request', {
                 method: 'POST',
@@ -29,7 +27,6 @@ export default function FeatureRequestPage() {
                     title: title,
                     description: desc,
                     projectId: selectedProject,
-                    projectname: selectedProjectObj?.project.name,
                 })
             });
             if (response.ok) {

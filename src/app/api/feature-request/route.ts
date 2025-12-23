@@ -2,7 +2,7 @@ import db from "@/lib/client";
 
 export async function POST(req: Request) {
     try {
-        const { clientId, projectId, title, description, projectname } = await req.json();
+        const { clientId, projectId, title, description } = await req.json();
 
         if (!clientId || !projectId || !title || !description) {
             return Response.json({ error: "Missing fields" }, { status: 400 });
@@ -33,8 +33,7 @@ export async function POST(req: Request) {
                 clientId,
                 projectId,
                 title,
-                description,
-                projectname
+                description
             }
         });
 

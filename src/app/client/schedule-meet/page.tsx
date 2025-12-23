@@ -1,40 +1,80 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { clientDemoData } from "../demodata"
+import { Toaster, toast } from "react-hot-toast";
 
 export default function ScheduleMeet() {
   const [reason, setReason] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("30 minutes");
+  const [duration, setDuration] = useState("30");
+  const [loading, setLoading] = useState(false);
+  const [loadingfetch, setLoadingfetch] = useState(false);
 
-  const [meetings, setMeetings] = useState(clientDemoData.meetRequests);
+  const [meetings, setMeetings] = useState<any[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    const newMeeting = {
-      id: meetings.length + 1,
-      reason,
-      date,
-      time,
-      duration,
-      status: "pending",
-      meetLink: ""
-    };
+    if (!reason || !date || !time) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    const durationInt = Number(duration);
 
-    setMeetings([newMeeting, ...meetings]);
+    if (isNaN(durationInt)) {
+      toast.error('Please enter a valid duration');
+      return;
+    }
 
-    setReason("");
-    setDate("");
-    setTime("");
-    setDuration("30 minutes");
+    try {
+      const res = await fetch('/api/client/meeting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason, meetDate: date, meetTime: time, duration: durationInt })
+      });
+      if (res.ok) {
+        toast.success('Meeting request submitted successfully');
+        setReason("");
+        setDate("");
+        setTime("");
+        setDuration("30");
+        fetchMeetings();
+      }
+    } catch (error) {
+      toast.error('Failed to submit meeting request');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fetchMeetings = async () => {
+    setLoadingfetch(true);
+    try {
+      const res = await fetch('/api/client/meeting');
+      const data = await res.json();
+      if (data.success) {
+
+        console.log("this is meetings", data.meetings);
+
+        setMeetings(data.meetings);
+      }
+    } catch (error) {
+      toast.error('Failed to fetch meetings');
+    }finally{
+      setLoadingfetch(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMeetings();
+  }, []);
 
   return (
     <div className="space-y-8">
-
+      <Toaster position="top-right" />
       {/* Heading */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -105,18 +145,19 @@ export default function ScheduleMeet() {
             onChange={(e) => setDuration(e.target.value)}
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           >
-            <option value="15 minutes">15 minutes</option>
-            <option value="30 minutes">30 minutes</option>
-            <option value="45 minutes">45 minutes</option>
-            <option value="1 hour">1 hour</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="1">1 hour</option>
           </select>
         </div>
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-all"
         >
-          Request Meeting
+          {loading ? "Submitting..." : "Request Meeting"}
         </button>
       </form>
 
@@ -127,7 +168,7 @@ export default function ScheduleMeet() {
         </h2>
 
         <div className="grid gap-4">
-          {meetings.map((m) => (
+          {/* {meetings.map((m) => (
             <div
               key={m.id}
               className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
@@ -139,8 +180,8 @@ export default function ScheduleMeet() {
 
                 <span
                   className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
                     }`}
                 >
                   {m.status}
@@ -150,10 +191,10 @@ export default function ScheduleMeet() {
 
                 <div className="space-y-1">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Date: {m.date}
+                    Date: {m.meetDate}
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Time: {m.time}
+                    Time: {m.meetTime}
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     Duration: {m.duration}
@@ -178,7 +219,72 @@ export default function ScheduleMeet() {
               </div>
 
             </div>
-          ))}
+          ))} */}
+
+          <div className="grid gap-4">
+            {loadingfetch ? (
+              <p className="text-center text-sm text-gray-500">
+                Loading meetings...
+              </p>
+            ) : meetings.length === 0 ? (
+              <p className="text-center text-sm text-gray-500">
+                No meetings found
+              </p>
+            ) : (
+              meetings.map((m) => (
+                <div
+                  key={m.id}
+                  className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      {m.reason}
+                    </h3>
+
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
+                          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                        }`}
+                    >
+                      {m.status}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center mt-3">
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Date: {m.meetDate}
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Time: {m.meetTime}
+                      </p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Duration: {m.duration}
+                      </p>
+                    </div>
+
+                    {m.status === "approved" && m.meetLink && (
+                      <a
+                        href={m.meetLink}
+                        target="_blank"
+                        className="
+                px-4 py-2 rounded-lg text-sm font-medium
+                bg-blue-500/30 text-blue-600
+                dark:bg-blue-400/20 dark:text-blue-300
+                hover:bg-blue-500/40 dark:hover:bg-blue-400/30
+                transition
+              "
+                      >
+                        Join
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
         </div>
 
 

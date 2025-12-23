@@ -31,6 +31,7 @@ model User {
   clockRecords    ClockRecord[]
   Documents       Docs[]           @relation("UserDocuments")
   meetingRequests MeetingRequest[]
+  memo            Memo[]
   milestones      Milestone[]
   projectMembers  ProjectMember[]
 
@@ -325,7 +326,19 @@ model MeetingRequest {
   duration  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  memo      Memo[]
   client    User     @relation(fields: [clientId], references: [id])
+}
+
+model Memo {
+  id        String @id @default(cuid())
+  meetingId String
+  message   String
+  clientId  String
+  totaltime String
+
+  client         User            @relation(fields: [clientId], references: [id])
+  meetingRequest MeetingRequest? @relation(fields: [meetingId], references: [id])
 }
 
 model FeatureRequest {

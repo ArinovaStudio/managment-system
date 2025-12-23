@@ -78,6 +78,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, meeting });
   } catch (error) {
+    console.log(error.message);
+    
     return NextResponse.json({ error: "Failed to create meeting" }, { status: 500 });
   }
 }

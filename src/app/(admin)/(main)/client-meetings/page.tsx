@@ -13,11 +13,10 @@ export default function AdminMeetRequests() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [newMeeting, setNewMeeting] = useState({ reason: "", meetDate: "", meetTime: "", duration: 30 });
   const [userRole, setUserRole] = useState(false);
-
-  useEffect(() => {
-    fetchMeetings();
-    checkUserRole();
-  }, []);
+  const [activeMeetingId, setActiveMeetingId] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const checkUserRole = async () => {
     const userResponse = await fetch('/api/user');
@@ -123,6 +122,53 @@ export default function AdminMeetRequests() {
     }
   };
 
+  const getMeetingStartTime = (meetDate: string, meetTime: string) => {
+    const [hours, minutes] = meetTime.split(":").map(Number);
+    const date = new Date(meetDate);
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  };
+
+  const toMMSS = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  const now = new Date();
+  const isActive = activeMeetingId === hoveredId;
+
+  useEffect(() => {
+    fetchMeetings();
+    checkUserRole();
+  }, []);
+
+  useEffect(() => {
+    if (!activeMeetingId) return;
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeMeetingId]);
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (activeMeetingId) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+
+    
+  }, [activeMeetingId]);
+
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -135,13 +181,13 @@ export default function AdminMeetRequests() {
             View and manage client meeting requests.
           </p>
         </div>
-        <button
+        {/* <button
           onClick={() => setShowRequestModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus size={16} />
           Request Meeting
-        </button>
+        </button> */}
       </div>
 
       {loading ? (
@@ -152,87 +198,131 @@ export default function AdminMeetRequests() {
         <div className="grid gap-4">
           {meetRequests.map((m) => (
             <div
+              onMouseEnter={() => setHoveredId(m.id)}
+              onMouseLeave={() => setHoveredId(null)}
               key={m.id}
-              className="
-              bg-white dark:bg-gray-900 p-4 rounded-xl
+              onClick={() => {
+                if (isActive) {
+                  window.open(`/memo?meetingId=${activeMeetingId}&seconds=${elapsedSeconds}`, "_blank", "noopener,noreferrer");
+                };
+              }}
+              className=
+              {` bg-white dark:bg-gray-900 p-4 rounded-xl
               border border-gray-200 dark:border-gray-800
-              shadow-sm hover:shadow-md transition-all
-            "
+              shadow-sm transition-all ${isActive
+                  ? " hover:shadow-md hover:scale-101 cursor-pointer"
+                  : "cursor-default"}`}
+
             >
-              {/* Title row */}
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  {m.reason}
-                </h3>
-                <div className="flex items-center gap-2">
-                  {userRole && (
-                    <button
-                      onClick={() => deleteMeeting(m.id)}
-                      className="p-1 text-gray-500 hover:text-red-600 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="flex justify-between items-center mt-3">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Calendar size={16} className="text-blue-500" />
-                    {new Date(m.meetDate).toLocaleDateString()}
+              <div>
+                {/* Title row */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {m.reason}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {userRole && (
+                      <button
+                        onClick={() => deleteMeeting(m.id)}
+                        className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Clock size={16} className="text-green-500" />
-                    {m.meetTime} ({m.duration}min)
-                  </div>
-                  {m.client && (
-                    <span className="text-sm text-gray-500">
-                      by {m.client.name}
-                    </span>
-                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Details */}
+                <div className="flex justify-between items-center mt-3">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Calendar size={16} className="text-blue-500" />
+                      {new Date(m.meetDate).toLocaleDateString()}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Clock size={16} className="text-green-500" />
+                      {m.meetTime} ({m.duration}min)
+                    </div>
+                    {m.client && (
+                      <span className="text-sm text-gray-500">
+                        by {m.client.name}
+                      </span>
+                    )}
+                  </div>
 
-                  {m.status === "approved" ? (
+                  <div className="flex items-center gap-2">
+
+                    {/* {m.status === "approved" ? (
                     <a
                       href={m.meetLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="cursor-pointer text-sm bg-sky-500 px-3 py-1 rounded-lg text-white hover:bg-sky-600 transition"
                     >Join Meeting</a>
-                  ) : null}
+                  ) : null} */}
 
-                  {userRole && m.status === "pending" ? (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => approveHandler(m.id)}
-                        className="px-3 py-1 rounded-lg text-sm bg-blue-600/30 text-blue-700 hover:bg-blue-600/40 transition"
-                      >
-                        Approve
-                      </button>
+                    {m.status === "approved" && (() => {
+                      const meetingStart = getMeetingStartTime(m.meetDate, m.meetTime);
+                      const hasStarted = now >= meetingStart;
 
-                      <button
-                        onClick={() => rejectHandler(m.id)}
+                      return hasStarted ? (
+                        (activeMeetingId === m.id ? (
+                          <span className="text-sm font-semibold text-green-600">
+                            Meeting running •{" "}
+                            {Math.floor(elapsedSeconds / 60)}:
+                            {(elapsedSeconds % 60).toString().padStart(2, "0")}
+                          </span>
+                        ) : (
+                          <a
+                            href={m.meetLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => {
+                              setActiveMeetingId(m.id);
+                              setElapsedSeconds(0);
+                            }}
+                            className="cursor-pointer text-sm bg-sky-500 px-3 py-1 rounded-lg text-white hover:bg-sky-600 transition"
+                          >
+                            Join Meeting
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-500 italic">
+                          Please wait, meeting has not started yet
+                        </span>
+                      );
+                    })()}
+
+
+                    {userRole && m.status === "pending" ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => approveHandler(m.id)}
+                          className="px-3 py-1 rounded-lg text-sm bg-blue-600/30 text-blue-700 hover:bg-blue-600/40 transition"
+                        >
+                          Approve
+                        </button>
+
+                        <button
+                          onClick={() => rejectHandler(m.id)}
+                          className="px-3 py-1 rounded-lg text-sm bg-red-600/30 text-red-700 hover:bg-red-600/40 transition"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : null}
+
+                    {m.status === "rejected" ? (
+                      <span
                         className="px-3 py-1 rounded-lg text-sm bg-red-600/30 text-red-700 hover:bg-red-600/40 transition"
                       >
-                        Reject
-                      </button>
-                    </div>
-                  ) : null}
+                        Rejected
+                      </span>
+                    ) : null}
 
-                  {m.status === "rejected" ? (
-                    <span
-                      className="px-3 py-1 rounded-lg text-sm bg-red-600/30 text-red-700 hover:bg-red-600/40 transition"
-                    >
-                      Rejected
-                    </span>
-                  ) : null}
+                  </div>
 
                 </div>
-
               </div>
             </div>
           ))}
@@ -332,6 +422,36 @@ export default function AdminMeetRequests() {
           </div>
         </div>
       )}
+
+      {/* INFO MODAL */}
+      {showInfoModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+          onClick={() => setShowInfoModal(false)} // 👈 click outside closes
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-xl p-6 w-full max-w-md relative"
+            onClick={(e) => e.stopPropagation()} // 👈 prevent closing when clicking inside
+          >
+            {/* Close (X) */}
+            <button
+              onClick={() => setShowInfoModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-red-600"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-lg font-semibold">
+              Meeting in progress
+            </h2>
+
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              A meeting is currently running. Please finish it before leaving this page.
+            </p>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
