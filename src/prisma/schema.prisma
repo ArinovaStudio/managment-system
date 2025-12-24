@@ -252,6 +252,7 @@ model Project {
   featureRequests FeatureRequest[]
   projectInfo     ProjectInfo?
   latestUpdates   LatestUpdate[]
+  meetingRequest  MeetingRequest[]
 }
 
 model LatestUpdate {
@@ -328,6 +329,9 @@ model MeetingRequest {
   updatedAt DateTime @updatedAt
   memo      Memo[]
   client    User     @relation(fields: [clientId], references: [id])
+  
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
 }
 
 model Memo {
@@ -336,6 +340,7 @@ model Memo {
   message   String
   clientId  String
   totaltime String
+  createdAt DateTime @default(now())
 
   client         User            @relation(fields: [clientId], references: [id])
   meetingRequest MeetingRequest? @relation(fields: [meetingId], references: [id])

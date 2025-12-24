@@ -19,7 +19,8 @@ import {
   User,
   NotebookPen,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  Book
 } from "lucide-react"
 
 type NavItem = {
@@ -136,6 +137,11 @@ const clientItems: NavItem[] = [
     icon: <MessageSquareMore strokeWidth={1.5} />,
     name: "Feedbacks",
     path: "/client-feedback",
+  },
+  {
+    icon: <Book strokeWidth={1.5} />,
+    name: "M.memo",
+    path: "/memobook",
   },
 ];
 

@@ -9,6 +9,17 @@ type Props = {
     meetingId: string;
 };
 
+type Project = {
+    id: string;
+    name: string;
+    summary: string;
+    priority: string;
+    basicDetails: string;
+    status: number;
+    createdAt: string;
+    progress: number;
+};
+
 type Meeting = {
     id: string;
     clientId: string;
@@ -19,6 +30,8 @@ type Meeting = {
     duration: number;
     createdAt: string;
     updatedAt: string;
+    project?: Project | null;
+    projectId?: string;
 };
 
 export default function ClientMemo({ time, meetingId, }: Props) {
@@ -69,34 +82,24 @@ export default function ClientMemo({ time, meetingId, }: Props) {
 
     const saveMemoToLocal = (html: string) => {
         localStorage.setItem("memo", html);
-        
+
     };
 
     const loadMemoFromLocal = () => {
         console.log("i am calledd");
         setHtml(localStorage.getItem("memo"));
         return localStorage.getItem("memo");
-        
+
     };
 
     const clearMemoFromLocal = () => {
-        localStorage.removeItem("memo");
+        localStorage.setItem("memo", "Arinova");
+        onChange({ target: { value: "Arinova" } });
     };
 
     useEffect(() => {
         fetchmeet();
     }, [meetingId]);
-
-    useEffect(() => {
-        if (!meeting) return;
-
-        setHtml(`
-    Reason: ${meeting.reason}
-    Status: ${meeting.status}
-    Duration: ${meeting.duration} min
-   Date: ${new Date(meeting.meetDate).toLocaleDateString()}
-  `);
-    }, [meeting]);
 
 
     // useEffect(() => {
@@ -125,10 +128,6 @@ export default function ClientMemo({ time, meetingId, }: Props) {
             <Toaster position="top-right" />
             <div className="flex items-center justify-between">
                 <h1 className="text-xl font-semibold">Meeting Time</h1>
-                <div className="flex gap-4 items-center">
-                    <button onClick={loadMemoFromLocal} className="mt-4 px-4 py-2 bg-zinc-500 text-white rounded hover:bg-zinc-600 hover:shadow-md">show</button>
-                    <button onClick={clearMemoFromLocal} className="mt-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 hover:shadow-md">clear</button>
-                </div>
             </div>
 
             <p className="mt-2 text-gray-600">
@@ -140,19 +139,45 @@ export default function ClientMemo({ time, meetingId, }: Props) {
                     </p>
                 </span>
 
+                <div className="flex flex-col">
+                    <p><span className="text-blue-400">Meeting Reasion:</span> {meeting?.reason}</p>
+                    <p><span className="text-blue-400">Meeting Status:</span> {meeting?.status}</p>
+                    <p><span className="text-blue-400">Meeting Duration:</span> {meeting?.duration}</p>
+                    <p><span className="text-blue-400">Meeting Date:</span> {new Date(meeting?.meetDate).toLocaleDateString()}</p>
+                    {meeting?.project ? (
+                        <>
+                            <p>
+                                <span className="text-blue-400">Project Name:</span>{" "}
+                                {meeting.project.name}
+                            </p>
+                            <p>
+                                <span className="text-blue-400">Project Priority:</span>{" "}
+                                {meeting.project.priority}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-gray-500 italic">
+                            No project details found
+                        </p>
+                    )}
+
+                </div>
+
                 <span>
                     <Editor value={html} onChange={onChange} className="dark:text-white" />
                 </span>
             </p>
 
-            <div className="flex gap-5 items-center">
-                <button onClick={submitMemo} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hover:shadow-md">
+            <div className="flex gap-5 items-center justify-between">
+                <div className="flex gap-3">
+                    <button onClick={() => saveMemoToLocal(html)} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 hover:shadow-md">Save</button>
+                    <button onClick={loadMemoFromLocal} className="mt-4 px-4 py-1 border-zinc-700 border-2 rounded hover:shadow-md">show</button>
+                    <button onClick={clearMemoFromLocal} className="mt-4 px-4 py-1 rounded hover:shadow-md">clear</button>
+                </div>
+                <button onClick={submitMemo} className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 hover:shadow-md">
                     Finish
                 </button>
 
-                <button onClick={() => saveMemoToLocal(html)} className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 hover:shadow-md">
-                    Save
-                </button>
             </div>
 
         </div>

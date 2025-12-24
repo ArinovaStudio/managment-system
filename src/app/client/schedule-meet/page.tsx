@@ -11,6 +11,9 @@ export default function ScheduleMeet() {
   const [duration, setDuration] = useState("30");
   const [loading, setLoading] = useState(false);
   const [loadingfetch, setLoadingfetch] = useState(false);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [projects, setProjects] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
 
   const [meetings, setMeetings] = useState<any[]>([]);
 
@@ -33,7 +36,7 @@ export default function ScheduleMeet() {
       const res = await fetch('/api/client/meeting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason, meetDate: date, meetTime: time, duration: durationInt })
+        body: JSON.stringify({ reason, meetDate: date, meetTime: time, duration: durationInt , projectId: selectedProject })
       });
       if (res.ok) {
         toast.success('Meeting request submitted successfully');
@@ -63,14 +66,39 @@ export default function ScheduleMeet() {
       }
     } catch (error) {
       toast.error('Failed to fetch meetings');
-    }finally{
+    } finally {
       setLoadingfetch(false);
     }
   };
 
+  const fetchUser = async () => {
+    const res = await fetch("/api/user");
+    const data = await res.json();
+
+
+
+    if (data.user) {
+      setUser(data.user);
+      console.log(user);
+    }
+  };
+
+  const fetchProject = async () => {
+    const res = await fetch(`/api/feedbacks/clientprojectfetch?userId=${user?.id}`);
+    const data = await res.json();
+    console.log("this is project", data);
+
+    setProjects(data.projects || []);
+  };
+
   useEffect(() => {
     fetchMeetings();
+    fetchUser();
   }, []);
+
+  useEffect(() => {
+    fetchProject();
+  }, [user]);
 
   return (
     <div className="space-y-8">
@@ -103,6 +131,47 @@ export default function ScheduleMeet() {
             required
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-700 dark:text-gray-300 mb-1.5">
+            Project
+          </label>
+
+          <div className="relative">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="
+          w-full appearance-none rounded-xl px-4 py-2.5
+          bg-white dark:bg-gray-900
+          border border-gray-300 dark:border-gray-700
+          text-gray-900 dark:text-gray-100
+          transition-all duration-200
+          shadow-sm
+        "
+            >
+              <option value="">Select Project</option>
+
+              {projects.map((proj) => (
+                <option key={proj.id} value={proj.project.id}>
+                  {proj.project.name}
+                </option>
+              ))}
+            </select>
+
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg
+                className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </div>
         </div>
 
         {/* Date + Time */}
@@ -243,8 +312,8 @@ export default function ScheduleMeet() {
 
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
                         }`}
                     >
                       {m.status}

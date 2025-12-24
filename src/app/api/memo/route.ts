@@ -12,10 +12,18 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Meeting ID required" }, { status: 400 });
         }
 
-        const meeting = await db.meetingRequest.findUnique({ where: { id: meetingId } });
+        const meeting = await db.meetingRequest.findUnique({
+            where: { id: meetingId },
+            include: {
+                project: true
+            }
+        });
         if (!meeting) {
             return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
         }
+
+        console.log(meeting);
+        
 
         return NextResponse.json({ success: true, meeting });
 
@@ -43,16 +51,16 @@ export async function POST(req: NextRequest) {
         }
 
         const memoo = await db.memo.create({
-            data: { 
+            data: {
                 meetingId,
                 message: memo,
                 clientId: userId,
-                totaltime:totaltime
+                totaltime: totaltime
             }
         });
 
         console.log("this is memo", memoo);
-        
+
 
         return NextResponse.json({
             success: true,

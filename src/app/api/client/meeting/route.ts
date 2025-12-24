@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
         };
       })
     );
+    
 
     return NextResponse.json({ success: true, meetings });
   } catch (error) {
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     const payload: any = verifyToken(token);
     const userId = payload.userId || payload.id;
 
-    const { reason, meetDate, meetTime, duration } = await req.json();
+    const { reason, meetDate, meetTime, duration, projectId } = await req.json();
 
     if (!reason || !meetDate || !meetTime || !duration) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -72,9 +73,11 @@ export async function POST(req: NextRequest) {
         reason,
         meetDate: new Date(meetDate),
         meetTime,
-        duration
+        duration,
+        projectId
       }
     });
+console.log(meeting);
 
     return NextResponse.json({ success: true, meeting });
   } catch (error) {

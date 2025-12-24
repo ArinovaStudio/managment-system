@@ -6,9 +6,6 @@ export async function GET(req: Request) {
     const paramUserId = searchParams.get("userId");
     const client = paramUserId;
 
-    console.log("this is the client", client);
-
-
     if (paramUserId) {
         const get_data = await db.ProjectMember.findMany({
             where: {
@@ -27,7 +24,6 @@ export async function GET(req: Request) {
                 id: 'desc',
             },
         });
-console.log(get_data);
 
         return NextResponse.json({ projects: get_data }, { status: 200 })
     }
