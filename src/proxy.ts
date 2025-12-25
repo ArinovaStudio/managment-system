@@ -20,7 +20,7 @@ const roleHome: Record<string, string> = {
   CLIENT: "/client",
 };
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname.toLowerCase();
 
   /* -------------------------------------------------
@@ -97,6 +97,13 @@ export function middleware(req: NextRequest) {
      9️⃣ CLIENT RULES
      - ONLY /client/**
   -------------------------------------------------- */
+
+  if (role === "CLIENT") {
+    if (pathname.startsWith("/profile")) {
+      return NextResponse.next();
+    }
+  }
+
   if (role === "CLIENT") {
     if (!(pathname === "/client" || pathname.startsWith("/client/"))) {
       const url = req.nextUrl.clone();

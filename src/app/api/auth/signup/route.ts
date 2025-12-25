@@ -87,7 +87,7 @@ export async function POST(req: Request) {
           bio,
           dob,
           image: imageUrl,
-          employeeId,
+          employeeId: finalRole === "EMPLOYEE" ? employeeId : null,
         },
       });
 
@@ -193,4 +193,3 @@ export async function DELETE() {
     );
   }
 }
-

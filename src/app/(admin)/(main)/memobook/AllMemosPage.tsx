@@ -1,6 +1,6 @@
 "use client";
 
-import { Shredder, Trash, Trash2 } from "lucide-react";
+import { Shredder } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -102,7 +102,7 @@ export default function AllMemosPage() {
                             <div className="flex justify-between items-center">
                                 {/* ✅ Project conditional rendering */}
                                 {memo.meetingRequest?.project ? (
-                                    <p className="text-gray-600">
+                                    <p className="text-gray-600 text-sm">
                                         {memo.meetingRequest.project.name}
                                     </p>
                                 ) : (
@@ -110,42 +110,42 @@ export default function AllMemosPage() {
                                         No project details found
                                     </p>
                                 )}
-                                <p className="text-[#098500] font-bold">
+                                <p className="text-green-600 font-bold">
                                     {memo.totaltime}
                                 </p>
                             </div>
 
                             {/* reasion */}
-                            <p className="text-2xl">
-                                {memo.meetingRequest?.reason ?? "—"}
+                            <p className="text-xl">
+                                {memo.meetingRequest?.reason.slice(0, 50)}
                             </p>
 
                             {/* date and time */}
                             <div className="mt-4 flex justify-between items-center">
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs text-gray-500">
                                     {new Date(memo.meetingRequest.meetDate).toLocaleDateString()}
                                 </p>
 
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs text-gray-500">
                                     {memo.meetingRequest.meetTime}
                                 </p>
                             </div>
 
                             {/* message and trash */}
                             <div className="flex items-center gap-2 mt-2">
-                                <div className="border px-3 py-2 rounded-lg w-full">
+                                <div className="bg-gray-100 dark:bg-gray-800  px-3 py-2 rounded-lg w-full">
                                     <div
-                                        className="mt-3 prose dark:prose-invert max-w-none text-gray-400"
+                                        className="prose dark:prose-invert max-w-none  text-gray-500"
                                         dangerouslySetInnerHTML={{ __html: memo.message }}
                                     />
                                 </div>
                                 <div
-                                    className="bg-red-300 h-22 w-7 flex items-center justify-center rounded-md cursor-pointer
+                                    className="bg-red-300 dark:bg-red-700/20 h-22 w-7 flex items-center justify-center rounded-md cursor-pointer
              transition-transform duration-200 ease-out
              hover:scale-105 active:scale-95 hover:shadow-md"
                                 >
                                     <button onClick={() => deleteMemo(memo.id)}>
-                                        <Shredder className="w-4 h-4 text-red-800" />
+                                        <Shredder className="w-4 h-4 text-red-600 dark:text-red-700" />
                                     </button>
                                 </div>
 

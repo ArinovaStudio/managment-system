@@ -110,28 +110,6 @@ export default function page() {
         }
     };
 
-    // const deleteTip = async (id: string) => {
-    //     if (!window.confirm('Are you sure you want to delete this tip?')) return;
-
-    //     try {
-    //         const response = await fetch('/api/well-being', {
-    //             method: 'DELETE',
-    //             headers: { 'Content-Type': 'application/json' },
-    //             credentials: 'include',
-    //             body: JSON.stringify({ id })
-    //         });
-
-    //         if (response.ok) {
-    //             toast.success('Tip deleted successfully!');
-    //             await fetchWellBeingData();
-    //         } else {
-    //             toast.error('Failed to delete tip');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error deleting tip:', error);
-    //         toast.error('Error deleting tip');
-    //     }
-    // };
 
     const openDeleteModal = (id: string) => {
         setDeletingId(id);
@@ -256,6 +234,9 @@ export default function page() {
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
+                                    <p className="text-gray-900 dark:text-gray-500 text-sm">
+                                        {item.category || 'Category'}
+                                    </p>
 
                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
                                         {item.title || 'Untitled'}
@@ -272,6 +253,9 @@ export default function page() {
                                 <>
                                     <div className="flex items-center gap-4 flex-1">
                                         <div>
+                                    <p className="text-gray-900 dark:text-gray-500 text-sm">
+                                        {item.category || 'Category'}
+                                    </p>
                                             <h3 className="font-medium text-gray-900 dark:text-white">
                                                 {item.title || 'Untitled'}
                                             </h3>
@@ -344,10 +328,57 @@ export default function page() {
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-900/70 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
                                     >
                                         <option value="">Select category</option>
-                                        <option value="Mental">Mental Health</option>
-                                        <option value="Physical">Physical Health</option>
-                                        <option value="Nutrition">Nutrition</option>
-                                        <option value="Sleep">Sleep</option>
+                                        <option value="PhysicalHealth">Physical Health</option>
+<option value="MentalHealth">Mental Health</option>
+<option value="EmotionalHealth">Emotional Health</option>
+<option value="Sleep">Sleep</option>
+<option value="Ergonomics">Ergonomics</option>
+<option value="Posture">Posture</option>
+<option value="EyeHealth">Eye Health</option>
+<option value="VisionBreaks">Vision Breaks</option>
+<option value="Movement">Movement</option>
+<option value="Stretching">Stretching</option>
+<option value="Mobility">Mobility</option>
+<option value="Exercise">Exercise</option>
+<option value="SedentaryRisk">Sedentary Risk</option>
+<option value="Nutrition">Nutrition</option>
+<option value="Hydration">Hydration</option>
+<option value="MealTiming">Meal Timing</option>
+<option value="CaffeineManagement">Caffeine Management</option>
+<option value="Stress">Stress Management</option>
+<option value="Burnout">Burnout Prevention</option>
+<option value="Anxiety">Anxiety Management</option>
+<option value="Focus">Focus</option>
+<option value="Concentration">Concentration</option>
+<option value="ProductivityHealth">Productivity Health</option>
+<option value="ScreenTime">Screen Time</option>
+<option value="DigitalFatigue">Digital Fatigue</option>
+<option value="WorkRoutine">Healthy Work Routine</option>
+<option value="Breaks">Breaks</option>
+<option value="Sleep">Sleep</option>
+<option value="Microbreaks">Microbreaks</option>
+<option value="Energy">Energy Management</option>
+<option value="Recovery">Recovery</option>
+<option value="WorkLifeBoundaries">Work Life Boundaries</option>
+<option value="Isolation">Isolation</option>
+<option value="SocialHealth">Social Health</option>
+<option value="Mindfulness">Mindfulness</option>
+<option value="Breathing">Breathing Exercises</option>
+<option value="SelfCare">Self Care</option>
+<option value="PainManagement">Pain Management</option>
+<option value="HeadachePrevention">Headache Prevention</option>
+<option value="NeckShoulderHealth">Neck Shoulder Health</option>
+<option value="BackHealth">Back Health</option>
+<option value="Circulation">Circulation</option>
+<option value="ImmuneHealth">Immune Health</option>
+<option value="PreventiveCare">Preventive Care</option>
+<option value="HealthTracking">Health Tracking</option>
+<option value="DailyHabits">Daily Health Habits</option>
+<option value="Tips">Health Tips</option>
+<option value="Guides">Health Guides</option>
+<option value="Recommendations">Recommendations</option>
+<option value="Other">Other</option>
+
                                     </select>
                                 </div>
 

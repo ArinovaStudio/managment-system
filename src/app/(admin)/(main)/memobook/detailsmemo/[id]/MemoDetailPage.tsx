@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, CheckCheck } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import toast from "react-hot-toast";
 import Editor from 'react-simple-wysiwyg';
@@ -25,7 +25,7 @@ type meetingRequest = {
 };
 
 type Memo = {
-    id: string;
+    id: string;priority
     memo: string;
     message: string;
     totaltime: string;
@@ -48,6 +48,8 @@ const MemoDetailPage = ({ memoId, }) => {
             if (!res.ok) throw new Error("Failed");
 
             const data = await res.json();
+            console.log(data.memo);
+            
             setMemos(data.memo);
         } catch (err) {
             toast.error("Failed to load memos");
@@ -93,9 +95,9 @@ const MemoDetailPage = ({ memoId, }) => {
     const priority = memo.meetingRequest?.project?.priority?.toUpperCase();
 
     const priorityStyles: Record<string, string> = {
-        LOW: "bg-green-100 text-green-600 border border-green-400",
-        MEDIUM: "bg-orange-100 text-orange-600 border border-orange-400",
-        HIGH: "bg-red-100 text-red-600 border border-red-400",
+        LOW: "bg-green-100 dark:bg-green-600/20 text-green-600 dark:text-green-400 border border-green-400",
+        MEDIUM: "bg-orange-100 dark:bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-400",
+        HIGH: "bg-red-100 dark:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-400",
     };
     return (
         <div>
@@ -104,7 +106,7 @@ const MemoDetailPage = ({ memoId, }) => {
                 <div className="flex justify-between">
 
                     <h1 className='text-2xl mb-8'>
-                        ON GOING MEETING
+                        MEETING DETAILS
                     </h1>
                     <p className="text-[#098500] text-xl font-bold">{memo.totaltime}</p>
                 </div>
@@ -129,7 +131,7 @@ const MemoDetailPage = ({ memoId, }) => {
                                 {priority && (
                                     <div
                                         className={`px-4 py-3 rounded-xl font-medium
-      ${priorityStyles[priority] ?? "bg-gray-100 text-gray-600 border"}
+                                ${priorityStyles[priority] ?? "bg-gray-100 text-gray-600 border"}
     `}
                                     >
                                         {priority}
@@ -141,7 +143,7 @@ const MemoDetailPage = ({ memoId, }) => {
                             {/* Meeting Duration */}
                             <div className="col-span-2 flex flex-col gap-1">
                                 <label className="text-sm text-gray-500">Meeting Duration</label>
-                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border text-center font-medium">
+                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border text-center font-medium">
                                     {memo.meetingRequest!.duration} min.
                                 </div>
                             </div>
@@ -152,7 +154,7 @@ const MemoDetailPage = ({ memoId, }) => {
                             {/* Meeting Date */}
                             <div className="col-span-4 flex flex-col gap-1">
                                 <label className="text-sm text-gray-500">Meeting Date</label>
-                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border">
+                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border">
                                     {new Date(memo.meetingRequest!.meetDate).toLocaleDateString()}
                                 </div>
                             </div>
@@ -160,7 +162,7 @@ const MemoDetailPage = ({ memoId, }) => {
                             {/* Meeting Reason */}
                             <div className="col-span-8 flex flex-col gap-1">
                                 <label className="text-sm text-gray-500">Meeting Reason</label>
-                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border">
+                                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border">
                                     {memo.meetingRequest?.reason ?? "—"}
                                 </div>
                             </div>
@@ -176,8 +178,8 @@ const MemoDetailPage = ({ memoId, }) => {
                         <div className='flex justify-between items-center mt-5 text-xl'>
                             <div>Message</div>
                             <div onClick={() => setIsEditing(true)}
-                                className='border  cursor-pointer border-blue-400 px-3 rounded-md text-blue-400 flex items-center gap-2'>
-                                <ArrowLeftRight />
+                                className='border cursor-pointer bg-blue-400 px-6 py-1 rounded-md text-white flex items-center gap-2'>
+                                <ArrowLeftRight size={18} />
                                 <div className=''>Editor</div></div>
 
                         </div>
@@ -185,10 +187,12 @@ const MemoDetailPage = ({ memoId, }) => {
                     {isEditing && (
                         <div className='flex justify-between items-center mt-5 text-xl'>
                             <div>Editor</div>
-                            <div onClick={handleSubmit}
-                                className='border  cursor-pointer border-blue-400 px-3 rounded-md text-blue-400 flex items-center gap-2'>
-                                <ArrowLeftRight />
-                                <div className=''>{saving ? "Saving..." : "Save"}</div></div>
+                            <div onClick={saving ? () => { } : handleSubmit}
+                                className={`border cursor-pointer bg-blue-400 px-6 py-1 rounded-md text-white flex items-center gap-2 ${saving ? "opacity-50 cursor-not-allowed" : ""}`}>
+                                <div className=''>{saving ? "Saving..." : "Save"}</div>
+                            <CheckCheck size={18} />
+                                
+                                </div>
 
                         </div>
                     )}
@@ -196,7 +200,7 @@ const MemoDetailPage = ({ memoId, }) => {
                 <div className=' mt-3'>
                     {!isEditing && (
                         <div
-                            className="prose dark:prose-invert max-w-none text-gray-600 dark:bg-gray-800 px-3 py-1 rounded-md"
+                            className="prose dark:prose-invert max-w-none text-gray-100 px-3 py-1 rounded-md"
                             dangerouslySetInnerHTML={{ __html: memo.message }}
                         />
                     )}

@@ -334,7 +334,7 @@ export const ScreenTimeCard = () => {
 // ---------- 🧩 Default Export ----------
 export default function WellBeingSection() {
   return (
-    <div className="w-full mt-4 h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="w-full mt-4 sticky top-0 h-auto grid grid-cols-1 md:grid-cols-2 gap-4">
       <WaterIntakeCard />
       <StretchCard />
       <PostureCard />

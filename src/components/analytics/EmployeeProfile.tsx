@@ -23,13 +23,17 @@ const EmployeeProfile = () => {
 
         <div className="h-full rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
             <div className="flex items-center space-x-4">
-                <div className="h-20 w-20 rounded-full bg-gray-300 overflow-hidden">
+                <div className="h-20 w-20 rounded-full bg-gradient-to-br from-purple-300 to-purple-800 overflow-hidden flex justify-center items-center">
+                    {user?.image ? (
                     <Image
                         width={80}
                         height={80}
-                        src={user?.image || "/images/user/default.png"} 
+                        src={user.image} 
                         alt="user"
                     />
+                    ) : (
+                        <h1 className="text-white text-4xl">{user?.name.charAt(0)}</h1>
+                    )}
                 </div>
                 <div>
                     <h3 className="text-3xl font-bold text-gray-800 dark:text-white">

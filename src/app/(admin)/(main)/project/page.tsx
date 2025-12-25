@@ -23,6 +23,7 @@ export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
+  const [isClientSelected, setClientSelected] = useState<boolean>(false);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -33,7 +34,8 @@ export default function ProjectsPage() {
     projectType: '',
     startDate: '',
     deadline: '',
-    supervisorAdmin: ''
+    supervisorAdmin: '',
+    client: '',
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -103,7 +105,7 @@ export default function ProjectsPage() {
       if (data.success) {
         toast.success('Project created successfully');
         setShowCreateModal(false);
-        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '' });
+        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '', client: '' });
         setSelectedMembers([]);
         fetchUserProjects();
       } else {
@@ -116,7 +118,10 @@ export default function ProjectsPage() {
     }
   };
 
-  const toggleMember = (userId: string) => {
+  const toggleMember = (userId: string, isClientSelected: boolean) => {
+    if (isClientSelected) {
+      setClientSelected(true)
+    }
     setSelectedMembers(prev =>
       prev.includes(userId)
         ? prev.filter(id => id !== userId)
@@ -181,7 +186,7 @@ export default function ProjectsPage() {
           {isAdmin && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-[50%] inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-auto inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />
               New Project
@@ -323,11 +328,13 @@ export default function ProjectsPage() {
                       required
                     >
                       <option value="">Select project type</option>
-                      <option value="e-commerce">E-commerce</option>
+                      <option value="saas">Ai</option>
+                      <option value="e-commerce">Cyber Security</option>
                       <option value="saas">SaaS</option>
                       <option value="static">Static Website</option>
-                      <option value="mobile-app">Mobile App</option>
+                      <option value="e-commerce">E-commerce</option>
                       <option value="web-app">Web Application</option>
+                      <option value="mobile-app">Mobile App</option>
                       <option value="web-app">Other</option>
                     </select>
                   </div>
@@ -471,8 +478,8 @@ export default function ProjectsPage() {
                         filteredUsers.map((user) => (
                           <div
                             key={user.id}
-                            onClick={() => toggleMember(user.id)}
-                            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all mb-1
+                            onClick={isClientSelected && user.role === "CLIENT" ? () => {} : () => toggleMember(user.id, user.role === "CLIENT" ? true : false)}
+                            className={`${isClientSelected && user.role === "CLIENT" ? "opacity-40 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent" : "cursor-pointer"} flex items-center justify-between px-3 py-2 rounded-lg transition-all mb-1
               ${selectedMembers.includes(user.id)
                                 ? "bg-blue-100 dark:bg-blue-900/30"
                                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -484,7 +491,8 @@ export default function ProjectsPage() {
                                 {user.name}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {user.workingAs || "Employee"}
+                                {/* {|| "Employee"} */}
+                                {user.role === "CLIENT" ? `Client - ${user.email}` : `${user.workingAs} - ${user.department}` || "Employee"}
                               </p>
                             </div>
                             {selectedMembers.includes(user.id) && (

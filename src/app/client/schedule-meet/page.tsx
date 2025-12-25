@@ -126,11 +126,14 @@ export default function ScheduleMeet() {
           <input
             type="text"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => setReason(e.target.value.slice(0, 100))}
+            maxLength={50}
+            minLength={50}
             placeholder="Explain why you want the meeting"
             required
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
+          <p className="my-2 text-right text-xs text-neutral-400 dark:text-neutral-600">{reason.length}/100</p>
         </div>
 
         <div className="flex flex-col">

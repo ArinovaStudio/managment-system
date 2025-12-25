@@ -11,7 +11,7 @@ function Health({ wellBeingData }: { wellBeingData: any[] }) {
             <WellCard key={index} data={item} />
           ))
         ) : (
-          <div className="w-full text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="w-full text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
             <p className="text-gray-500 dark:text-gray-400">No wellness tips available</p>
           </div>
         )}

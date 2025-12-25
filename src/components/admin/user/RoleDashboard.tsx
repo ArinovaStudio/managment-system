@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf } from "lucide-react";
+import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf, LucideTrash } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -201,7 +201,7 @@ export default function RoleDashboard() {
     async function loadUsers() {
       try {
         setLoading(true);
-        const res = await fetch("/api/admin/users");
+        const res = await fetch("/api/admin/getRoleWise?role=" + selectedRole);
         const data = await res.json();
         if (!res.ok) {
           toast.error(data.error || "Failed to load users");
@@ -215,7 +215,7 @@ export default function RoleDashboard() {
       }
     }
     loadUsers();
-  }, []);
+  }, [selectedRole]);
 
   useEffect(() => {
     async function loadTimezones() {
@@ -535,10 +535,7 @@ export default function RoleDashboard() {
 
                         <button
                           onClick={() => {
-                            setEditUser(u);
-                            setSelectedTimezone(u.timezone?.code || "");
-                            setLeaveType("");
-                            setLeaveDays(0);
+                            setDeleteUser(u)
                           }}
 
                           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
@@ -767,8 +764,14 @@ export default function RoleDashboard() {
                       <Image src={u.image ?? "/default-avatar.png"} alt={u.name} width={72} height={72} className="rounded-full object-cover w-18 h-18" />
                       <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 relative">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{u.name}</h3>
+                      <div className="w-10 h-10 hover:bg-gray-200/20 rounded-sm flex justify-center items-center absolute right-0 top-0 z-50" 
+                      onClick={() => {
+                            setDeleteUser(u)
+                          }}>
+                        <LucideTrash color="white" strokeWidth={1} size={18}/>
+                      </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                           <Mail className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
@@ -786,7 +789,7 @@ export default function RoleDashboard() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Dept: {u.department || "N/A"}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Bio: {u.bio || "N/A"}</span>
                   </div>
                 </div>
               ))}

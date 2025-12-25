@@ -24,7 +24,7 @@ export async function generateAndSendOtp(email: string, type: OtpType): Promise<
   })
 
   // Send OTP email
-  const emailType = type === 'SIGNUP' ? 'signup' : 'forgot-password'
+  const emailType = type === 'SIGNUP' ? 'signup' : type === "LOGIN" ? 'login' : 'forgot-password'
   await sendOtp(email, otp, emailType)
 }
 
