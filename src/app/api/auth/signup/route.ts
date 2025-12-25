@@ -94,11 +94,11 @@ employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
       },
     });
 
-    const token = createToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    // const token = createToken({
+    //   userId: user.id,
+    //   email: user.email,
+    //   role: user.role,
+    // });
 
     const response = NextResponse.json(
       {
@@ -114,12 +114,12 @@ employeeId = `emp-${nextNumber.toString().padStart(3, "0")}`;
       { status: 201 }
     );
 
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60,
-    });
+    // response.cookies.set('token', token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === 'production',
+    //   sameSite: 'strict',
+    //   maxAge: 7 * 24 * 60 * 60,
+    // });
 
     return response;
   } catch (err) {
