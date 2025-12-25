@@ -122,11 +122,11 @@ export default function AllMemosPage() {
 
                             {/* date and time */}
                             <div className="mt-4 flex justify-between items-center">
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-500">
                                     {new Date(memo.meetingRequest.meetDate).toLocaleDateString()}
                                 </p>
 
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-gray-500">
                                     {memo.meetingRequest.meetTime}
                                 </p>
                             </div>
@@ -135,7 +135,7 @@ export default function AllMemosPage() {
                             <div className="flex items-center gap-2 mt-2">
                                 <div className="border px-3 py-2 rounded-lg w-full">
                                     <div
-                                        className="mt-3 prose dark:prose-invert max-w-none text-gray-600"
+                                        className="mt-3 prose dark:prose-invert max-w-none text-gray-400"
                                         dangerouslySetInnerHTML={{ __html: memo.message }}
                                     />
                                 </div>

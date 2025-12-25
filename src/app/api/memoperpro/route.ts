@@ -36,3 +36,24 @@ export async function GET(req: NextRequest) {
         );
     }
 }
+
+export async function PUT(req: NextRequest) {
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+        const { message } = await req.json();
+
+        if (!id || !message) {
+            return NextResponse.json({ success: false }, { status: 400 });
+        }
+
+        await db.memo.update({
+            where: { id: id },
+            data: { message: message },
+        });
+
+        return NextResponse.json({ success: true });
+    }catch (error) {
+        return NextResponse.json({ "message": "failed", "error": error }, { status: 500 })
+    }
+}

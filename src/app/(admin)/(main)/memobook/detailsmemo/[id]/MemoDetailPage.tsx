@@ -3,6 +3,8 @@
 import { ArrowLeftRight } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import toast from "react-hot-toast";
+import Editor from 'react-simple-wysiwyg';
+
 type Project = {
     name: string;
     summary: string;
@@ -34,6 +36,9 @@ type Memo = {
 const MemoDetailPage = ({ memoId, }) => {
     const [memo, setMemos] = useState<Memo | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedMessage, setEditedMessage] = useState("");
+    const [saving, setSaving] = useState(false);
 
 
 
@@ -51,9 +56,36 @@ const MemoDetailPage = ({ memoId, }) => {
         }
     };
 
+    const handleSubmit = async () => {
+        try {
+            setSaving(true);
+            const res = await fetch(`/api/memoperpro?id=${memoId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: editedMessage }),
+            });
+
+            if (!res.ok) throw new Error();
+
+            toast.success("Message updated");
+            setIsEditing(false);
+            fetchMemos();
+        } catch {
+            toast.error("Failed to save message");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     useEffect(() => {
         fetchMemos();
     }, []);
+
+    useEffect(() => {
+        if (memo?.message) {
+            setEditedMessage(memo.message);
+        }
+    }, [memo]);
 
     if (loading) return <p>Loading…</p>;
     if (!memo) return <p>No memo found</p>;
@@ -137,16 +169,41 @@ const MemoDetailPage = ({ memoId, }) => {
                     </div>
 
                 </div>
-                <div className='flex justify-between items-center mt-5 text-xl'>
-                    <div>Message.</div>
-                    <div className='border border-blue-500 px-3 rounded-md text-blue-500'><ArrowLeftRight />Editor</div>
-                </div>
-                <div className='dark:bg-gray-800 px-3 py-1 mt-3 rounded-md'>
-                    <div
-                    className="mt-3 prose dark:prose-invert max-w-none text-gray-600"
-                    dangerouslySetInnerHTML={{ __html: memo.message }}
-                />
                 
+                {/* saving and editing */}
+                <div>
+                    {!isEditing && (
+                        <div className='flex justify-between items-center mt-5 text-xl'>
+                            <div>Message</div>
+                            <div onClick={() => setIsEditing(true)}
+                                className='border  cursor-pointer border-blue-400 px-3 rounded-md text-blue-400 flex items-center gap-2'>
+                                <ArrowLeftRight />
+                                <div className=''>Editor</div></div>
+
+                        </div>
+                    )}
+                    {isEditing && (
+                        <div className='flex justify-between items-center mt-5 text-xl'>
+                            <div>Editor</div>
+                            <div onClick={handleSubmit}
+                                className='border  cursor-pointer border-blue-400 px-3 rounded-md text-blue-400 flex items-center gap-2'>
+                                <ArrowLeftRight />
+                                <div className=''>{saving ? "Saving..." : "Save"}</div></div>
+
+                        </div>
+                    )}
+                </div>
+                <div className=' mt-3'>
+                    {!isEditing && (
+                        <div
+                            className="prose dark:prose-invert max-w-none text-gray-600 dark:bg-gray-800 px-3 py-1 rounded-md"
+                            dangerouslySetInnerHTML={{ __html: memo.message }}
+                        />
+                    )}
+                    {isEditing && (
+
+                        <Editor value={editedMessage} onChange={(e) => setEditedMessage(e.target.value)} className="dark:text-white" />
+                    )}
                 </div>
             </div>
         </div>

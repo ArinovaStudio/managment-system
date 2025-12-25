@@ -123,6 +123,14 @@ export default function ClientMemo({ time, meetingId, }: Props) {
         return () => clearInterval(interval);
     }, [isRunning]);
 
+    const priority = meeting?.project?.priority?.toUpperCase();
+
+    const priorityStyles: Record<string, string> = {
+        LOW: "bg-green-100 text-green-600 border border-green-400",
+        MEDIUM: "bg-orange-100 text-orange-600 border border-orange-400",
+        HIGH: "bg-red-100 text-red-600 border border-red-400",
+    };
+
     return (
         <div className="p-6">
             <Toaster position="top-right" />
@@ -139,12 +147,65 @@ export default function ClientMemo({ time, meetingId, }: Props) {
                     </p>
                 </span>
 
-                <div className="flex flex-col">
-                    <p><span className="text-blue-400">Meeting Reasion:</span> {meeting?.reason}</p>
-                    <p><span className="text-blue-400">Meeting Status:</span> {meeting?.status}</p>
-                    <p><span className="text-blue-400">Meeting Duration:</span> {meeting?.duration}</p>
-                    <p><span className="text-blue-400">Meeting Date:</span> {new Date(meeting?.meetDate).toLocaleDateString()}</p>
-                    {meeting?.project ? (
+                <div className="flex flex-col mb-3">
+                    
+
+                    {/* Row 1 */}
+                    <div className="grid grid-cols-12 gap-6">
+                        {/* Project Name */}
+                        <div className="col-span-6 flex flex-col gap-1">
+                            <label className="text-sm text-gray-500">Project Name</label>
+                            <div className="bg-gray-100 dark:bg-gray-800 text-gray-500 px-4 py-3 rounded-xl border">
+                                {meeting?.project?.name ?? "No project"}
+                            </div>
+                        </div>
+
+                        {/* Project Priority */}
+                        <div className="col-span-4 flex flex-col gap-1">
+                            <label className="text-sm  text-gray-500">Project Priority</label>
+                            {priority && (
+                                <div
+                                    className={`px-4 py-3 rounded-xl font-medium
+      ${priorityStyles[priority] ?? "bg-gray-100 text-gray-600 border"}
+    `}
+                                >
+                                    {priority}
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Meeting Duration */}
+                        <div className="col-span-2 flex flex-col gap-1">
+                            <label className="text-sm text-gray-500">Meeting Duration</label>
+                            <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border text-center font-medium">
+                                {meeting?.duration} min.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Row 2 */}
+                    <div className="grid grid-cols-12 gap-6">
+                        {/* Meeting Date */}
+                        <div className="col-span-4 flex flex-col gap-1">
+                            <label className="text-sm text-gray-500">Meeting Date</label>
+                            <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border">
+                                {new Date(meeting?.meetDate).toLocaleDateString()}
+                            </div>
+                        </div>
+
+                        {/* Meeting Reason */}
+                        <div className="col-span-8 flex flex-col gap-1">
+                            <label className="text-sm text-gray-500">Meeting Reason</label>
+                            <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 px-4 py-3 rounded-xl border">
+                                {meeting?.reason ?? "—"}
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {/* meeting project details */}
+                    {/* {meeting?.project ? (
                         <>
                             <p>
                                 <span className="text-blue-400">Project Name:</span>{" "}
@@ -159,11 +220,11 @@ export default function ClientMemo({ time, meetingId, }: Props) {
                         <p className="text-gray-500 italic">
                             No project details found
                         </p>
-                    )}
+                    )} */}
 
                 </div>
 
-                <span>
+                <span className="mt-3">
                     <Editor value={html} onChange={onChange} className="dark:text-white" />
                 </span>
             </p>
