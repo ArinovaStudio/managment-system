@@ -505,6 +505,7 @@ model OtpVerification {
 enum OtpType {
   SIGNUP
   FORGOT_PASSWORD
+  LOGIN
 }
 
 enum MILESTONE_STATUS {

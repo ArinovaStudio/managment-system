@@ -1,7 +1,7 @@
 import db from './client'
 import { sendOtp } from './mailer'
 
-export type OtpType = 'SIGNUP' | 'FORGOT_PASSWORD'
+export type OtpType = 'SIGNUP' | 'FORGOT_PASSWORD' | 'LOGIN'
 
 export async function generateAndSendOtp(email: string, type: OtpType): Promise<void> {
   // Generate 6-digit OTP
@@ -39,6 +39,7 @@ export async function verifyOtp(email: string, otp: string, type: OtpType): Prom
   })
 
   if (!otpRecord) {
+    console.log("not found");
     return false
   }
 

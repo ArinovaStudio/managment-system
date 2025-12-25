@@ -10,6 +10,9 @@ import React, { useState } from "react";
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [step, setStep] = useState(1);
+  const [otp, setOtp] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,6 +22,42 @@ export default function SignUpForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (!isChecked) {
+  //     setError("Please accept terms and conditions");
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   setError("");
+
+  //   try {
+  //     const formDataToSend = new FormData();
+  //     formDataToSend.append('name', formData.name);
+  //     formDataToSend.append('email', formData.email);
+  //     formDataToSend.append('password', formData.password);
+  //     formDataToSend.append('phone', formData.phone);
+  //     if (formData.image) {
+  //       formDataToSend.append('image', formData.image);
+  //     }
+
+  //     const res = await fetch("/api/auth/signup", {
+  //       method: "POST",
+  //       body: formDataToSend,
+  //     });
+
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.error || "Sign up failed");
+
+  //     window.location.href = "/";
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,13 +71,13 @@ export default function SignUpForm() {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('email', formData.email);
-      formDataToSend.append('password', formData.password);
-      formDataToSend.append('phone', formData.phone);
-      if (formData.image) {
-        formDataToSend.append('image', formData.image);
-      }
+      formDataToSend.append("action", step === 1 ? "send-otp" : "verify-otp");
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("phone", formData.phone);
+      if (otp) formDataToSend.append("otp", otp);
+      if (formData.image) formDataToSend.append("image", formData.image);
 
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -46,7 +85,12 @@ export default function SignUpForm() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Sign up failed");
+      if (!res.ok) throw new Error(data.error || "Signup failed");
+
+      if (step === 1) {
+        setStep(2); // show OTP input
+        return;
+      }
 
       window.location.href = "/";
     } catch (err) {
@@ -55,6 +99,8 @@ export default function SignUpForm() {
       setLoading(false);
     }
   };
+
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -100,6 +146,7 @@ export default function SignUpForm() {
                   <Input
                     type="email"
                     placeholder="Enter your email"
+                    disabled={step === 2}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
@@ -115,6 +162,7 @@ export default function SignUpForm() {
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
+                      disabled={step === 2}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       required
                     />
@@ -143,6 +191,24 @@ export default function SignUpForm() {
                     onChange={(e) => setFormData({ ...formData, image: e.target.files?.[0] || null })}
                   />
                 </div>
+
+                {/* OTP FIELD (STEP 2 ONLY) */}
+                {step === 2 && (
+                  <div>
+                    <Label>
+                      Enter OTP<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter OTP sent to your email"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                )}
+
+
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 {/* <!-- Checkbox --> */}
                 <div className="flex items-center gap-3">
@@ -165,7 +231,12 @@ export default function SignUpForm() {
                 {/* <!-- Button --> */}
                 <div>
                   <Button type="submit" className="w-full" size="sm" disabled={loading}>
-                    {loading ? "Creating account..." : "Sign Up"}
+                    {/* {loading ? "Creating account..." : "Sign Up"} */}
+                    {loading
+                      ? "Please wait..."
+                      : step === 1
+                        ? "Send OTP"
+                        : "Verify OTP & Sign Up"}
                   </Button>
                 </div>
               </div>
