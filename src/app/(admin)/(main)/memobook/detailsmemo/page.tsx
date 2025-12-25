@@ -1,21 +1,35 @@
-"use client";
+// "use client";
 
-import { useSearchParams } from "next/navigation";
-import ClientMemo from "@/app/(admin)/(main)/memo/[time]/ClientMemo";
-import MemoDetailPage from "./[id]/MemoDetailPage";
+// import { useSearchParams } from "next/navigation";
+// import ClientMemo from "@/app/(admin)/(main)/memo/[time]/ClientMemo";
+// import MemoDetailPage from "./[id]/MemoDetailPage";
 
-export default function MemoPage() {
-  const searchParams = useSearchParams();
+// export default function MemoPage() {
+//   const searchParams = useSearchParams();
 
-  const memoId = searchParams.get("memoId");
+//   const memoId = searchParams.get("memoId");
 
-  if (!memoId) {
-    return <div>Invalid meeting</div>;
-  }
+//   if (!memoId) {
+//     return <div>Invalid meeting</div>;
+//   }
 
+//   return (
+//     <MemoDetailPage
+//       memoId={memoId}
+//     />
+//   );
+// }
+
+
+import { Suspense } from "react";
+import MemoDetailPageClient from "./MemoDetailPageClient";
+
+export const dynamic = "force-dynamic";
+
+export default function Page() {
   return (
-    <MemoDetailPage
-      memoId={memoId}
-    />
+    <Suspense fallback={<div>Loading memo details...</div>}>
+      <MemoDetailPageClient />
+    </Suspense>
   );
 }
