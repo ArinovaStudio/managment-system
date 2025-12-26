@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/client";
+import db from "@/lib/client";
 
 interface Params {
   params: { id: string };
