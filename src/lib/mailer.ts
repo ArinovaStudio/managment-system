@@ -254,7 +254,7 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
       attachments: [
       {
       filename: "logo.jpg",
-      path: "public/images/logo/logo.jpg",
+      path: "/public/images/logo/logo.jpg",
       cid: "logo",
       },
       ]
