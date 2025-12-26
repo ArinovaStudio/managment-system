@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/client";
-import bcrypt from "bcryptjs";
-import { createToken } from "@/lib/jwt";
-
 interface User {
     id: string;
     name: string;
@@ -11,6 +8,7 @@ interface User {
     department?: string;
     workingAs?: string;
     image?: string | null;
+    employeeId?: string | null;
 }
 
 export async function PATCH(req: Request) {
@@ -25,6 +23,7 @@ export async function PATCH(req: Request) {
       department,
       workingAs,
       image,
+      employeeId,
     } = body as User;
 
     /* ---------------- Validation ---------------- */
@@ -64,6 +63,7 @@ export async function PATCH(req: Request) {
         department: department || null,
         workingAs: workingAs || null,
         image: image || null,
+        employeeId: employeeId || null,
       },
     });
 
