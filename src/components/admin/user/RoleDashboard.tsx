@@ -1,9 +1,9 @@
 "use client";
 
-import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf, LucideTrash } from "lucide-react";
+import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf, LucideTrash, LucideEdit2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 
@@ -171,31 +171,7 @@ export default function RoleDashboard() {
   }
 
 
-  // async function updateLeaves() {
-  //   if (!editUser || !leaveType || !leaveDays) return;
 
-  //   const res = await fetch("/api/admin/leaves", {
-  //     method: "POST",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({
-  //       userId: editUser.id,
-  //       action: "deduct",
-  //       type: leaveType,
-  //       days: leaveDays,
-  //     }),
-  //   });
-
-  //   const data = await res.json();
-  //   if (!res.ok) return toast.error(data.error);
-
-  //   setUsers(prev =>
-  //     prev.map(u =>
-  //       u.id === editUser.id ? { ...u, leaves: data.leaves } : u
-  //     )
-  //   );
-
-  //   toast.success("Leaves updated");
-  // }
 
   useEffect(() => {
     async function loadUsers() {
@@ -232,48 +208,6 @@ export default function RoleDashboard() {
 
     loadTimezones();
   }, []);
-
-
-  // UPDATE TIMEZONE
-  // async function updateTimezone() {
-  //   if (!selected || !editUser) return;
-
-  //   try {
-  //     const res = await fetch("/api/admin/users", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         userId: editUser.id,
-  //         timezoneCode: selected,
-  //       }),
-  //     });
-
-  //     const data = await res.json();
-  //     if (!res.ok) {
-  //       toast.error(data.error || "Failed to update timezone");
-  //       return;
-  //     }
-
-  //     // Update UI instantly
-  //     setUsers((prev) =>
-  //       prev.map((u) =>
-  //         u.id === editUser.id
-  //           ? { ...u, timezone: data.timezone }
-  //           : u
-  //       )
-  //     );
-  //     setEditUser(prev =>
-  //       prev ? { ...prev, timezone: data.timezone } : prev
-  //     );
-  //     setEditUser(null);
-
-
-  //     toast.success("Timezone updated");
-  //   } catch {
-  //     toast.error("Network error");
-  //   }
-  // }
-
 
 
   const visibleUsers = users.filter((u) => u.role === selectedRole);
@@ -433,18 +367,187 @@ export default function RoleDashboard() {
               <th className="p-3 border text-left text-sm font-medium">Role</th>
               <th className="p-3 border text-left text-sm font-medium">Department</th>
               <th className="p-3 border text-left text-sm font-medium">Phone</th>
+              <th className="p-3 border text-left text-sm font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {visibleUsers.map((u) => (
-              <tr key={u.id} className="dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <td className="p-3 border text-sm">{u.id}</td>
+              <React.Fragment key={u.id}>
+              <tr className="dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <td className="p-3 border text-sm">{u.employeeId}</td>
                 <td className="p-3 border text-sm">{u.name}</td>
                 <td className="p-3 border text-sm">{u.email}</td>
                 <td className="p-3 border text-sm">{u.role}</td>
                 <td className="p-3 border text-sm">{u.department || "-"}</td>
                 <td className="p-3 border text-sm">{u.phone || "-"}</td>
+                <td className="p-3 flex justify-center items-center">
+                  <LucideEdit2 onClick={() => setEditUser(u)} size={16} className="hover:text-blue-600 cursor-pointer "/>
+                  <LucideTrash onClick={() => setDeleteUser(u)} size={16}  className="hover:text-red-600 cursor-pointer ml-4"/>
+                   </td>
               </tr>
+              <td>
+          {editUser && editUser.id === u.id && (
+             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                 <h2 className="text-lg font-bold mb-4">Edit User</h2>
+                 <form
+                   className="space-y-3"
+                 >
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Name</label>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.name} onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} placeholder="Enter name" />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Email</label>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
+                   </div>
+                    <div>
+                     <label className="block text-sm font-medium mb-1">Employee ID</label>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Phone</label>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Department</label>
+                     <select className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}>
+                       <option value="">Select or type below</option>
+                       {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                     </select>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2" value={editUser.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="Or type custom department" />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Position</label>
+                     <select className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}>
+                       <option value="">Select or type below</option>
+                       {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                     </select>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2" value={editUser.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
+                   </div>
+                   <div>
+                     <label className="block text-sm font-medium mb-1">Manage Leaves</label>
+                     <select
+                       value={leaveType}
+                       onChange={(e) => setLeaveType(e.target.value)}
+                       className="w-full border px-3 py-2 rounded dark:bg-gray-700"
+                     >
+                       <option value="">Select leave type</option>
+                       <option value="remaining">Casual</option>
+                       <option value="sick">Sick</option>
+                       <option value="emergency">Emergency</option>
+                     </select>
+                     <input
+                       type="number"
+                       min={1}
+                       value={leaveDays}
+                       onChange={(e) => setLeaveDays(Number(e.target.value))}
+                       className="w-full border px-3 py-2 rounded mt-2 dark:bg-gray-700"
+                       placeholder="Number of days"
+                     />
+                     {/* <button
+                       onClick={updateLeaves}
+                       className="w-full mt-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                     >
+                       Deduct Leaves
+                     </button> */}
+                   </div>
+         
+                   <div>
+                     <label className="block text-sm font-medium mb-1">
+                       Time Zone
+                     </label>
+         
+                     <select
+                       value={selectedTimezone}
+                       onChange={(e) => setSelectedTimezone(e.target.value)}
+                       className=" w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       <option value="" disabled>
+                         Select Timezone
+                       </option>
+         
+                       {allTimezones.map((tz) => (
+                         <option key={tz.code} value={tz.code}>
+                           {tz.code} — {tz.hours}
+                         </option>
+                       ))}
+                     </select>
+                     {/* <button
+                       onClick={updateTimezone}
+                       disabled={!selected}
+                       className="w-full mt-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+                     >
+                       Save Timezone
+                     </button> */}
+         
+                   </div>
+                   <div className="flex justify-end gap-3 mt-4">
+                     <button
+                       type="button"
+                       onClick={() => setEditUser(null)}
+                       className="px-4 py-2 rounded border dark:border-gray-600"
+                     >
+                       Cancel
+                     </button>
+         
+                     <button
+                       type="button"
+                       onClick={handleSaveAllChanges}
+                       disabled={saving}
+                       className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                     >
+                       {saving ? "Saving..." : "Save Changes"}
+                     </button>
+                   </div>
+         
+                 </form>
+               </div>
+             </div>
+           )}
+              </td>
+
+           <td>
+
+           {deleteUser && deleteUser.id === u.id && (
+             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
+                 <h2 className="text-lg font-bold text-red-600">Delete User</h2>
+                 <p className="text-sm mt-2">Are you sure you want to delete <strong>{deleteUser.name}</strong>? This action cannot be undone.</p>
+                 <div className="flex justify-end gap-3 mt-5">
+                   <button onClick={() => setDeleteUser(null)} className="px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+                   <button
+                     onClick={async () => {
+                       const toastId = toast.loading("Deleting user...");
+                       try {
+                         const res = await fetch("/api/auth/user", {
+                           method: "DELETE",
+                           headers: { "Content-Type": "application/json" },
+                           body: JSON.stringify({ email: deleteUser.email }),
+                         });
+                         const data = await res.json();
+                         if (!res.ok) {
+                           toast.error(data.error || "Delete failed", { id: toastId });
+                           return;
+                         }
+                         setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
+                         toast.success("User deleted successfully", { id: toastId });
+                         setDeleteUser(null);
+                       } catch {
+                         toast.error("Something went wrong", { id: toastId });
+                       }
+                     }}
+                     className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                   >
+                     Delete
+                   </button>
+                 </div>
+               </div>
+             </div>
+           )}
+           </td>
+
+
+            </React.Fragment>
             ))}
           </tbody>
         </table>
@@ -576,30 +679,6 @@ export default function RoleDashboard() {
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                           <h2 className="text-lg font-bold mb-4">Edit User</h2>
                           <form
-                            // onSubmit={async (e) => {
-                            //   e.preventDefault();
-                            //   setSaving(true);
-                            //   const toastId = toast.loading("Updating user...");
-                            //   try {
-                            //     const res = await fetch("/api/auth/user", {
-                            //       method: "PATCH",
-                            //       headers: { "Content-Type": "application/json" },
-                            //       body: JSON.stringify(editUser),
-                            //     });
-                            //     const data = await res.json();
-                            //     if (!res.ok) {
-                            //       toast.error(data.error || "Update failed", { id: toastId });
-                            //       return;
-                            //     }
-                            //     setUsers((prev) => prev.map((u) => (u.id === editUser.id ? data.user ?? editUser : u)));
-                            //     toast.success("User updated successfully", { id: toastId });
-                            //     setEditUser(null);
-                            //   } catch {
-                            //     toast.error("Something went wrong", { id: toastId });
-                            //   } finally {
-                            //     setSaving(false);
-                            //   }
-                            // }}
                             className="space-y-3"
                           >
                             <div>

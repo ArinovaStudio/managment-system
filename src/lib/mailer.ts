@@ -86,7 +86,7 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
             </div>
           </div>
           
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p> <br>
+          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
           <p style="color:#C4B5FD; font-size:14px;">
             This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
             If you did not sign up, you can safely ignore this email.
@@ -155,7 +155,7 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
             </div>
           </div>
 
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p> <br>
+          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
           <p style="color:#C4B5FD; font-size:14px;">
             This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
             If you did not sign up, you can safely ignore this email.
@@ -223,7 +223,7 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
             </div>
           </div>
 
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p> <br>
+          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
           <p style="color:#C4B5FD; font-size:14px;">
             This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
             If you did not sign up, you can safely ignore this email.

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "generate": "npx prisma generate --schema ./src/prisma/schema.prisma && npx prisma db push --schema ./src/prisma/schema.prisma",
+    "generate": "npx prisma generate --schema ./src/prisma/schema.prisma",
+    "push": "npx prisma db push --schema ./src/prisma/schema.prisma",
     "build": "npx prisma generate --schema ./src/prisma/schema.prisma && next build --webpack",
     "start": "next start",
     "lint": "next lint"

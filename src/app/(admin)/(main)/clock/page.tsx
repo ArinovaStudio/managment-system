@@ -800,7 +800,7 @@ function Clock() {
           const isActive = activeBreak === breakType.id;
 
           return (
-            <>
+            <React.Fragment key={breakType.id}>
               <div key={breakType.id} className="w-1/3 h-full bg-white dark:bg-white/[0.03] dark:text-white rounded-2xl flex justify-start p-4 items-center gap-3">
                 <div className={`w-20 h-5/6 ${colors.bg} text-white rounded-xl grid place-items-center`}>
                   <IconComponent size={28} strokeWidth={1.6} />
@@ -829,7 +829,7 @@ function Clock() {
                   )}
                 </button>
               </div>
-            </>
+            </React.Fragment>
           );
         })}
 
