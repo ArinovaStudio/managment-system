@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (err) {
     console.error("SIGNUP_ERROR:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: err }, { status: 500 });
   }
 }
 
@@ -170,7 +170,7 @@ export async function GET() {
   } catch (err) {
     console.error("GET_USERS_ERROR:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: err },
       { status: 500 }
     );
   }
@@ -188,7 +188,7 @@ export async function DELETE() {
   } catch (err) {
     console.error("DELETE_USERS_ERROR:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: err },
       { status: 500 }
     );
   }
