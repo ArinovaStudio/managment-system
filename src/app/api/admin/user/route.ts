@@ -41,6 +41,20 @@ export async function POST(req: Request) {
         { status: 409 }
       );
     }
+    const lastEmployee = await db.user.findFirst({
+        where: { employeeId: { not: null } },
+        orderBy: { createdAt: "desc" },
+        select: { employeeId: true },
+      });
+
+      let nextNumber = 1;
+      if (lastEmployee?.employeeId) {
+        const num = parseInt(lastEmployee.employeeId.split("-")[1], 10);
+        if (!isNaN(num)) nextNumber = num + 1;
+      }
+
+      const employeeId = `emp-${String(nextNumber).padStart(3, "0")}`;
+
 
     // 🔑 HASH PASSWORD
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -56,6 +70,7 @@ export async function POST(req: Request) {
         workingAs,
         phone,
         isLogin: false, // IMPORTANT
+        employeeId: role !== "CLIENT" ? employeeId : null,
       },
     });
 

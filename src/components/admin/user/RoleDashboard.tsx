@@ -67,8 +67,60 @@ export default function RoleDashboard() {
   const [addUser, setAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
   const [saving, setSaving] = useState(false);
-  const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Other'];
-  const positions = ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'UI/UX Designer', 'Product Manager', 'Marketing Manager', 'Sales Executive', 'HR Manager', 'Other'];
+  const departments = [
+  'Web Development',
+  'UI / UX Design',
+  'Mobile App Development',
+  'Custom Software Development',
+  'AI / ML Solutions',
+  'Data Engineering & Analytics',
+  'Cyber Security',
+  'Cloud Architecture & DevOps',
+  'SaaS Product Development',
+  'E-commerce Development',
+  'API & System Integrations',
+  'Automation & RPA',
+  'Quality Assurance & Testing',
+  'Performance Optimization',
+  'SEO & Growth Engineering',
+  'Digital Marketing',
+  'Branding & Creative Design',
+  'Product Management',
+  'Project Management',
+  'IT Consulting & Strategy',
+  'Maintenance & Support',
+  'Research & Innovation',
+  'HR & Talent Management'
+];
+  const positions = [
+  'Frontend Developer',
+  'Backend Developer',
+  'Full Stack Developer',
+  'Mobile App Developer',
+  'UI/UX Designer',
+  'Product Manager',
+  'Project Manager',
+  'QA Engineer',
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'AI / ML Engineer',
+  'Data Engineer',
+  'Cyber Security Analyst',
+  'SEO Specialist',
+  'Digital Marketing Manager',
+  'Content Strategist',
+  'Brand Designer',
+  'Sales Executive',
+  'Business Development Manager',
+  'Client Success Manager',
+  'HR Manager',
+  'Talent Acquisition Specialist',
+  'Operations Manager',
+  'Technical Support Engineer',
+  'Intern / Trainee',
+  'Other'
+];
+
   const [allTimezones, setAllTimezones] = useState<any[]>([]);
   const [selectedTimezone, setSelectedTimezone] = useState("");
   const [leaveType, setLeaveType] = useState("");
@@ -313,7 +365,7 @@ export default function RoleDashboard() {
                 <input required type="email" className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder="Enter email" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Password *</label>
+                <label className="block text-sm font-addUsermedium mb-1">Password *</label>
                 <input required type="password" className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder="Enter password" />
               </div>
               <div>
@@ -381,7 +433,7 @@ export default function RoleDashboard() {
                 <td className="p-3 border text-sm">{u.department || "-"}</td>
                 <td className="p-3 border text-sm">{u.phone || "-"}</td>
                 <td className="p-3 flex justify-center items-center">
-                  <LucideEdit2 onClick={() => setEditUser(u)} size={16} className="hover:text-blue-600 cursor-pointer "/>
+                  <LucideEdit2 onClick={() => {setEditUser(u),  setSelectedTimezone(u.timezone?.code || "")}} size={16} className="hover:text-blue-600 cursor-pointer "/>
                   <LucideTrash onClick={() => setDeleteUser(u)} size={16}  className="hover:text-red-600 cursor-pointer ml-4"/>
                    </td>
               </tr>
@@ -689,6 +741,10 @@ export default function RoleDashboard() {
                               <label className="block text-sm font-medium mb-1">Email</label>
                               <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
                             </div>
+                            <div>
+                     <label className="block text-sm font-medium mb-1">Employee ID</label>
+                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
+                   </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">Phone</label>
                               <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />

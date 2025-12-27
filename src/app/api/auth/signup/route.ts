@@ -87,7 +87,7 @@ export async function POST(req: Request) {
           bio,
           dob,
           image: imageUrl,
-          employeeId: finalRole === "EMPLOYEE" ? employeeId : null,
+          employeeId: finalRole !== "CLIENT" ? employeeId : null,
         },
       });
 

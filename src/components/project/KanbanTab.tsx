@@ -334,7 +334,6 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
   useEffect(() => {
     fetchTasks();
-    console.log("this is the project id", projectId);
 
 
   }, [projectId]);
@@ -357,11 +356,9 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
   const fetchTasks = async () => {
     try {
-      console.log("fetch tas calledd");
 
       const res = await fetch(`/api/kanban/task?projectId=${projectId}`);
       const data = await res.json();
-      console.log("fetched tasks data", data);
 
       if (data.tasks) setTasks(data.tasks);
     } catch (err) {
