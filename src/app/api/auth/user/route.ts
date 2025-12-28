@@ -4,6 +4,7 @@ interface User {
     id: string;
     name: string;
     email: string;
+    dob: string;
     phone?: string;
     department?: string;
     workingAs?: string;
@@ -23,6 +24,7 @@ export async function PATCH(req: Request) {
       department,
       workingAs,
       image,
+      dob,
       employeeId,
     } = body as User;
 
@@ -64,6 +66,7 @@ export async function PATCH(req: Request) {
         workingAs: workingAs || null,
         image: image || null,
         employeeId: employeeId || null,
+        dob: dob || null
       },
     });
 

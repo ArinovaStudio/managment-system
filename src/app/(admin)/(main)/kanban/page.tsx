@@ -13,11 +13,9 @@ import {
   X,
   Plus,
   Search,
-  MoreVertical,
   Send,
   AlertCircle,
   Tag,
-  Users,
   Edit2,
   Trash2,
   Save,
@@ -64,7 +62,6 @@ const priorityClasses = {
 type NewTaskShape = {
   title: string;
   description: string;
-  assignee: string;
   priority: 'low' | 'medium' | 'high';
   dueDate: string;
   tags: string[];
@@ -78,13 +75,14 @@ const NewTaskModal: React.FC<{
   onClose: () => void;
   mode: "create" | "edit";
   newTask: NewTaskShape;
+  assignee: string;
   setNewTask: (t: NewTaskShape) => void;
   handleSubmit: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
   projectsLoading: boolean;
   projects: { id: string; name: string }[];
-}> = ({ isOpen, onClose, mode, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
+}> = ({ isOpen, onClose, mode, assignee, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
   if (!isOpen) return null;
 
   return (
@@ -133,7 +131,7 @@ const NewTaskModal: React.FC<{
               <div className="flex items-center gap-2 pl-1">
                 <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <p className="text-gray-900 dark:text-white font-medium">
-                  {newTask.assignee || "Loading..."}
+                  {assignee || "Loading..."}
                 </p>
               </div>
             </div>
@@ -879,7 +877,6 @@ const KanbanBoard: React.FC = () => {
   const [newTask, setNewTask] = useState<NewTaskShape>({
     title: '',
     description: '',
-    assignee: '',
     priority: 'medium',
     dueDate: '',
     tags: [],
@@ -887,6 +884,9 @@ const KanbanBoard: React.FC = () => {
     attachmentFile: null,
     projectId: '',
   });
+
+  const [assigne, setAssigne] = useState<string>('');
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -896,9 +896,7 @@ const KanbanBoard: React.FC = () => {
   const [taskemployee, settaskemployee] = useState<any>(null);
   const [taskMode, setTaskMode] = useState<"create" | "edit">("create");
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-
   const [reportsLoading, setReportsLoading] = useState(false);
-
   const [projects, setProjects] = useState<any[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
 
@@ -915,11 +913,25 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
+  const fetchAdmin = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      if (data.user) {
+        setAssigne(data.user.name);
+      }
+    }
+    catch (err) {
+      console.error("Failed to load Me", err);
+      toast.error("Failed to load Me");
+    }
+  }
   useEffect(() => {
     fetchProjects();
   }, []);
-
+  
   useEffect(() => {
+    fetchAdmin();
     fetchUserRole();
     fetchTasks();
   }, []);
@@ -956,33 +968,6 @@ const KanbanBoard: React.FC = () => {
       setEmployees(data.users.filter((u: any) => u.role === 'EMPLOYEE'));
     }
   };
-
-  // const fetchTasks = async (employeeName?: string) => {
-  //   try {
-  //     console.log("Employee lest see" ,employeeName);
-  //     const employee = "Raj"
-  //     setTasksLoading(true);
-  //     const url = employeeName ? `/api/kanban/task?assignee=${encodeURIComponent(employeeName)}` : '/api/kanban/task';
-  //     console.log("Employee lest see" ,employee);
-  //     const res = await fetch(url);
-  //     const data = await res.json();
-  //     console.log("data of tasks", data);
-
-
-  //     if (data.success && data.tasks) {
-  //       setTasks(data.tasks);
-  //     } else if (data.tasks) {
-  //       setTasks(data.tasks);
-  //     } else {
-  //       setTasks([]);
-  //     }
-  //   } catch (err) {
-  //     console.error("Kanban Fetch Error:", err);
-  //     setTasks([]);
-  //   } finally {
-  //     setTasksLoading(false);
-  //   }
-  // };
 
   const fetchTasks = async (employeeName?: string) => {
     try {
@@ -1054,7 +1039,7 @@ const KanbanBoard: React.FC = () => {
       formData.append("id", taskToEdit.id);
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
-      formData.append("assignee", newTask.assignee);
+      formData.append("assignee", assigne);
       formData.append("priority", newTask.priority);
       formData.append("dueDate", newTask.dueDate);
       formData.append("status", newTask.status);
@@ -1106,7 +1091,6 @@ const KanbanBoard: React.FC = () => {
     setNewTask({
       title: task.title,
       description: task.description,
-      assignee: task.assignee,
       priority: task.priority,
       dueDate: task.dueDate,
       tags: task.tags,
@@ -1283,25 +1267,7 @@ const KanbanBoard: React.FC = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (!selectedTask) return;
 
-  //   const fetchReports = async () => {
-  //     try {
-  //       const res = await fetch(`/api/kanban/report?taskId=${selectedTask.id}`);
-  //       const data = await res.json();
-
-  //       if (data.success) {
-  //         setReportCount(data.count || 0);
-  //         setReportMessages(data.messages || []);
-  //       }
-  //     } catch (err) {
-  //       console.error("Failed to fetch reports:", err);
-  //     }
-  //   };
-
-  //   fetchReports();
-  // }, [selectedTask]);
   const fetchReports = async (taskId: string) => {
     try {
       setReportsLoading(true);
@@ -1313,7 +1279,6 @@ const KanbanBoard: React.FC = () => {
       if (data.success) {
         setReportCount(data.count || 0);
         setReportMessages(data.messages || []);
-        console.log("fetch done");
         console.log(reportMessages);
 
 
@@ -1328,8 +1293,6 @@ const KanbanBoard: React.FC = () => {
   useEffect(() => {
     if (!selectedTask) return;
     fetchReports(selectedTask.id);
-    console.log("i ma selected", selectedTask);
-
   }, [selectedTask?.id]);
 
   const handleCreateTask = async () => {
@@ -1337,18 +1300,13 @@ const KanbanBoard: React.FC = () => {
 
     try {
       const formData = new FormData();
-
-      console.log(currentUser.employeeId);
-
-
-      const assigneeName = newTask.assignee || "Unassigned";
+      const assigneeName = assigne || "Unassigned";
       const employeeId = taskemployee || currentUser.employeeId || "";
 
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
       formData.append("assignee", assigneeName);
       formData.append("employeeId", employeeId);
-
       formData.append(
         "assigneeAvatar",
         assigneeName !== "Unassigned"
@@ -1359,7 +1317,6 @@ const KanbanBoard: React.FC = () => {
             .toUpperCase()
           : ""
       );
-
       formData.append("priority", newTask.priority);
       formData.append("dueDate", newTask.dueDate);
       formData.append("status", newTask.status);
@@ -1387,7 +1344,6 @@ const KanbanBoard: React.FC = () => {
       setNewTask({
         title: "",
         description: "",
-        assignee: "",
         priority: "medium",
         dueDate: "",
         tags: [],
@@ -1662,6 +1618,7 @@ const KanbanBoard: React.FC = () => {
 
       <NewTaskModal
         isOpen={showNewTaskModal}
+        assignee={assigne}
         onClose={() => {
           setShowNewTaskModal(false);
           setTaskMode("create");

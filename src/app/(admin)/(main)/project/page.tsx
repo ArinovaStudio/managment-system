@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, AlertCircle, Plus, Search, Filter, X, ArrowLeft } from 'lucide-react';
+import { Users, Calendar, AlertCircle, Plus, Search, Filter, X, ArrowLeft, LucideEye, LucideEdit2, LucideTrash } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,10 @@ interface Project {
   basicDetails: string;
   membersCount: number;
   progress: number;
+  budget: number;
+  projectType: string;
+  startDate: string;
+  deadline: string;
   createdAt: string;
 }
 
@@ -46,6 +50,9 @@ export default function ProjectsPage() {
     fetchUserProjects();
     fetchUsers();
   }, []);
+
+
+
 
   const fetchUserProjects = async () => {
     try {
@@ -157,6 +164,7 @@ export default function ProjectsPage() {
     user.name.toLowerCase().includes(searchUser.toLowerCase())
   );
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -233,7 +241,7 @@ export default function ProjectsPage() {
               href={`/project/${project.id}`}
               className="group block"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-600">
+              <div className="relative bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-600">
                 {/* Project Header */}
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">

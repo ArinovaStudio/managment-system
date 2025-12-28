@@ -88,14 +88,20 @@ export default function UserProfilePage() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-8 shadow-lg">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="relative">
-            <Image
-              src={user.image ?? "/default-avatar.png"}
-              alt={user.name}
-              width={120}
-              height={120}
-              className="rounded-full h-30 w-30 object-cover border-4 border-white shadow-xl"
-            />
-            <div className="absolute -bottom-2 -right-2 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
+            {
+              user?.image ? (
+                <Image
+                src={user.image ?? "/default-avatar.png"}
+                alt={user.name}
+                  width={120}
+                  height={120}
+                  className="rounded-full h-30 w-30 object-cover border-4 border-white shadow-xl"
+                  />
+              ) : (
+                  <div className="rounded-full h-30 w-30 object-cover text-white border-4 border-white shadow-xl grid place-items-center text-4xl bg-white/20">{user.name.charAt(0)}</div>
+              )
+            }
+            <div className="absolute -bottom-0 -right-0 bg-green-500 w-8 h-8 rounded-full border-4 border-white"></div>
           </div>
 
           <div className="flex-1 text-center md:text-left">
