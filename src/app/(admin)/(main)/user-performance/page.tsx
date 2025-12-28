@@ -26,29 +26,31 @@ const PerformanceRating = () => {
     { key: 'feedback', label: 'Feedback Reception', desc: 'How well they receive and implement feedback' }
   ];
 
-  useEffect(() => {
-    fetchUser();
-    fetchEmployees();
-  }, []);
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('/api/user', { credentials: 'include' });
+      setLoading(true);
+      const response = await fetch('/api/admin/getRoleWise?role=EMPLOYEE', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        setUser(data.users);
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
     }
+    finally {
+      setLoading(false)
+    }
   };
 
-  const fetchEmployees = async () => {
+  const fetchPeformance = async (id: string) => {
     try {
-      const response = await fetch('/api/performace', { credentials: 'include' });
+      const response = await fetch(`/api/performace?userId=${id}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        setEmployees(data.employees || []);
+        console.log(data);
+        
+        setRatings(data.ratings[0])
       }
     } catch (error) {
       console.error('Failed to fetch employees:', error);
@@ -58,6 +60,18 @@ const PerformanceRating = () => {
   const handleRatingChange = (field: string, value: number) => {
     setRatings(prev => ({ ...prev, [field]: value }));
   };
+
+
+  useEffect(() => {
+    fetchUser();
+    // fetchPeformance();
+  }, []);
+
+  useEffect(() => {
+    if (selectedEmployee) {
+      fetchPeformance(selectedEmployee)
+    }
+  }, [selectedEmployee])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +89,7 @@ const PerformanceRating = () => {
         body: JSON.stringify({
           employeeId: selectedEmployee,
           ...ratings,
-          ratedBy: user?.name || 'Admin'
+          ratedBy: 'Admin'
         })
       });
 
@@ -119,14 +133,15 @@ const PerformanceRating = () => {
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Employee
           </label>
+          {/* {} */}
           <select
             value={selectedEmployee}
             onChange={(e) => setSelectedEmployee(e.target.value)}
             required
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900/80 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Choose an employee</option>
-            {employees.map((emp) => (
+            <option value="">{loading ? 'Loading...' : 'Choose an employee'}</option>
+            {!loading && user?.length > 0 && user.map((emp) => (
               <option key={emp.id} value={emp.id}>
                 {emp.name} ({emp.employeeId})
               </option>

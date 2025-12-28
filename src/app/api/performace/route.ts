@@ -4,29 +4,15 @@ import { getUserId } from "@/lib/auth";
 
 export async function GET(req: Request) {
     try {
-        const userId = await getUserId(req);
-        const user = await db.user.findUnique({
-            where: { id: userId },
-            select: { role: true }
-        });
+        const { searchParams } = new URL(req.url);
+        const userId = searchParams.get('userId');
         
-        // If admin, return employees list
-        if (user?.role === 'ADMIN') {
-            const employees = await db.user.findMany({
-                where: { role: { not: 'ADMIN' } },
-                select: {
-                    id: true,
-                    name: true,
-                    employeeId: true,
-                    email: true
-                }
-            });
-            return NextResponse.json({ employees }, { status: 200 });
+        if (!userId) {
+            return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
         }
-        
         // For non-admin users, return their ratings
         const ratings = await db.performanceRating.findMany({
-            where: { employeeId: userId },
+            where: { userId: userId },
             orderBy: { createdAt: 'desc' }
         });
         
@@ -47,7 +33,7 @@ export async function POST(req: Request) {
 
         const rating = await db.performanceRating.create({
             data: {
-                employeeId,
+                userId: employeeId,
                 newLearnings: parseInt(newLearnings) || 5,
                 speed: parseInt(speed) || 5,
                 workQuality: parseInt(workQuality) || 5,

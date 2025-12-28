@@ -116,3 +116,18 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const danger = await db.workHours.deleteMany({
+    where: {
+        summary: {
+          not: null
+        }
+  }})
+  return NextResponse.json({ success: true, deletedCount: danger.count });
+  }
+  catch {
+    return NextResponse.json({ error: 'Failed to delete summaries' }, { status: 500 });
+  }
+}

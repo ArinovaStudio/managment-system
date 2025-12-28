@@ -14,7 +14,7 @@ export default function SignInForm() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(1); // 1: credentials, 2: otp
   const [otp, setOtp] = useState("");
-
+  const [isEnabled, setEnabled] = useState(false);
   const handleCredentials = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -132,10 +132,10 @@ export default function SignInForm() {
                 <div>
                   <Label>Enter OTP <span className="text-error-500">*</span></Label>
                   <Input
-                    type="text"
+                    type="number"
                     placeholder="Enter 6-digit OTP sent to your email"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    onChange={(e) => {setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true)}}
                     autoComplete="off"
                     name="otp"
                   />
@@ -144,7 +144,7 @@ export default function SignInForm() {
                 {error && <p className="text-red-500 text-sm">{error}</p>}
 
                 <div>
-                  <Button type="submit" className="w-full" size="sm" disabled={loading || !otp}>
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || !isEnabled}>
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>

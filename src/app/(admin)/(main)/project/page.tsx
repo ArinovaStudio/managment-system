@@ -375,6 +375,7 @@ export default function ProjectsPage() {
                     <input
                       type="date"
                       value={formData.startDate}
+                      min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required
@@ -388,6 +389,7 @@ export default function ProjectsPage() {
                     <input
                       type="date"
                       value={formData.deadline}
+                      min={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required

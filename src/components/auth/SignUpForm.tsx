@@ -11,6 +11,7 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [step, setStep] = useState(1);
+  const [isEnabled, setEnabled] = useState<boolean>(false);
   const [otp, setOtp] = useState("");
 
   const [formData, setFormData] = useState({
@@ -23,41 +24,6 @@ export default function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!isChecked) {
-  //     setError("Please accept terms and conditions");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   setError("");
-
-  //   try {
-  //     const formDataToSend = new FormData();
-  //     formDataToSend.append('name', formData.name);
-  //     formDataToSend.append('email', formData.email);
-  //     formDataToSend.append('password', formData.password);
-  //     formDataToSend.append('phone', formData.phone);
-  //     if (formData.image) {
-  //       formDataToSend.append('image', formData.image);
-  //     }
-
-  //     const res = await fetch("/api/auth/signup", {
-  //       method: "POST",
-  //       body: formDataToSend,
-  //     });
-
-  //     const data = await res.json();
-  //     if (!res.ok) throw new Error(data.error || "Sign up failed");
-
-  //     window.location.href = "/";
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -193,7 +159,7 @@ export default function SignUpForm() {
                       type="text"
                       placeholder="Enter OTP sent to your email"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => {setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true)}}
                       autoComplete="off"
                     />
                   </div>
@@ -221,7 +187,7 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <Button type="submit" className="w-full" size="sm" disabled={loading}>
+                  <Button type="submit" className="w-full" size="sm" disabled={loading || (step === 2 && !isEnabled)}>
                     {/* {loading ? "Creating account..." : "Sign Up"} */}
                     {loading
                       ? "Please wait..."

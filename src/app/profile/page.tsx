@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/common/Loading";
 import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import UserMetaCard from "@/components/user-profile/UserMetaCard";
@@ -54,7 +55,9 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <div className="w-full h-full flex justify-center items-center">
+    <Loader />
+  </div>;
   if (!user) return <p>No user found</p>;
 
   return (

@@ -243,8 +243,8 @@ const SidePanel: React.FC<{
                 <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Assignee</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-purple-400 text-white dark:from-blue-500 dark:to-purple-500">
-                  {selectedTask.assigneeAvatar}
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-purple-400 text-white dark:from-blue-500 dark:to-green-500">
+                  {selectedTask.assignee.charAt(0)}
                 </div>
                 <span className="font-medium text-gray-900 dark:text-white">{selectedTask.assignee}</span>
               </div>
@@ -599,7 +599,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-blue-500 to-green-500 text-white">
-                            {task.assigneeAvatar}
+                            {task.assignee.charAt(0)}
                           </div>
                         </div>
                       </div>

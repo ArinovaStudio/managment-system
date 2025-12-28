@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Star, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import Loader from "@/components/common/Loading";
 
 export default function AdminFeedbacksPage() {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -60,18 +61,11 @@ export default function AdminFeedbacksPage() {
             Client Feedbacks
           </h1>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          <Plus size={16} />
-          Add Feedback
-        </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center w-full h-[60vh] items-center">
+          <Loader />
         </div>
       ) : (
         <div className="grid gap-4">
@@ -103,68 +97,6 @@ export default function AdminFeedbacksPage() {
               </p>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Add Feedback Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Submit Feedback</h2>
-            <div className="space-y-4">
-              <select
-                value={newFeedback.type}
-                onChange={(e) => setNewFeedback({ ...newFeedback, type: e.target.value })}
-                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-              >
-                <option value="">Select feedback type</option>
-                <option value="Bug Report">Bug Report</option>
-                <option value="Feature Request">Feature Request</option>
-                <option value="General">General</option>
-                <option value="Complaint">Complaint</option>
-              </select>
-              <div>
-                <label className="block text-sm mb-2">Rating (1-10)</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={newFeedback.rating}
-                  onChange={(e) => setNewFeedback({ ...newFeedback, rating: parseInt(e.target.value) })}
-                  className="w-full"
-                />
-                <span className="text-sm text-gray-500">{newFeedback.rating}/10</span>
-              </div>
-              <textarea
-                placeholder="Your feedback..."
-                value={newFeedback.desc}
-                onChange={(e) => setNewFeedback({ ...newFeedback, desc: e.target.value })}
-                className="w-full p-3 border rounded-lg h-24 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={newFeedback.isAnynonyms}
-                  onChange={(e) => setNewFeedback({ ...newFeedback, isAnynonyms: e.target.checked })}
-                />
-                <span className="text-sm">Submit anonymously</span>
-              </label>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-2 border rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitFeedback}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

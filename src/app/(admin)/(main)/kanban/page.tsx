@@ -145,6 +145,7 @@ const NewTaskModal: React.FC<{
                 <input
                   type="date"
                   value={newTask.dueDate}
+                  min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -446,8 +447,8 @@ const SidePanel: React.FC<{
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Assignee</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-purple-400 text-white dark:from-blue-500 dark:to-purple-500">
-                    {selectedTask.assigneeAvatar}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-green-400 text-white dark:from-blue-500 dark:to-green-500">
+                    {selectedTask.assignee.charAt(0)}
                   </div>
                   <span className="font-medium text-gray-900 dark:text-white">{selectedTask.assignee}</span>
                 </div>
@@ -473,11 +474,12 @@ const SidePanel: React.FC<{
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Tags</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {selectedTask.tags.map(tag => (
+                  {selectedTask.tags.length > 0 ? selectedTask.tags.map(tag => (
                     <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
                       {tag}
                     </span>
-                  ))}
+                  )) : <p className="text-xs text-gray-400 dark:text-gray-500 ml-4 ">No Tags Provided</p>
+                  }
                 </div>
               </div>
 
@@ -1622,7 +1624,7 @@ const KanbanBoard: React.FC = () => {
 
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-blue-500 to-green-500 text-white">
-                                {task.assigneeAvatar}
+                                {task.assignee.charAt(0)}
                               </div>
                             </div>
                           </div>

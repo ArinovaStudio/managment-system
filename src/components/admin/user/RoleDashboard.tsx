@@ -614,24 +614,30 @@ export default function RoleDashboard() {
                 const leaveStats = getLeaveStats(u);
 
                 return (
-                  // <Link
-                  //   href={`/user/${u.name}`}
-                  //   className="hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-                  //   title="View Profile"
-                  //   key={u.id}
-                  // >
+                  <Link
+                    href={`/user/${u.id}`}
+                    className="hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
+                    title="View Profile"
+                    key={u.id}
+                  >
                   <div key={u.id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all">
                     {/* Header Section */}
                     <div className="flex items-start gap-4">
                       {/* Avatar with Status */}
                       <div className="relative flex-shrink-0">
-                        <Image
-                          src={u.image ?? "/default-avatar.png"}
-                          alt={u.name}
-                          width={72}
-                          height={72}
-                          className="rounded-full object-cover w-18 h-18"
-                        />
+                        {
+                          u?.image ? (
+                          <Image
+                            src={u.image ?? "/default-avatar.png"}
+                            alt={u.name}
+                            width={72}
+                            height={72}
+                            className="rounded-full object-cover w-18 h-18"
+                          />
+                          ) : (
+                            <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700 to-pink-400">{u.name.charAt(0)}</div>
+                          )
+                        }
                         <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
                       </div>
 
@@ -883,7 +889,7 @@ export default function RoleDashboard() {
                       </div>
                     )}
                   </div>
-                  // </Link>
+                 </Link>
                 );
               })}
             </div>

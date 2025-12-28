@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Users, Calendar, TrendingUp, BarChart3, Mail, Building2, Award } from "lucide-react";
@@ -24,23 +24,18 @@ function getPriorityColor(priority: string) {
 }
 
 export default function UserProfilePage() {
-  const { username } = useParams();
+
+  const {id} = useParams()
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('projects');
 
-  useEffect(() => {
-    if (username) {
-      loadUser();
-      loadPerformanceData();
-    }
-  }, [username]);
 
   async function loadUser() {
     try {
-      const res = await fetch(`/api/user/${username}`);
+      const res = await fetch(`/api/user/${id}`);
       const data = await res.json();
 
       if (data.success) {
@@ -55,13 +50,23 @@ export default function UserProfilePage() {
 
   async function loadPerformanceData() {
     try {
-      const res = await fetch(`/api/performace?employeeId=${username}`);
+      const res = await fetch(`/api/performace?userId=${id}`);
       const data = await res.json();
+      console.log(data);
+      
       setPerformanceData(data.ratings || []);
     } catch (err) {
       console.error("Error loading performance data:", err);
     }
   }
+
+
+  useEffect(() => {
+    if (id) {
+      loadUser();
+      loadPerformanceData();
+    }
+  }, [id]);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">

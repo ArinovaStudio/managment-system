@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Plus, Clock, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import Loader from "@/components/common/Loading";
 
 export default function AdminMeetRequests() {
   const [meetRequests, setMeetRequests] = useState([]);
@@ -191,8 +192,8 @@ export default function AdminMeetRequests() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center w-full h-[60vh] items-center">
+          <Loader />
         </div>
       ) : (
         <div className="grid gap-4">

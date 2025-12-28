@@ -19,13 +19,15 @@ export async function GET(req: NextRequest) {
     const userId = payload.userId || payload.id;
 
     const documents = await db.docs.findMany({
-      where: { userId },
+      include: {Projects: {
+        select: { id: true, name: true}
+      }},
       orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json({ success: true, documents });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch documents", err: error }, { status: 500 });
   }
 }
 
@@ -40,6 +42,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const title = formData.get('title') as string;
     const file = formData.get('file') as File;
+    const projectId = formData.get('projectId') as string;
 
     if (!title || !file) {
       return NextResponse.json({ error: "Title and file are required" }, { status: 400 });
@@ -53,18 +56,27 @@ export async function POST(req: NextRequest) {
 
     // Upload to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
+      
       folder: 'documents',
       resource_type: 'auto',
       public_id: `${userId}_${Date.now()}`
     });
 
-    const document = await db.docs.create({
-      data: {
-        title,
-        fileUrl: uploadResult.secure_url,
-        userId
-      }
-    });
+const document = await db.docs.create({
+  data: {
+    title,
+    fileUrl: uploadResult.secure_url,
+    User: {
+      connect: { id: userId },
+    },
+    Projects: {
+      connect: { id: projectId },
+    },
+  },
+});
+
+
+
 
     return NextResponse.json({ success: true, document });
   } catch (error) {

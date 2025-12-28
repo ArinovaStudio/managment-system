@@ -15,6 +15,7 @@ const ForgotPassword = () => {
     const [step, setStep] = useState(1); // 1: email, 2: otp, 3: new password
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isEnabled, setEnabled] = useState<boolean>(false);
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
@@ -111,7 +112,7 @@ const ForgotPassword = () => {
                                         placeholder="Enter 6-digit OTP"
                                         type="text"
                                         value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
+                                        onChange={(e) => {setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true)}}
                                         required
                                     />
                                 </div>
@@ -142,7 +143,7 @@ const ForgotPassword = () => {
                                 {error && <p className="text-red-500 text-sm">{error}</p>}
 
                                 <div>
-                                    <Button type="submit" className="w-full" size="sm" disabled={loading || !otp || !newPassword}>
+                                    <Button type="submit" className="w-full" size="sm" disabled={loading || !isEnabled || !newPassword}>
                                         {loading ? "Resetting..." : "Reset Password"}
                                     </Button>
                                 </div>

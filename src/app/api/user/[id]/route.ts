@@ -3,18 +3,17 @@ import db from '@/lib/client';
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { username: rawUsername } = await params;
-
+    const { id } = await params;
+    console.log(id);
+    
     // In case there are encoded characters in the URL (spaces, etc.)
-    const username = decodeURIComponent(rawUsername);
-
     // Fetch ONE user by name, including their projects
     const user = await db.user.findFirst({
       where: {
-        name: username,
+        id: id,
       },
       select: {
         id: true,

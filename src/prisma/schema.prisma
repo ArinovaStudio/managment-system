@@ -31,7 +31,7 @@ model User {
   memo            Memo[]
   milestones      Milestone[]
   projectMembers  ProjectMember[]
-
+  // peformance      PerformanceRating[]
   leaves          UserLeaves?
   timezone        UserTimezone?
   workHours       WorkHours[]
@@ -49,7 +49,9 @@ model Docs {
   fileUrl   String
   createdAt DateTime @default(now())
   userId    String?
-  User      User?    @relation("UserDocuments", fields: [userId], references: [id])
+  projectId String?  
+  Projects  Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  User      User?    @relation("UserDocuments", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model well {
@@ -107,7 +109,7 @@ model leaveReq {
   updatedAt  DateTime @updatedAt
   userId     String
 
-  user User? @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Analytics {
@@ -211,8 +213,8 @@ model Task {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   projectId      String?
-  comments       Comment[]
-  Project        Project?  @relation(fields: [projectId], references: [id])
+  comments       Comment[] 
+  Project        Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Report {
@@ -229,8 +231,8 @@ model Comment {
   taskId    String
   userId    String
   createdAt DateTime @default(now())
-  task      Task     @relation(fields: [taskId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Project {
@@ -250,6 +252,7 @@ model Project {
   projectInfo     ProjectInfo?
   latestUpdates   LatestUpdate[]
   meetingRequest  MeetingRequest[]
+  docs            Docs[]
 }
 
 model LatestUpdate {
@@ -259,7 +262,7 @@ model LatestUpdate {
   projectId String
   createdBy String
   createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectMember {
@@ -268,8 +271,8 @@ model ProjectMember {
   userId    String
   role      String?
   isLeader  Boolean @default(false)
-  project   Project @relation(fields: [projectId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Milestone {
@@ -281,8 +284,8 @@ model Milestone {
   status      MILESTONE_STATUS @default(PENDING)
   createdBy   String
   createdAt   DateTime         @default(now())
-  creator     User             @relation(fields: [createdBy], references: [id])
-  project     Project          @relation(fields: [projectId], references: [id])
+  creator     User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Asset {
@@ -293,7 +296,7 @@ model Asset {
   publicId  String
   title     String?
   createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Ticket {
@@ -325,10 +328,10 @@ model MeetingRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   memo      Memo[]
-  client    User     @relation(fields: [clientId], references: [id])
+  client    User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   
   projectId String?
-  project   Project? @relation(fields: [projectId], references: [id])
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Memo {
@@ -339,8 +342,8 @@ model Memo {
   totaltime String
   createdAt DateTime @default(now())
 
-  client         User            @relation(fields: [clientId], references: [id])
-  meetingRequest MeetingRequest? @relation(fields: [meetingId], references: [id])
+  client         User            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  meetingRequest MeetingRequest? @relation(fields: [meetingId], references: [id], onDelete: Cascade)
 }
 
 model FeatureRequest {
@@ -351,8 +354,8 @@ model FeatureRequest {
   description String
   createdAt   DateTime @default(now())
   status      String   @default("pending")
-  client      User     @relation(fields: [clientId], references: [id])
-  project     Project  @relation(fields: [projectId], references: [id])
+  client      User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model ProjectInfo {
@@ -367,7 +370,7 @@ model ProjectInfo {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  Project Project @relation(fields: [projectId], references: [id])
+  Project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Certificate {
@@ -416,7 +419,7 @@ model Meeting {
   meetingLink String?
 
   createdById String
-  createdBy   User   @relation("CreatedMeetings", fields: [createdById], references: [id])
+  createdBy   User   @relation("CreatedMeetings", fields: [createdById], references: [id], onDelete: Cascade)
 
   attendees MeetingAttendee[]
 
@@ -463,7 +466,7 @@ enum EventType {
 
 model PerformanceRating {
   id            String   @id @default(cuid())
-  employeeId    String
+  userId        String
   newLearnings  Int      @default(5)
   speed         Int      @default(5)
   workQuality   Int      @default(5)
