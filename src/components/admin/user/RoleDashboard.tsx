@@ -386,7 +386,7 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
                     <div className="mt-4 pt-3.5 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
                       <div className="flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>Time Zone: {u.timezone?.code || "IND"}</span>
+                        <span>Time Zone: {u.timezone?.code || "NOT SET"}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span>DOB: {u.dob || "N/A"}</span>
