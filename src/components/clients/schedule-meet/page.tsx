@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { clientDemoData } from "../demodata"
 
 export default function ScheduleMeet() {
   const [reason, setReason] = useState("");
@@ -9,7 +8,7 @@ export default function ScheduleMeet() {
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("30 minutes");
 
-  const [meetings, setMeetings] = useState(clientDemoData.meetRequests);
+  const [meetings, setMeetings] = useState([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

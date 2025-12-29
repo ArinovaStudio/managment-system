@@ -16,14 +16,21 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const [isClientAvailable, setIsClientAvailable] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isEmployee, setEmployee] = useState(false)
 
       const checkUserRole = async () => {
     try {
       const response = await fetch('/api/user');
       const data = await response.json();
+
+      if (data.user && data.user.role === "EMPLOYEE") {
+        setEmployee(true);
+      }
+
       if (data.user && data.user.role === 'ADMIN') {
         setIsAdmin(true);
       }
+
     } catch (error) {
       console.error('Failed to check user role:', error);
     }
@@ -35,9 +42,6 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   }, [projectId]);
 
 
-  // useEffect(() => {
-  //   checkUserRole();
-  // }, [])
   
   const fetchMembers = async () => {
     try {
@@ -183,15 +187,18 @@ export default function TeamTab({ projectId }: { projectId: string }) {
       )}
 
       <div className="space-y-4">
-        {members.map((m: any) => (
+        {members.map((m: any) => {
+          if (isEmployee && m.role === "CLIENT") {
+            return null;
+          }
+          return (
           <div
-            key={m.id}
-            className="p-5 bg-white  dark:bg-gray-800/50 border border-gray-400 rounded-xl"
+          key={m.id}
+          className="p-5 bg-white  dark:bg-gray-800/50 border border-gray-400 rounded-xl"
           >
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 <p className="font-semibold dark:text-white">{m.user.name}</p>
-
                 {editingMember?.id === m.id ? (
                   <div className="flex items-center gap-2 mt-2">
                     <input
@@ -203,7 +210,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                     />
                     <button
                       onClick={saveRole}
-                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-green-700"
                     >
                       Save
                     </button>
@@ -249,7 +256,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                 <div className="flex items-center gap-1">
                   {
                     m.role === "CLIENT" ? null : (
-                                        <button
+                    <button
                     onClick={() => {
                       setEditingMember(m);
                       setNewRole(m.role || "");
@@ -273,11 +280,12 @@ export default function TeamTab({ projectId }: { projectId: string }) {
               </div>
                 )
               }
-
-
             </div>
           </div>
-        ))}
+          )
+        }
+        )
+      }
       </div>
 
       {/* Add Member Modal */}

@@ -2,10 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
-import { clientDemoData } from "../demodata"
 import { Toaster, toast } from "react-hot-toast";
-
-const { feedback } = clientDemoData
 
 export default function FeedbacksPage() {
     const [feedbacks, setFeedbacks] = useState<any[]>([]);

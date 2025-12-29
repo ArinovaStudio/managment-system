@@ -1,12 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { clientDemoData } from "../demodata";
 import { PlusCircle } from "lucide-react";
 
 export default function FeatureRequestPage() {
     const [title, setTitle] = useState("");
     const [desc, setDesc] = useState("");
-    const [features, setFeatures] = useState(clientDemoData.featureRequests);
+    const [features, setFeatures] = useState([]);
 
     const handleSubmit = (e: any) => {
         e.preventDefault();

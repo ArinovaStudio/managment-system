@@ -775,7 +775,7 @@ export default function RoleDashboard() {
           {selectedRole === "CLIENT" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {visibleUsers.map((u) => (
-                <div key={u.id} onClick={() => (window.location.href = `/user/${u.name}`)} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]">
+                <div key={u.id} onClick={() => (window.location.href = `/user/${u.id}`)} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]">
                   <div className="flex items-start gap-4">
                     <div className="relative flex-shrink-0">
                       <Image src={u.image ?? "/default-avatar.png"} alt={u.name} width={72} height={72} className="rounded-full object-cover w-18 h-18" />

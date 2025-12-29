@@ -121,7 +121,6 @@ export default function ClientDashboardV2({ user }: { user: any }) {
   // Add update (uses selectedProject.id)
   const handleAddUpdate = async () => {
     if (!newUpdate.trim() || !selectedProject) return;
-
     try {
       const userRes = await fetch("/api/auth/me");
       const userData = await userRes.json();
@@ -138,7 +137,6 @@ export default function ClientDashboardV2({ user }: { user: any }) {
 
       if (res.ok) {
         const result = await res.json();
-        // update local copy of selectedProject's latestUpdates safely
         setSelectedProject((prev: any) => {
           if (!prev) return prev;
           const prevDashboard = prev.dashboardData || {};

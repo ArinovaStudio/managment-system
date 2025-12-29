@@ -15,12 +15,15 @@ export default function SignInForm() {
   const [step, setStep] = useState(1); // 1: credentials, 2: otp
   const [otp, setOtp] = useState("");
   const [isEnabled, setEnabled] = useState(false);
+
+
   const handleCredentials = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
+
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,7 +46,6 @@ export default function SignInForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/auth/signin", {
         method: "POST",

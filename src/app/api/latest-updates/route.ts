@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/client";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/jwt";
 
 export async function GET(req: Request) {
   try {
@@ -54,5 +56,36 @@ export async function POST(req: Request) {
       { success: false, message: "Failed to create update" },
       { status: 500 }
     );
+  }
+}
+
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const token = (await cookies()).get("token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const payload: any = verifyToken(token);
+    const userId = payload.userId || payload.id;
+
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Only admin can delete updates" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID required" }, { status: 400 });
+    }
+
+    await db.latestUpdate.delete({ where: { id: id } });
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error("DELETE MEETING ERROR:", error);
+    return NextResponse.json({ error: "Failed to latest" }, { status: 500 });
   }
 }

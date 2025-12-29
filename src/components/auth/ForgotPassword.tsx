@@ -21,12 +21,13 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
+    const TrimEmail = email.trim()
+    const TrimPass = email.trim()
         try {
             const res = await fetch("/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, action: "send-otp" }),
+                body: JSON.stringify({ TrimEmail, action: "send-otp" }),
             });
 
             const data = await res.json();
@@ -44,12 +45,14 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
+    const TrimEmail = email.trim()
+    const TrimPass = newPassword.trim()
+    const TrimOtp = otp.trim()
         try {
             const res = await fetch("/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp, newPassword, action: "reset-password" }),
+                body: JSON.stringify({ TrimEmail, TrimOtp, TrimPass, action: "reset-password" }),
             });
 
             const data = await res.json();

@@ -12,12 +12,29 @@ cloudinary.config({
 
 export async function GET(req: NextRequest) {
   try {
-    const token = (await cookies()).get("token")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { searchParams } = new URL(req.url);
+    const userOnly = searchParams.get('userOnly');
+    
+    if (userOnly === 'true') {
+      // Get projects for current user
+      const { getUserId } = await import('@/lib/auth');
+      const userId = await getUserId(req);
+      
+      const documents = await db.docs.findMany({
+        where: { userId },
+        include: {
+          User: {
+            select: {
+              name: true
+            }
+          },
+          Projects: true
+        }
+      });
 
-    const payload: any = verifyToken(token);
-    const userId = payload.userId || payload.id;
-
+      return Response.json({ success: true, documents });
+    }
+    
     const documents = await db.docs.findMany({
       include: {Projects: {
         select: { id: true, name: true}
@@ -27,6 +44,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, documents });
   } catch (error) {
+    console.log(error)
     return NextResponse.json({ error: "Failed to fetch documents", err: error }, { status: 500 });
   }
 }

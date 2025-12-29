@@ -139,7 +139,7 @@ export default function AdminDocuments() {
                                     <div className="flex items-center gap-3">
                                         <FileText className="text-blue-600" size={20} />
                                         <div>
-                                            <p className="font-normal text-xs text-gray-500">{doc?.Projects.name}</p>
+                                            <p className="font-normal text-xs text-gray-500">{doc?.Projects.name} - {doc?.User.name}</p>
                                             <p className="font-medium text-gray-900 dark:text-white mb-1">{doc.title}</p>
                                             <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                                         </div>
@@ -167,8 +167,7 @@ export default function AdminDocuments() {
                 </section>
             )}
 
-            {/* Add Document Modal */}
-            {/* Add Document Modal */}
+
             {addModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-[9999]">
                     <div className="bg-white dark:bg-gray-900 p-6 rounded-xl max-w-md w-full border border-gray-200 dark:border-gray-700 shadow-lg">

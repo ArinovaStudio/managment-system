@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { clientDemoData } from "../demodata"
 import { Toaster, toast } from "react-hot-toast";
 
 export default function ScheduleMeet() {
@@ -121,8 +120,8 @@ export default function ScheduleMeet() {
             type="text"
             value={reason}
             onChange={(e) => setReason(e.target.value.slice(0, 100))}
-            maxLength={50}
-            minLength={50}
+            maxLength={100}
+            minLength={20}
             placeholder="Explain why you want the meeting"
             required
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -234,59 +233,6 @@ export default function ScheduleMeet() {
         </h2>
 
         <div className="grid gap-4">
-          {/* {meetings.map((m) => (
-            <div
-              key={m.id}
-              className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  {m.reason}
-                </h3>
-
-                <span
-                  className={`px-3 py-1 text-xs rounded-full ${m.status === "approved"
-                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
-                    }`}
-                >
-                  {m.status}
-                </span>
-              </div>
-              <div className="flex justify-between items-center mt-3">
-
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Date: {m.meetDate}
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Time: {m.meetTime}
-                  </p>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Duration: {m.duration}
-                  </p>
-                </div>
-
-                {m.status === "approved" && m.meetLink && (
-                  <a
-                    href={m.meetLink}
-                    target="_blank"
-                    className="
-              px-4 py-2 rounded-lg text-sm font-medium
-              bg-blue-500/30 text-blue-600
-              dark:bg-blue-400/20 dark:text-blue-300
-              hover:bg-blue-500/40 dark:hover:bg-blue-400/30
-              transition
-            "
-                  >
-                    Join
-                  </a>
-                )}
-              </div>
-
-            </div>
-          ))} */}
-
           <div className="grid gap-4">
             {loadingfetch ? (
               <p className="text-center text-sm text-gray-500">
@@ -320,7 +266,7 @@ export default function ScheduleMeet() {
                   <div className="flex justify-between items-center mt-3">
                     <div className="space-y-1">
                       <p className="text-sm text-gray-700 dark:text-gray-300">
-                        Date: {m.meetDate}
+                        Date: {m.meetDate.spilt("T")[0]}
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300">
                         Time: {m.meetTime}

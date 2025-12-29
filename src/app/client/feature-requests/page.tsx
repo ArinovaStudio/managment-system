@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { clientDemoData } from "../demodata";
 import { PlusCircle } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 

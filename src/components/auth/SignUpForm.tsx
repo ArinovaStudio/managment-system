@@ -38,10 +38,10 @@ export default function SignUpForm() {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("action", step === 1 ? "send-otp" : "verify-otp");
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-      formDataToSend.append("phone", formData.phone);
+      formDataToSend.append("name", formData.name.trim());
+      formDataToSend.append("email", formData.email.trim());
+      formDataToSend.append("password", formData.password.trim());
+      formDataToSend.append("phone", formData.phone.trim());
       if (otp) formDataToSend.append("otp", otp);
       if (formData.image) formDataToSend.append("image", formData.image);
 
