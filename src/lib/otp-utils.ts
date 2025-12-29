@@ -39,7 +39,6 @@ export async function verifyOtp(email: string, otp: string, type: OtpType): Prom
   })
 
   if (!otpRecord) {
-    console.log("not found");
     return false
   }
 

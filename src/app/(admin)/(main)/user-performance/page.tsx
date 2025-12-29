@@ -48,7 +48,6 @@ const PerformanceRating = () => {
       const response = await fetch(`/api/performace?userId=${id}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         
         setRatings(data.ratings[0])
       }

@@ -12,6 +12,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  password: string;
   employeeId?: string | null;
   department?: string | null;
   phone?: string | null;
@@ -114,23 +115,43 @@ type User = {
 
 export function UserModel({rect = false, editUser, setEditUser, setAddUser, leaveDays, setLeaveDays, leaveType, setLeaveType, selectedTimezone, setSelectedTimezone, allTimezones, handleSaveAllChanges, saving}: {rect?:boolean, setAddUser?: (v: boolean) => void, leaveDays: number, setLeaveDays: (v: number) => void, editUser: User | null, setEditUser: React.Dispatch<React.SetStateAction<User | null>>, leaveType: string, setLeaveType: React.Dispatch<React.SetStateAction<string>>, selectedTimezone: string, setSelectedTimezone: React.Dispatch<React.SetStateAction<string>>, allTimezones: any[], handleSaveAllChanges: () => void, saving: boolean}) {
   return (
-                          <div className={`absolute inset-0 w-[90%] ${rect ? "h-[45vh]" : "h-screen"} top-4 bg-black/50 flex items-center justify-center z-99999`}>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                          <div className={`absolute inset-0 w-full ${rect ? "h-[45vh]" : "h-screen"} top-4 dark:bg-black/50 flex items-center justify-center z-99999`}>
+                        <div className="bg-neutral-100 dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                           <h2 className="text-lg font-bold mb-4">{setAddUser ? "Add User" : "Edit User"}</h2>
                           <form
                             className="space-y-3"
                           >
                             <div>
                               <label className="block text-sm font-medium mb-1">Name</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.name || "" } onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} placeholder="Enter name" />
+                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.name || "" } onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} placeholder="Enter name" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">Email</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.email || "" } onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
+                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.email || "" } onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
                             </div>
                             <div>
-                     <label className="block text-sm font-medium mb-1">Employee ID</label>
-                     <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
+                      {
+                        setAddUser ? (
+                          <>
+                          <label className="block text-sm font-medium mb-1">Password</label>
+                          <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.password ? editUser. password: ""} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Enter Password" />
+                                        <div>
+                <label className="block text-sm font-medium my-2">Role *</label>
+                <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.role || ""} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}>
+                  <option value="">Select Role</option>
+                  <option value="EMPLOYEE">Employee</option>
+                  <option value="ADMIN">Admin</option>
+                  <option value="CLIENT">Client</option>
+                </select>
+              </div>
+                          </>
+                        ) : (
+                          <>
+                          <label className="block text-sm font-medium mb-1">Employee ID</label>
+                          <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
+                          </>
+                        )
+                      }
                    </div>
                   <div>
                      <label className="block text-sm font-medium mb-1">Date of Birth</label>
@@ -138,35 +159,37 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                   type="date"
                   value={editUser?.dob?.split("T")[0] || ""}
                   onChange={(e) => setEditUser({ ...editUser, dob: e.target.value })}
-                  className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded"
+                  className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded"
                 />
                    </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">Phone</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />
+                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">Department</label>
-                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}>
+                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}>
                                 <option value="">Select or type below</option>
                                 {departments.map(d => <option key={d} value={d}>{d}</option>)}
                               </select>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="Or type custom department" />
+                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="Or type custom department" />
                             </div>
                             <div>
                               <label className="block text-sm font-medium mb-1">Position</label>
-                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}>
+                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}>
                                 <option value="">Select or type below</option>
                                 {positions.map(p => <option key={p} value={p}>{p}</option>)}
                               </select>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
+                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
                             </div>
+                            {
+                              !setAddUser && (
                             <div>
                               <label className="block text-sm font-medium mb-1">Manage Leaves</label>
                               <select
                                 value={leaveType}
                                 onChange={(e) => setLeaveType(e.target.value)}
-                                className="w-full border px-3 py-2 rounded dark:bg-gray-700"
+                                className="w-full border px-3 py-2 rounded dark:bg-gray-700 bg-white"
                               >
                                 <option value="">Select leave type</option>
                                 <option value="remaining">Casual</option>
@@ -178,11 +201,13 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                                 min={1}
                                 value={leaveDays}
                                 onChange={(e) => setLeaveDays(Number(e.target.value))}
-                                className="w-full border px-3 py-2 rounded mt-2 dark:bg-gray-700"
+                                className="w-full border px-3 py-2 rounded mt-2 dark:bg-gray-700 bg-white"
                                 placeholder="Number of days"
                               />
                             </div>
 
+                              ) 
+                            }
                             <div>
                               <label className="block text-sm font-medium mb-1">
                                 Time Zone
@@ -207,7 +232,7 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                             <div className="flex justify-end gap-3 mt-4">
                               <button
                                 type="button"
-                                onClick={setAddUser ? () => setAddUser(false) : () => setEditUser(null)}
+                                onClick={setAddUser ? () => {setAddUser(false), setEditUser(null)} : () => setEditUser(null)}
                                 className="px-4 py-2 rounded border dark:border-gray-600"
                               >
                                 Cancel
@@ -286,7 +311,7 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
                             scrollToTop()
                           }}
 
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-800 rounded-t-lg"
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
@@ -297,7 +322,7 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
                             setDeleteUser(u)
                           }}
 
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-950 bg-gray-800 rounded-t-lg"
+                          className="p-2 hover:bg-red-100 dark:hover:bg-red-950 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
@@ -324,7 +349,7 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
                             className="rounded-full object-cover w-18 h-18"
                           />
                           ) : (
-                            <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700 to-black grid place-items-center">{u.name.charAt(0)}</div>
+                            <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700  dark:to-black to-purple-300 text-white grid place-items-center">{u.name.charAt(0)}</div>
                           )
                         }
                         <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
@@ -406,17 +431,13 @@ export default function RoleDashboard() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [addUser, setAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'EMPLOYEE', department: '', workingAs: '', phone: '' });
   const [saving, setSaving] = useState(false);
-
-
   const [allTimezones, setAllTimezones] = useState<any[]>([]);
   const [selectedTimezone, setSelectedTimezone] = useState("");
   const [leaveType, setLeaveType] = useState("");
   const [leaveDays, setLeaveDays] = useState(0);
 
   const createUser = async () => {
-                // e.preventDefault();
                 setSaving(true);
                 const toastId = toast.loading("Creating user...");
                 try {
@@ -424,7 +445,7 @@ export default function RoleDashboard() {
                     method: "POST",
                     credentials: "include",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newUser),
+                    body: JSON.stringify({editUser, timezoneCode: selectedTimezone}),
                   });
                   const data = await res.json();
                   if (!res.ok) {
@@ -434,7 +455,7 @@ export default function RoleDashboard() {
                   setUsers((prev) => [...prev, data.user]);
                   toast.success("User created successfully", { id: toastId });
                   setAddUser(false);
-                  setNewUser({ name: "", email: "", password: "", role: "EMPLOYEE", department: "", workingAs: "", phone: "" });
+                  setEditUser(null);
                 } catch {
                   toast.error("Something went wrong", { id: toastId });
                 } finally {
@@ -618,7 +639,7 @@ export default function RoleDashboard() {
                 key={role}
                 onClick={() => setSelectedRole(role)}
                 className={`px-5 py-2 rounded-md text-sm font-medium transition-all ${selectedRole === role
-                  ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  ? "bg-gray-200 dark:bg-gray-700 bg-white text-gray-900 dark:text-white"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
               >
@@ -669,7 +690,7 @@ export default function RoleDashboard() {
                 setUsers={setUsers}
                 />
               )}
-                {editUser && (
+                {editUser && !addUser && (
                       <UserModel
                       editUser={editUser}
                       allTimezones={allTimezones}
@@ -715,7 +736,7 @@ export default function RoleDashboard() {
                 setUsers={setUsers}
                 />
               )}
-                {editUser && (
+                {!addUser && editUser && (
                       <UserModel 
                       rect={true}
                       editUser={editUser}

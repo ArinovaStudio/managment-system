@@ -31,7 +31,6 @@ model User {
   memo            Memo[]
   milestones      Milestone[]
   projectMembers  ProjectMember[]
-  // peformance      PerformanceRating[]
   leaves          UserLeaves?
   timezone        UserTimezone?
   workHours       WorkHours[]

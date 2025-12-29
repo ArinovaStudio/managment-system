@@ -8,15 +8,30 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-
+  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("image");
   const [title, setTitle] = useState("");
 
+    const checkUserRole = async () => {
+    try {
+      const response = await fetch('/api/user');
+      const data = await response.json();
+      if (data.user && data.user.role === 'ADMIN') {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error('Failed to check user role:', error);
+    }
+  };
+
   useEffect(() => {
+    checkUserRole();
     fetchAssets();
   }, [projectId]);
+
+
 
   const fetchAssets = async () => {
     try {
@@ -104,12 +119,17 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold dark:text-white">Assets</h2>
 
+      {
+        isAdmin && (
         <button
           onClick={() => setOpen(true)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
         >
           <Plus size={18} /> Upload Asset
         </button>
+        )
+      }
+
       </div>
 
       {/* EMPTY STATE */}

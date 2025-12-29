@@ -16,7 +16,6 @@ export default function AdminDocuments() {
             const res = await fetch('/api/client/documents');
             const data = await res.json();
             if (data.success) {
-                // console.log(data.documents);
                 setDocuments(data.documents);
             }
         } catch (error) {

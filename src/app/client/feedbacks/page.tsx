@@ -78,8 +78,6 @@ export default function FeedbacksPage() {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("see the feedbackclient", data);
-
                 setFeedbacks(data.feedbacks || []);
             }
         } catch (error) {
@@ -95,15 +93,12 @@ export default function FeedbacksPage() {
 
         if (data.user) {
             setUser(data.user);
-            console.log(user);
         }
     };
 
     const fetchProject = async () => {
         const res = await fetch(`/api/feedbacks/clientprojectfetch?userId=${user?.id}`);
         const data = await res.json();
-        console.log("this is project", data);
-        
         setProjects(data.projects || []);
     };
 
@@ -116,8 +111,6 @@ export default function FeedbacksPage() {
         if (user) {
             fetchAllFeedbacks();
             fetchProject();
-            console.log("running i am ");
-
         }
     }, [user]);
 

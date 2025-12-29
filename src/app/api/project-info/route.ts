@@ -42,7 +42,6 @@ export async function POST(req: Request) {
 
         return Response.json({ message: "created", data: info });
     } catch (error) {
-        console.log(error)
         return Response.json({ error }, { status: 500 });
     }
 }

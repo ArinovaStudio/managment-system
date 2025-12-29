@@ -1279,9 +1279,6 @@ const KanbanBoard: React.FC = () => {
       if (data.success) {
         setReportCount(data.count || 0);
         setReportMessages(data.messages || []);
-        console.log(reportMessages);
-
-
       }
     } catch (err) {
       console.error("Failed to fetch reports:", err);
@@ -1401,7 +1398,6 @@ const KanbanBoard: React.FC = () => {
     } catch (err) {
       console.error("Report error:", err);
       toast.error("Something went wrongg");
-      console.log("this is the error", err.message);
 
     } finally {
       setLoading(false);

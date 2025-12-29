@@ -52,7 +52,6 @@ export default function UserProfilePage() {
     try {
       const res = await fetch(`/api/performace?userId=${id}`);
       const data = await res.json();
-      console.log(data);
       
       setPerformanceData(data.ratings || []);
     } catch (err) {

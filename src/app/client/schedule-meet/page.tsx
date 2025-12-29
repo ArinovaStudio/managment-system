@@ -59,9 +59,6 @@ export default function ScheduleMeet() {
       const res = await fetch('/api/client/meeting');
       const data = await res.json();
       if (data.success) {
-
-        console.log("this is meetings", data.meetings);
-
         setMeetings(data.meetings);
       }
     } catch (error) {
@@ -79,15 +76,12 @@ export default function ScheduleMeet() {
 
     if (data.user) {
       setUser(data.user);
-      console.log(user);
     }
   };
 
   const fetchProject = async () => {
     const res = await fetch(`/api/feedbacks/clientprojectfetch?userId=${user?.id}`);
     const data = await res.json();
-    console.log("this is project", data);
-
     setProjects(data.projects || []);
   };
 

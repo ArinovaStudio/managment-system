@@ -91,8 +91,6 @@ export default function page() {
 
 
             });
-            console.log(response);
-            console.log("this is", newTip);
 
             if (response.ok) {
                 toast.success('Well-being tip created successfully!');

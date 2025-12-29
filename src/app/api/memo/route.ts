@@ -22,9 +22,6 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
         }
 
-        console.log(meeting);
-        
-
         return NextResponse.json({ success: true, meeting });
 
     } catch (error) {
@@ -58,8 +55,6 @@ export async function POST(req: NextRequest) {
                 totaltime: totaltime
             }
         });
-
-        console.log("this is memo", memoo);
 
 
         return NextResponse.json({

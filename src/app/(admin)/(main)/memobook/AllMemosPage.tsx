@@ -55,7 +55,6 @@ export default function AllMemosPage() {
 
     const deleteMemo = async (id: string) => {
         try {
-            console.log(id);
 
             setLoading(true);
             const res = await fetch(`/api/memobook?id=${id}`, { method: "DELETE" });

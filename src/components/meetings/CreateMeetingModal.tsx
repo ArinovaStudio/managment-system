@@ -39,7 +39,7 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
                     }
                 }
                 catch (e) {
-                    console.log(e);
+                    toast.error(e)
                 }
             }
             fetchUsers();

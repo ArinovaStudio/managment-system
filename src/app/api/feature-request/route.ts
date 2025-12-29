@@ -76,9 +76,6 @@ export async function GET(req: Request) {
             //     );
             // }
 
-            console.log(list,"this is list");
-            
-
             return Response.json({ features: list }, { status: 200 });
         }
 

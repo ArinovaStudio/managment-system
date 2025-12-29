@@ -54,7 +54,6 @@ export default function ClientMemo({ time, meetingId, }: Props) {
         if (res.ok) {
             const data = await res.json();
             setMeeting(data.meeting);
-            console.log(data.meeting);
 
         } else {
             toast.error('Failed to fetch meeting');
@@ -86,7 +85,6 @@ export default function ClientMemo({ time, meetingId, }: Props) {
     };
 
     const loadMemoFromLocal = () => {
-        console.log("i am calledd");
         setHtml(localStorage.getItem("memo"));
         return localStorage.getItem("memo");
 

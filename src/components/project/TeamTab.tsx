@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, User2, Crown, Edit, Trash2, Plus } from "lucide-react";
+import { ShieldCheck, Crown, Edit, Trash2, Plus } from "lucide-react";
 
 export default function TeamTab({ projectId }: { projectId: string }) {
   const [members, setMembers] = useState<any[]>([]);
@@ -15,11 +15,30 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const [memberRole, setMemberRole] = useState("");
   const [isClientAvailable, setIsClientAvailable] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+      const checkUserRole = async () => {
+    try {
+      const response = await fetch('/api/user');
+      const data = await response.json();
+      if (data.user && data.user.role === 'ADMIN') {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      console.error('Failed to check user role:', error);
+    }
+  };
 
   useEffect(() => {
+    checkUserRole();
     if (projectId) fetchMembers();
   }, [projectId]);
 
+
+  // useEffect(() => {
+  //   checkUserRole();
+  // }, [])
+  
   const fetchMembers = async () => {
     try {
       const res = await fetch(`/api/project/member?projectId=${projectId}`);
@@ -129,6 +148,8 @@ export default function TeamTab({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Project Team</h2>
+        {
+          isAdmin && (
         <div className="flex justify-between items-center gap-4">
         
         <button
@@ -151,7 +172,10 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         >
           <Plus size={18} /> Add Member
         </button>
-            </div>
+        </div>
+          )
+        }
+      
       </div>
 
       {members.length === 0 && (
@@ -202,7 +226,8 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   </p>
                 )}
               </div>
-
+              {
+                isAdmin && (
               <div className="flex mt-10 items-end gap-2">
                 {
                   m.user.role === "CLIENT" ? null : (
@@ -246,6 +271,10 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   </button>
                 </div>
               </div>
+                )
+              }
+
+
             </div>
           </div>
         ))}

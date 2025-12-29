@@ -9,11 +9,14 @@ import { useRouter } from "next/navigation";
 
 
 type Member = {
-  id: string;
-  name: string;
-  email: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string;
+  }
   role?: string;
-  avatar?: string;
+  isLeader: boolean;
 };
 
 type Project = {
@@ -338,14 +341,14 @@ const TeamMemberCard = ({ member }: { member: Member }) => (
   <div className="bg-white border border-gray-300 dark:bg-gray-900 dark:border-gray-600 rounded-xl p-4">
     <div className="flex items-center gap-3">
       <div className="w-14 h-14 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
-        {member.avatar ? (
-          <img src={member.avatar} alt={member.name} className="w-14 h-14 rounded-full object-cover" />
+        {member.user.image ? (
+          <img src={member.user.image} alt={member.user.name} className="w-14 h-14 rounded-full object-cover" />
         ) : (
           <User size={28} className="text-gray-500 dark:text-gray-400" />
         )}
       </div>
       <div>
-        <h3 className="font-semibold text-gray-900 dark:text-white">{member.name}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white">{member.user.name}</h3>
         <p className="text-sm text-gray-500">{member.role || 'Team Member'}</p>
       </div>
     </div>
@@ -360,6 +363,8 @@ export default function OverviewTab({ project }: OverviewTabProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editModel, setEditModel] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [isLeader, setIsLeader] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -370,7 +375,12 @@ export default function OverviewTab({ project }: OverviewTabProps) {
     const checkUserRole = async () => {
       try {
         const response = await fetch('/api/user');
+        
         const data = await response.json();
+        project.members.filter((v: any) => v.user.id === data.user.id).map((e) => {
+          setIsLeader(e.isLeader)
+        })
+         
         if (data.user && data.user.role === 'ADMIN') {
           setIsAdmin(true);
         }
@@ -469,7 +479,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
             <h3 className="mt-4 text-base font-semibold text-gray-900 dark:text-white">
               Overall Progress
             </h3>
-            {isAdmin && (
+            {(isAdmin || isLeader) && (
               <button
                 onClick={() => {
                   setNewProgress(project.progress || 0);
@@ -499,7 +509,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Team Members</h2>
           {project.members && project.members.length > 0 ? (
             project.members.slice(0, 3).map((member) => (
-              <TeamMemberCard key={member.id} member={member} />
+              <TeamMemberCard key={member.user.id} member={member} />
             ))
           ) : (
             <p className="text-gray-500 dark:text-gray-400">No team members assigned</p>

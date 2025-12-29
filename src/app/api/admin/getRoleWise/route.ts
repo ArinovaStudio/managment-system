@@ -7,7 +7,6 @@ export async function GET(req: Request) {
         // AUTH (who are you?)
         const params = req.url
         const role = params.split("?")[1].split("=")[1];
-        // console.log();
         const userId = await getUserId(req);
 
         // AUTHZ (what can you do?)

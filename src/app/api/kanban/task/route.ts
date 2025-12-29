@@ -179,22 +179,17 @@ export async function GET(req: Request) {
       );
     }
 
-    console.log("this is my ", userId);
-
 
     const userr = await db.user.findUnique({
       where: {
         id: userId,
       },
     })
-    console.log("this is my empid ", userr.employeeId);
 
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
 
     const employeeIdFromQuery = searchParams.get("employeeId");
-
-    console.log(employeeIdFromQuery);
 
 
     let whereClause: any = {
@@ -218,9 +213,6 @@ export async function GET(req: Request) {
       where: whereClause,
       orderBy: { createdAt: "desc" },
     });
-
-    console.log(tasks);
-    console.log(whereClause);
 
 
 

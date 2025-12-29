@@ -25,14 +25,6 @@ if (isEmailConfigured) {
 
 export async function sendOtp(useremail: string, otp: number, type: 'signup' | 'login' | 'forgot-password' = 'signup'): Promise<boolean> {
   // Use fallback in development if email not configured
-  if (!isEmailConfigured) {
-    console.log(`\n=== OTP FALLBACK (${type.toUpperCase()}) ===`)
-    console.log(`To: ${useremail}`)
-    console.log(`OTP: ${otp}`)
-    console.log(`Expires: 10 minutes`)
-    console.log('========================\n')
-    return true
-  }
 
   try {
     const subject = type === 'signup' ? 'Management@Arinova.Studio - Verify your email' : type === "login" ? "Management@Arinova.Studio - Get to your account" : 'Management@Arinova.Studio - Retrieve your password'
@@ -264,14 +256,6 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
     return true
   } catch (error) {
     console.error('Failed to send OTP email:', error)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`\n=== OTP FALLBACK (${type.toUpperCase()}) ===`)
-      console.log(`To: ${useremail}`)
-      console.log(`OTP: ${otp}`)
-      console.log(`Expires: 10 minutes`)
-      console.log('========================\n')
-      return true
-    }
     throw new Error('Failed to send OTP email')
   }
 }
@@ -435,7 +419,6 @@ export async function verifyEmailConfig(): Promise<boolean> {
   
   try {
     await transporter.verify()
-    console.log('Email server is ready to send messages')
     return true
   } catch (error) {
     console.error('Email server verification failed:', error)

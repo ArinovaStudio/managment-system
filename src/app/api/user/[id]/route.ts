@@ -7,8 +7,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    console.log(id);
-    
     // In case there are encoded characters in the URL (spaces, etc.)
     // Fetch ONE user by name, including their projects
     const user = await db.user.findFirst({

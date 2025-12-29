@@ -33,12 +33,14 @@ export default function ReportIssueTab({ projectId }: { projectId: string }) {
     try {
       const res = await fetch(`/api/kanban/task?projectId=${projectId}`);
       const data = await res.json();
-      
       if (data.tasks) {
         setTasks(data.tasks);
       }
     } catch (err) {
       console.error("Failed to fetch tasks:", err);
+    }
+    finally {
+      setLoading(false);
     }
   };
 

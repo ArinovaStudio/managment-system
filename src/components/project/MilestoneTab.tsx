@@ -182,7 +182,7 @@ export default function MilestoneTab({ projectId }: any) {
           User: {currentUser?.name || 'Not loaded'} | Role: {currentUser?.role || 'Unknown'}
         </div>
 
-        {(currentUser?.role === 'ADMIN' || currentUser?.role === 'EMPLOYEE') && (
+        {(currentUser?.role === 'ADMIN') && (
           <button
             onClick={() => setOpen(true)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
@@ -197,8 +197,11 @@ export default function MilestoneTab({ projectId }: any) {
         <div className="text-center py-8">
           <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <p className="text-gray-500 dark:text-gray-400">No milestones created yet.</p>
-          {(currentUser?.role === 'ADMIN' || currentUser?.role === 'EMPLOYEE') && (
+          {(currentUser?.role === 'ADMIN') && (
             <p className="text-sm text-gray-400 mt-2">Create your first milestone to track project progress.</p>
+          )}
+          {(currentUser?.role === 'EMPLOYEE') && (
+            <p className="text-sm text-gray-400 mt-2">Ask for your admin to create first milestone to track project progress.</p>
           )}
         </div>
       )}

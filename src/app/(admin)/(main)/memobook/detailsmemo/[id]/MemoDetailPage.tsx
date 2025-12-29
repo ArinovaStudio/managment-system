@@ -48,7 +48,6 @@ const MemoDetailPage = ({ memoId, }) => {
             if (!res.ok) throw new Error("Failed");
 
             const data = await res.json();
-            console.log(data.memo);
             
             setMemos(data.memo);
         } catch (err) {

@@ -16,7 +16,6 @@ export async function GET() {
             },
         });
 
-        console.log(memos);
 
         return NextResponse.json({ success: true, memos });
 
@@ -33,7 +32,6 @@ export async function DELETE(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
-        console.log(id);
         
 
         if (!id) {

@@ -329,8 +329,6 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
     attachmentFile: null
   });
   const [tasks, setTasks] = useState<Task[]>([]);
-  console.log("i am running");
-
 
   useEffect(() => {
     fetchTasks();

@@ -55,14 +55,12 @@ export default function FeatureRequestPage() {
 
         if (data.user) {
             setUser(data.user);
-            console.log(user);
         }
     };
 
     const fetchProject = async () => {
         const res = await fetch(`/api/feedbacks/clientprojectfetch?userId=${user?.id}`);
         const data = await res.json();
-        console.log("this is project", data);
 
         setProjects(data.projects || []);
     };
@@ -70,7 +68,6 @@ export default function FeatureRequestPage() {
     const fetchfeature = async () => {
         const res = await fetch(`/api/feature-request?userId=${user?.id}`);
         const data = await res.json();
-        console.log("this is project", data);
         setFeatures(Array.isArray(data.features) ? data.features : []);
     };
 
@@ -82,12 +79,9 @@ export default function FeatureRequestPage() {
         if (user) {
             fetchProject();
             fetchfeature();
-            console.log("running i am ");
 
         }
     }, [user]);
-
-    console.log("this is a featureee", features);
 
 
     return (

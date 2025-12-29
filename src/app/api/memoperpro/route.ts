@@ -24,8 +24,6 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        console.log(memo);
-
         return NextResponse.json({ success: true, memo });
 
     } catch (error) {
