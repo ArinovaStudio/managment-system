@@ -1,6 +1,5 @@
 "use client";
 
-import ClientDashboard from '@/components/clients/Dashboard'
 import ClientDashboardV2 from "@/components/clients/ClientDashboardV2/ClientDashboardV2";
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'

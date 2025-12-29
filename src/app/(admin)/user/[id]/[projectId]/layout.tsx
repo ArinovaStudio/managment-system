@@ -2,7 +2,6 @@
 
 import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
-import Backdrop from "@/layout/Backdrop";
 import ClientSidebar from "@/layout/ClientSidebar";
 import React from "react";
 
