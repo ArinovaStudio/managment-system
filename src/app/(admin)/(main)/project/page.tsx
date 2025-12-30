@@ -66,6 +66,7 @@ export default function ProjectsPage() {
       const data = await response.json();
       if (data.success) {
         setProjects(data.projects);
+        
       }
     } catch (error) {
       console.error('Failed to fetch projects:', error);
@@ -281,7 +282,30 @@ export default function ProjectsPage() {
                     />
                   </div>
                 </div>
-
+                      {/* {project.members.length > 0 && (
+                        <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <div className="flex -space-x-2">
+                            {project.members.slice(0, 5).map((member: any) => {
+                              member.user?.image ? 
+                              <Image
+                                key={member.user.id}
+                                src={member.user.image || "/default-avatar.png"}
+                                alt={member.user.name}
+                                width={32}
+                                height={32}
+                                className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
+                                title={member.user.name}
+                              /> :
+                  <div className="rounded-full h-30 w-30 object-cover text-white border-4 border-white shadow-xl grid place-items-center text-4xl bg-white/20">{user.name.charAt(0)}</div>
+              })}
+                          </div>
+                          {project.members.length > 5 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                              +{project.members.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      )} */}
                 {/* Basic Details Preview */}
                 {project.basicDetails && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">

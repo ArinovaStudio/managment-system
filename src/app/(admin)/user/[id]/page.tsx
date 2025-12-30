@@ -183,7 +183,7 @@ export default function UserProfilePage() {
                 return (
                   <Link
                     key={project.id}
-                    href={`/user/${user.name}/${project.id}`}
+                    href={`/user/${user.id}/${project.id}`}
                     className="block"
                   >
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group">
@@ -235,8 +235,10 @@ export default function UserProfilePage() {
                       {members.length > 0 && (
                         <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                           <div className="flex -space-x-2">
-                            {members.slice(0, 5).map((member: any) => (
-                              <Image
+                            {members.slice(0, 5).map((member: any) => {
+                              return (
+                                member.user?.image ? (
+                                  <Image
                                 key={member.user.id}
                                 src={member.user.image || "/default-avatar.png"}
                                 alt={member.user.name}
@@ -244,8 +246,13 @@ export default function UserProfilePage() {
                                 height={32}
                                 className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
                                 title={member.user.name}
-                              />
-                            ))}
+                                />
+                              ) 
+                               :(
+                                 <div className="rounded-full h-8 w-8 object-cover text-white border-2 border-blue-400 shadow-xl grid place-items-center text-sm bg-white/20">{user.name.charAt(0)}</div>
+                                )
+                              )
+              })}
                           </div>
                           {members.length > 5 && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
