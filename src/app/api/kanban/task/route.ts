@@ -96,61 +96,6 @@ export async function POST(req: NextRequest) {
 }
 
 
-// export async function GET(req: NextRequest) {
-//   try {
-//     const { searchParams } = new URL(req.url);
-//     const projectId = searchParams.get("projectId");
-//     const assignee = searchParams.get("assignee");
-
-//     const tasks = await db.task.findMany({
-//       where: {
-//         ...(projectId && { projectId }),
-//         ...(assignee && { assignee })
-//       },
-//       orderBy: { createdAt: "desc" },
-//     });
-
-
-//     const formatted = tasks.map((task) => ({
-//       ...task,
-//       attachments: task.attachments ?? [],
-//       comments: task.comments ?? [],
-//       dueDate: task.dueDate?.toISOString().split("T")[0],
-//     }));
-
-//     return NextResponse.json({ tasks: formatted }, { status: 200 });
-//   } catch (error) {
-//     console.error("ERROR FETCHING TASKS:", error);
-//     return NextResponse.json({ message: "Failed to fetch tasks", error }, { status: 500 });
-//   }
-// }
-
-// export async function PUT(req: NextRequest) {
-//   try {
-//     const { id, status } = await req.json();
-
-//     if (!id || !status) {
-//       return NextResponse.json(
-//         { error: "Missing required fields" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const updatedTask = await db.task.update({
-//       where: { id },
-//       data: { status },
-//     });
-
-//     return NextResponse.json({ success: true, task: updatedTask });
-//   } catch (error) {
-//     console.error("Error updating task:", error);
-//     return NextResponse.json(
-//       { error: "Internal Server Error" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
@@ -166,10 +111,7 @@ export async function GET(req: Request) {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
-
-
     const userId = decoded.userId;
-    const userName = decoded.Name;
     const userRole = decoded.role; // ADMIN | EMPLOYEE
 
     if (!userId || !userRole) {
@@ -202,15 +144,25 @@ export async function GET(req: Request) {
         whereClause.employeeId = employeeIdFromQuery;
       } else {
         // First load → admin sees only own tasks
-        whereClause.employeeId = employeeIdFromQuery || userName;
+        whereClause.employeeId = employeeIdFromQuery || userr.employeeId;
       }
     } else {
       // Employee → always self
       whereClause.employeeId = employeeIdFromQuery || userr.employeeId;
     }
 
+
     const tasks = await db.task.findMany({
       where: whereClause,
+      include: {
+        comments: true,
+        Project: {
+          select: {
+            name: true,
+            id: true,
+          }
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 

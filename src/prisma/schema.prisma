@@ -11,6 +11,7 @@ model User {
   id              String           @id @default(cuid())
   employeeId      String?          @unique
   email           String           @unique
+  isDev           Boolean?         @default(false) 
   name            String
   password        String
   role            ROLES            @default(CLIENT)

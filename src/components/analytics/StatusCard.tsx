@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 
 const StatusCard = () => {
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isOnline, setIsOnline] = useState<boolean>(false);
   const [isOnBreak, setIsOnBreak] = useState<boolean>(false);
 
   useEffect(() => {
@@ -13,7 +13,7 @@ const StatusCard = () => {
 
   const checkUserStatus = async () => {
     try {
-      const response = await fetch('/api/auth/signup');
+      const response = await fetch('/api/user');
       const data = await response.json();
       setIsOnBreak(data.isLogin);
       setIsOnline(data.isLogin);

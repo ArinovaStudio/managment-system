@@ -6,13 +6,11 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const userId = searchParams.get('userId');
-        
-        if (!userId) {
-            return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
-        }
+        const myId = await getUserId(req);
+
         // For non-admin users, return their ratings
         const ratings = await db.performanceRating.findMany({
-            where: { userId: userId },
+            where: { userId: userId ? userId : myId },
             orderBy: { createdAt: 'desc' }
         });
         

@@ -135,7 +135,7 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                           <>
                           <label className="block text-sm font-medium mb-1">Password</label>
                           <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.password ? editUser. password: ""} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Enter Password" />
-                                        <div>
+                <div>
                 <label className="block text-sm font-medium my-2">Role *</label>
                 <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.role || ""} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}>
                   <option value="">Select Role</option>
@@ -182,6 +182,21 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                               </select>
                               <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
                             </div>
+                            {
+                              setAddUser && (
+                                <div className="flex justify-start gap-4">
+                              <label className="block text-sm font-medium">IS DEVELOPER?</label>
+                              <div className="flex items-center justify-items-center gap-1">
+                              <input type="radio" />
+                              <label className="block text-xs font-medium">Yes</label>
+                              </div>
+                              <div className="flex items-center justify-items-center gap-1">
+                              <input type="radio" />
+                              <label className="block text-xs font-medium">NO</label>
+                              </div>
+                                </div>
+                              )
+                            }
                             {
                               !setAddUser && (
                             <div>

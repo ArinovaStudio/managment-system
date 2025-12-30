@@ -53,6 +53,13 @@ export async function GET(req:Request) {
       where: {
         projectId: id,
       },
+      include: {
+        Project: {
+          select: {
+            name: true
+          }
+        }
+      },
       orderBy: {
         createdAt: "desc",
       },

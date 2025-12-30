@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Calendar, Clock, User, AlertCircle, Plus, Users, Trash2 } from "lucide-react";
 import CreateMeetingModal from "@/components/meetings/CreateMeetingModal";
+import Link from "next/link";
 
 interface Meeting {
   id: string;
@@ -150,15 +151,15 @@ export default function MeetingsPage() {
               </div>
 
               {meeting.meetingLink && (
-                <a
-                  href={meeting.meetingLink}
+                <Link
+                  href={meeting.meetingLink.startsWith("https://") ? meeting.meetingLink : `https://${meeting.meetingLink}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   Join Meeting
-                </a>
+                </Link>
               )}
 
               {isAdmin && (

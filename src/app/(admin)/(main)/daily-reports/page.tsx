@@ -15,6 +15,7 @@ interface DailyReport {
         workingAs: string;
         image?: string;
         department: string;
+        breaks: {duration: number, type: string}[]
     };
 }
 
@@ -22,7 +23,7 @@ const DailyReports = () => {
     const [reports, setReports] = useState<DailyReport[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
-
+    const [breaks, setBreaks] = useState([])
     useEffect(() => {
         fetchReports();
     }, []);
@@ -86,7 +87,7 @@ const DailyReports = () => {
                 </div>
 
                 <p className="text-gray-600 dark:text-gray-300 text-xs font-medium">
-                    {new Date().toLocaleDateString('en-GB', {
+                    {new Date().toLocaleDateString('en-IN', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
@@ -127,13 +128,18 @@ const DailyReports = () => {
                                 <div
                                     className={`ring-2 ${status.ring} rounded-full w-10 h-10 overflow-hidden`}
                                 >
-                                    <Image
+                                    {
+                                        report.user?.image ? (                                    
+                                        <Image
                                         src={report.user.image || "/images/user/user-01.png"}
                                         alt={report.user.name}
                                         width={48}
                                         height={48}
                                         className="w-full h-full object-cover rounded-full"
-                                    />
+                                    />) : (
+                                        <div className="bg-pink-700 text-white">{report.user.name.charAt(0)}</div>
+                                    )
+                                    }
                                 </div>
 
                                 <div className="flex-1 min-w-0">
@@ -157,35 +163,41 @@ const DailyReports = () => {
 
 
             {/* REPORT CARDS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex justify-start items-start gap-4 flex-col ">
                 {reports.map((report) => {
                     const status = getStatusClasses(report.user.workingAs);
 
                     return (
                         <div
                             key={report.id}
-                            className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition"
+                            className="w-full bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition"
                         >
                             {/* CARD HEADER */}
                             <div className="flex items-start gap-4 mb-4">
                                 <div
                                     className={`ring-2 ${status.ring} rounded-full w-10 h-10 overflow-hidden flex items-center justify-center flex-shrink-0`}
                                 >
-                                    <Image
-                                        src={report.user.image || '/images/user/user-01.png'}
-                                        alt={report.user.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover rounded-full"
-                                    />
+                                    {
+                                        report.user?.image ? (
+                                            <Image
+                                                src={report.user.image}
+                                                alt={report.user.name}
+                                                width={48}
+                                                height={48}
+                                                className="w-full h-full object-cover rounded-full"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-blue-700/20 text-blue-400 text-center grid place-items-center">{report.user.name.charAt(0)}</div>
+                                        )
+                                    }
                                 </div>
 
 
                                 <div className="flex-1">
-                                    <div className="font-semibold flex justify-between text-gray-900 dark:text-white">
+                                    <div className="font-normal flex justify-between text-gray-800 dark:text-white">
                                         {report.user.name}
                                         <span className="text-[13px]  text-gray-500 dark:text-gray-400">
-                                            {report.clockIn} - {report.clockOut}
+                                            {report.clockOut} - {report.clockIn} ~ <span className='text-purple-400 font-semibold'> ({report.hours.toFixed(1)} hours)</span>
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-gray-500 dark:text-gray-400">
@@ -195,7 +207,7 @@ const DailyReports = () => {
                             </div>
 
                             {/* SUMMARY */}
-                            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-6">
+                            <p className="text-base text-gray-600 dark:text-gray-300 ">
                                 {report.summary}
                             </p>
                         </div>

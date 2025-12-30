@@ -4,21 +4,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import WorkHoursChart from './Chart'
 import FaceRecognition from './FaceRecognition'
 import toast from 'react-hot-toast'
-// import { Button } from "@/components/ui/button";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectContent,
-//   SelectItem,
-//   SelectValue,
-// } from "@/components/ui/select";
 
 interface BreakType {
   id: string;
@@ -130,26 +115,7 @@ function Clock() {
   }, []);
 
   // UPDATE TIMEZONE
-  async function updateTimezone() {
-    if (!selected) return;
 
-    try {
-      const res = await fetch("/api/clock/timezone", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: "set-timezone",
-          timezone: selected,
-        }),
-      });
-
-      const data = await res.json();
-      setTimezone(data.timezone);
-    } catch (error) {
-      console.error('Failed to update timezone:', error);
-      toast.error('Failed to update timezone');
-    }
-  }
 
   // LOAD LEAVES
   useEffect(() => {
@@ -322,7 +288,7 @@ function Clock() {
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
 
-        if (userData.user?.workingAs === 'Developer') {
+        if (userData.user?.workingAs.toLowerCase().includes("developer")) {
           setShowDeveloperPopup(true);
         } else {
           setShowSummaryPopup(true);
@@ -371,12 +337,14 @@ function Clock() {
       const result = await response.json();
 
       if (result.success) {
+        console.log(result);
+        
         setShowAuthPopup(false);
         setPassword('');
 
         // If clocking out, check for developer workflow or show summary
         if (result.action === 'clock-out-auth') {
-          if (result.userWorkingAs === 'Developer') {
+          if (result.userWorkingAs.includes("Developer")) {
             setShowDeveloperPopup(true);
           } else {
             setShowSummaryPopup(true);
@@ -407,60 +375,6 @@ function Clock() {
     }
   };
 
-  const handleWorkSummary = async () => {
-    if (!workSummary.trim()) {
-      toast.error('Please provide a work summary');
-      return;
-    }
-
-    setSummaryLoading(true);
-    try {
-      const response = await fetch('/api/clock/work-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary: workSummary })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setShowSummaryPopup(false);
-        setWorkSummary('');
-        toast.success(`Clock-out successful! ${result.message}`);
-        await loadUserStatus();
-        await loadStats();
-      } else {
-        toast.error(`Failed to save work summary: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Work summary error:', error);
-      toast.error('Failed to save work summary. Please try again.');
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
-
-  const handleFaceAuthSuccess = async (result: any) => {
-    setShowFaceAuth(false);
-
-    if (result.action === 'clock-out') {
-      // For clock-out, check if user is developer
-      if (result.userRole === 'DEVELOPER') {
-        setShowDeveloperPopup(true);
-      } else {
-        setShowSummaryPopup(true);
-      }
-    } else {
-      toast.success(`Welcome! ${result.message}`);
-      await loadUserStatus();
-      await loadStats();
-    }
-  };
-
-  const handleFaceAuthError = () => {
-    setShowFaceAuth(false);
-    setShowAuthPopup(true);
-  };
 
   const handleSummarySubmit = async () => {
     if (!workSummary.trim()) {
@@ -479,7 +393,7 @@ function Clock() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Clock-Out Successfully! Work summary saved.');
+        toast.success(`Clock-Out Successfully!. ${result?.message}`);
         setShowSummaryPopup(false);
         setWorkSummary('');
         await loadUserStatus();
@@ -574,97 +488,6 @@ function Clock() {
           <h1 className="text-xl text-right w-full text-white mt-4">
             Selected Time Zone
           </h1>
-
-          {/* Change timezone button */}
-          {/* <Dialog>
-            <DialogTrigger asChild>
-              <Button className="mt-3 bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
-                Change Timezone
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent
-              className="
-      rounded-3xl
-      border border-white/20 
-      bg-white/10 
-      backdrop-blur-2xl 
-      shadow-[0_8px_32px_rgba(0,0,0,0.2)] 
-      p-8
-      animate-in 
-      fade-in-50 
-      zoom-in-95
-    "
-            >
-              <DialogHeader>
-                <DialogTitle className="text-white text-2xl font-semibold tracking-tight">
-                  Select Timezone
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="mt-4">
-                <Select onValueChange={setSelected}>
-                  <SelectTrigger
-                    className="
-            w-full 
-            bg-white/20 
-            border border-white/30 
-            text-white 
-            rounded-xl 
-            hover:bg-white/30 
-            transition 
-            backdrop-blur-md
-          "
-                  >
-                    <SelectValue placeholder="Choose timezone..." />
-                  </SelectTrigger>
-
-                  <SelectContent
-                    className="
-            bg-white/90 
-            text-gray-900 
-            rounded-xl 
-            shadow-lg 
-            animate-in 
-            slide-in-from-top-2
-          "
-                  >
-                    {allTimezones.map((tz) => (
-                      <SelectItem
-                        key={tz.code}
-                        value={tz.code}
-                        className="
-                cursor-pointer
-                py-2
-                hover:bg-gray-200 
-                rounded-lg
-              "
-                      >
-                        <span className="font-semibold">{tz.code}</span> — {tz.hours}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                onClick={updateTimezone}
-                className="
-        w-full mt-6 py-3 
-        rounded-xl 
-        bg-gradient-to-r from-green-500 to-green-700 
-        text-white 
-        font-semibold 
-        shadow-lg 
-        hover:scale-[1.02] 
-        transition-transform
-      "
-              >
-                Save
-              </Button>
-            </DialogContent>
-          </Dialog> */}
-
         </div>
 
         {/* LEAVES CARD */}

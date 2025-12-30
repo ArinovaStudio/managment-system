@@ -43,6 +43,7 @@ interface Task {
   assignee: string;
   assigneeAvatar: string;
   priority: 'low' | 'medium' | 'high';
+  Project: {name: string, id: string};
   dueDate: string;
   tags: string[];
   comments: Comment[];
@@ -340,7 +341,7 @@ const SidePanel: React.FC<{
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Task | null>(null);
     const [deleting, setDeleting] = useState(false);
-
+    
     const [editContent, setEditContent] = useState('');
     const [deleteComment, setDeleteComment] = useState<{
       id: string;
@@ -438,6 +439,7 @@ const SidePanel: React.FC<{
               <p className="text-gray-600 dark:text-gray-400">{selectedTask.description}</p>
             </div>
 
+
             <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gray-50 dark:bg-[#111]">
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -489,6 +491,13 @@ const SidePanel: React.FC<{
                 <span className="font-medium text-gray-900 dark:text-white">{selectedTask.attachments.length} files</span>
               </div>
             </div>
+            {
+              selectedTask?.Project && (
+            <div className="w-full h-16 rounded-lg dark:bg-[#111] bg-gray-50 flex justify-start px-4 items-center">
+                <p className='text-base'>Project: <span className='font-semibold'>{selectedTask.Project.name}</span></p>
+            </div>
+              )
+            }
 
             <div className="p-4 rounded-xl border bg-red-50 border-red-200 dark:bg-red-500/5 dark:border-red-500/20">
               <div className="flex items-start gap-3">
@@ -793,6 +802,7 @@ const SidePanel: React.FC<{
                   onClick={() => {
                     if (!selectedTask) return;
                     onDeleteTask(selectedTask.id);
+                    setConfirmDelete(null)
                   }}
                   className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
                 >
@@ -984,7 +994,8 @@ const KanbanBoard: React.FC = () => {
       });
 
       const data = await res.json();
-
+      console.log(data.tasks);
+      
       setTasks(data.tasks ?? []);
     } catch (err) {
       console.error("Kanban Fetch Error:", err);
@@ -1001,24 +1012,8 @@ const KanbanBoard: React.FC = () => {
     const task = tasks.find(t => t.id === selectedTaskId);
     if (task) {
       setSelectedTask(task);
-      fetchComments(selectedTaskId);
     }
   }, [tasks, selectedTaskId]);
-
-  const fetchComments = async (taskId: string) => {
-    try {
-      const res = await fetch(`/api/kanban/comment?taskId=${taskId}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setSelectedTask(prev =>
-          prev ? { ...prev, comments: data.comments || [] } : prev
-        );
-      }
-    } catch (err) {
-      console.error("Failed to fetch comments:", err);
-    }
-  };
 
   const columns = [
     { id: 'assigned', title: 'Assigned', icon: User, color: 'blue' },
@@ -1044,6 +1039,7 @@ const KanbanBoard: React.FC = () => {
       formData.append("dueDate", newTask.dueDate);
       formData.append("status", newTask.status);
       formData.append("tags", newTask.tags.join(","));
+      formData.append("projectId", newTask.projectId)
 
       if (newTask.attachmentFile) {
         formData.append("attachment", newTask.attachmentFile);
@@ -1092,11 +1088,11 @@ const KanbanBoard: React.FC = () => {
       title: task.title,
       description: task.description,
       priority: task.priority,
-      dueDate: task.dueDate,
+      dueDate: task.dueDate.split("T")[0],
       tags: task.tags,
       status: task.status,
       attachmentFile: null,
-      projectId: "",
+      projectId: task?.Project?.id || "",
     });
 
     setShowNewTaskModal(true);
@@ -1304,6 +1300,7 @@ const KanbanBoard: React.FC = () => {
       formData.append("description", newTask.description.trim());
       formData.append("assignee", assigneeName);
       formData.append("employeeId", employeeId);
+      formData.append("projectId", newTask.projectId)
       formData.append(
         "assigneeAvatar",
         assigneeName !== "Unassigned"

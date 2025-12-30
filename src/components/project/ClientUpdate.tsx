@@ -7,13 +7,15 @@ import Loader from '../common/Loading';
 import { Trash2 } from "lucide-react";
 
 type CardProps = {
+  id: string
   description: string;
   createdBy: string;
   date: string;
-  onDelete?: () => void;
+  onDelete?: (id: string) => void;
 };
 
 export function MinimalCard({
+  id,
   description,
   createdBy,
   date,
@@ -30,7 +32,7 @@ export function MinimalCard({
     >
       {/* Delete Icon */}
       <button
-        onClick={onDelete}
+        onClick={() => onDelete(id)}
         aria-label="Delete"
         className="
           absolute right-4 top-2
@@ -71,7 +73,8 @@ function ClientUpdate({projectId}: {projectId: string}) {
     const [loading, setLoading] = useState(false);
     const [updating, setUpdating] = useState(false);
 
-    const fetchUser = async () => {
+  
+  const fetchUpdates = async () => {
         setLoading(true)
         const req = await fetch(`/api/latest-updates?projectId=${projectId}`)
         if (req.status === 200) {
@@ -81,7 +84,7 @@ function ClientUpdate({projectId}: {projectId: string}) {
         setLoading(false)
     }
 
-    const handleAddUpdate = async () => {
+  const handleAddUpdate = async () => {
     if (!update.trim()) return;
 
     try {
@@ -114,8 +117,21 @@ function ClientUpdate({projectId}: {projectId: string}) {
     }
   };
 
+  const deleteProject = async (id: string) => {
+    if (!confirm("This action is irreversable are you sure want to delete this?")) {
+      return null;  
+    }
+
+    const req = await fetch(`/api/latest-updates?id=${id}`)
+    if (req.status === 200) {
+      fetchUpdates()
+      return true;
+    }
+  }
+
+
   useEffect(() => {
-    fetchUser();
+    fetchUpdates();
   }, [])
 
   if (loading) {
@@ -173,7 +189,7 @@ function ClientUpdate({projectId}: {projectId: string}) {
         data.length > 0 ? (
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
         {data.map((card, index) => (
-          <MinimalCard key={index} date={card.date} createdBy={card.createdBy} description={card.title} />
+          <MinimalCard key={index} id={card.id} date={card.date} createdBy={card.createdBy} description={card.title} onDelete={deleteProject} />
         ))}
       </div>
         ) : (<p className='text-center text-gray-300 dark:text-gray-600 py-16 font-normal'>No Updates has been added</p>)

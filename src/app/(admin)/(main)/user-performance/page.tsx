@@ -48,8 +48,9 @@ const PerformanceRating = () => {
       const response = await fetch(`/api/performace?userId=${id}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        
-        setRatings(data.ratings[0])
+        if (data.ratings.length > 0) {
+          setRatings(data.ratings[0])
+        }
       }
     } catch (error) {
       console.error('Failed to fetch employees:', error);
@@ -157,7 +158,7 @@ const PerformanceRating = () => {
 
         {/* Rating Fields */}
         <div className="grid gap-6">
-          {ratingFields.map((field) => (
+          {ratingFields.length > 0 && ratingFields.map((field) => (
             <div key={field.key} className="bg-gray-50 dark:bg-white/[0.05] p-4 rounded-lg">
               <div className="mb-3">
                 <h3 className="text-lg font-medium text-gray-800 dark:text-white">

@@ -25,7 +25,8 @@ export async function GET(req: Request) {
             name: true,
             workingAs: true,
             image: true,
-            department: true
+            department: true,
+            breaks: true,
           }
         }
       },
