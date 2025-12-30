@@ -62,7 +62,7 @@ export default function UserMetaCard({ user, onUpdate }: UserMetaCardProps) {
     };
 
     try {
-      const res = await fetch("/api/auth/user", {
+      const res = await fetch("/api/admin/user", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

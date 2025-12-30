@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     if (getAll === 'true') {
       const users = await db.user.findMany({
         select: {
+          isDev: true,
           id: true,
           name: true,
           email: true,
@@ -45,6 +46,7 @@ export async function GET(req: Request) {
       where: { id: payload.userId || payload.id },
       select: {
         id: true,
+        isDev: true,
         name: true,
         email: true,
         role: true,
@@ -69,6 +71,8 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ user });
   } catch (error) {
+    console.log(error);
+    
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

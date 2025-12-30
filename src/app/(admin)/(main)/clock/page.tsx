@@ -1,5 +1,5 @@
 'use client';
-import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X, SirenIcon } from 'lucide-react'
+import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X, SirenIcon, LogOut } from 'lucide-react'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import WorkHoursChart from './Chart'
 import FaceRecognition from './FaceRecognition'
@@ -281,14 +281,15 @@ function Clock() {
 
       const data = await response.json();
       setUserStatus(data);
-
+      
       // For clock-out, skip face recognition and go directly to logout workflow
       if (data.isLoggedIn) {
         // Get user info to check role
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-
-        if (userData.user?.workingAs.toLowerCase().includes("developer")) {
+        console.log(userData);
+        
+        if (userData.user?.isDev) {
           setShowDeveloperPopup(true);
         } else {
           setShowSummaryPopup(true);
@@ -337,14 +338,13 @@ function Clock() {
       const result = await response.json();
 
       if (result.success) {
-        console.log(result);
-        
         setShowAuthPopup(false);
         setPassword('');
-
+        console.log(result);
+        
         // If clocking out, check for developer workflow or show summary
         if (result.action === 'clock-out-auth') {
-          if (result.userWorkingAs.includes("Developer")) {
+          if (result.isDev) {
             setShowDeveloperPopup(true);
           } else {
             setShowSummaryPopup(true);
@@ -368,7 +368,7 @@ function Clock() {
   const handleDeveloperResponse = (pushedCode: boolean) => {
     if (!pushedCode) {
       setShowDeveloperPopup(false);
-      toast('Please Commit and push changes');
+      toast.error('Ops! First you need to push all your work progress!');
     } else {
       setShowDeveloperPopup(false);
       setShowSummaryPopup(true);
@@ -378,7 +378,7 @@ function Clock() {
 
   const handleSummarySubmit = async () => {
     if (!workSummary.trim()) {
-      toast.error('Please provide a work summary');
+      toast.error('Hey, Hey! Tell me what\'s your today\'s progress first?');
       return;
     }
 
@@ -422,8 +422,9 @@ function Clock() {
         // Get user info from API to check workingAs
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-
-        if (userData.user?.workingAs === 'Developer') {
+        // console.log(userData);
+        
+        if (userData.user?.isDev) {
           setShowDeveloperPopup(true);
         } else {
           setShowSummaryPopup(true);
@@ -596,12 +597,16 @@ function Clock() {
             onClick={handleFaceAuth}
             className="mx-auto cursor-pointer w-20 mt-6 h-20 bg-sky-400 shadow-[inset_4px_5px_7px_0px_#ffffff90] rounded-full grid place-items-center text-white hover:scale-105 transition-transform"
           >
+            {userStatus?.isLoggedIn ? 
+            <LogOut className='rotate-180' size={32} />
+             : 
             <ScanFace size={32} />
+            }
           </div>
 
           <h1 className="uppercase mt-8 dark:text-gray-400 text-neutral-400 text-center font-semibold text-lg">
             {userStatus?.isLoggedIn ? (
-              <span className="text-green-500">You are Logged-IN</span>
+              <span className="text-green-400">You are Logged-IN</span>
             ) : (
               <span>You are not Logged-IN</span>
             )}
@@ -761,24 +766,24 @@ function Clock() {
       {showDeveloperPopup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 mx-4 animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold dark:text-white">Developer Check</h2>
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-xl font-semibold text-gray-400 text-center w-full">Before Logout</h2>
             </div>
 
-            <p className="text-gray-600 dark:text-gray-300 mb-6 text-center text-lg">
+            <p className="text-gray-800 dark:text-gray-100 mb-6 text-center text-lg">
               Did you push the codes?
             </p>
 
             <div className="flex gap-3">
               <button
                 onClick={() => handleDeveloperResponse(false)}
-                className="flex-1 py-3 px-4  text-white rounded-lg border border-gray-600 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4 dark:text-white rounded-lg border-2 border-gray-600 transition-all hover:scale-105 font-medium"
               >
                 No
               </button>
               <button
                 onClick={() => handleDeveloperResponse(true)}
-                className="flex-1 py-3 px-4 bg-sky-400 text-white rounded-lg hover:bg-sky-500 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-all hover:scale-105 font-medium"
               >
                 Yes
               </button>
@@ -821,6 +826,7 @@ function Clock() {
                 onClick={() => {
                   setShowSummaryPopup(false);
                   setWorkSummary('');
+                  toast.error("Hey, Hey! Tell me what\'s your today\'s progress first?");
                 }}
                 className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white transition-all hover:scale-105"
               >

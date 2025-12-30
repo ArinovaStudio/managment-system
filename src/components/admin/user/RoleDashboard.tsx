@@ -12,6 +12,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  isDev?: boolean;
   password: string;
   employeeId?: string | null;
   department?: string | null;
@@ -182,21 +183,15 @@ export function UserModel({rect = false, editUser, setEditUser, setAddUser, leav
                               </select>
                               <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
                             </div>
-                            {
-                              setAddUser && (
-                                <div className="flex justify-start gap-4">
-                              <label className="block text-sm font-medium">IS DEVELOPER?</label>
-                              <div className="flex items-center justify-items-center gap-1">
-                              <input type="radio" />
-                              <label className="block text-xs font-medium">Yes</label>
-                              </div>
-                              <div className="flex items-center justify-items-center gap-1">
-                              <input type="radio" />
-                              <label className="block text-xs font-medium">NO</label>
-                              </div>
-                                </div>
-                              )
-                            }
+                            {/* {setAddUser && ( */}
+                              <label className="block text-sm font-medium mb-1">Is Developer</label>
+                
+              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={`${editUser?.isDev || false}`} onChange={(e) => setEditUser({ ...editUser, isDev: Boolean(e.target.value) })}>
+                  <option value="">Is Developer?</option>
+                  <option value="true">YES</option>
+                  <option value="false">NO</option>
+                </select>
+                              {/* // )} */}
                             {
                               !setAddUser && (
                             <div>
@@ -281,7 +276,7 @@ export function DeleteModel({deleteUser, setDeleteUser, setUsers}: {deleteUser: 
                               onClick={async () => {
                                 const toastId = toast.loading("Deleting user...");
                                 try {
-                                  const res = await fetch("/api/auth/user", {
+                                  const res = await fetch("/api/admin/user", {
                                     method: "DELETE",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ email: deleteUser.email }),
@@ -488,7 +483,7 @@ export default function RoleDashboard() {
       /* --------------------
          1️⃣ UPDATE USER PROFILE
       -------------------- */
-      const userRes = await fetch("/api/auth/user", {
+      const userRes = await fetch("/api/admin/user", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editUser),
