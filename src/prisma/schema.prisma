@@ -12,6 +12,7 @@ model User {
   employeeId      String?          @unique
   email           String           @unique
   isDev           Boolean?         @default(false) 
+  githubProfile   String?
   name            String
   password        String
   role            ROLES            @default(CLIENT)
@@ -241,6 +242,7 @@ model Project {
   summary         String?
   priority        String?
   basicDetails    String?
+  repository      String?
   status          Int              @default(0) // Progress percentage 0-100
   createdAt       DateTime         @default(now())
   progress        Int              @default(0)

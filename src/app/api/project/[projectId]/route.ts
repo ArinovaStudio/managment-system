@@ -22,6 +22,7 @@ const project = await db.project.findUnique({
         }
       }
     },
+    // repository: true,
     projectInfo: true,
     latestUpdates: {
       orderBy: { createdAt: "desc" },
@@ -69,8 +70,11 @@ const project = await db.project.findUnique({
       project: {
         id: project.id,
         name: project.name,
+        isLeader: project.isLeader,
+        role: project.role,
         summary: project.summary,
         priority: project.priority,
+        repository: project.repository,
         status: project.status,
         progress: project.progress,
         createdAt: project.createdAt,
@@ -82,6 +86,7 @@ const project = await db.project.findUnique({
       dashboardData
     });
   } catch (err) {
+    console.log(err);
     return Response.json(
       { success: false, message: "Failed to fetch project overview", err },
       { status: 500 }

@@ -317,7 +317,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
   const [commentText, setCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string, employeeId: string } | null>(null);
   const [newTask, setNewTask] = useState<NewTaskShape>({
     title: '',
     description: '',
@@ -456,6 +456,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
       formData.append("status", newTask.status);
       formData.append("tags", newTask.tags.join(","));
       formData.append("projectId", projectId);
+      formData.append("employeeId", currentUser.employeeId);
 
       if (newTask.attachmentFile) {
         formData.append("attachment", newTask.attachmentFile);

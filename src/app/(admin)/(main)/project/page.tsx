@@ -39,6 +39,7 @@ export default function ProjectsPage() {
     startDate: '',
     deadline: '',
     supervisorAdmin: '',
+    repository: '',
     client: '',
   });
   const [createLoading, setCreateLoading] = useState(false);
@@ -113,7 +114,7 @@ export default function ProjectsPage() {
       if (data.success) {
         toast.success('Project created successfully');
         setShowCreateModal(false);
-        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '', client: '' });
+        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '', client: '', repository: '' });
         setSelectedMembers([]);
         fetchUserProjects();
       } else {
@@ -445,6 +446,19 @@ export default function ProjectsPage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                                    <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Repository
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.repository}
+                      onChange={(e) => setFormData({ ...formData, repository: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Make sure URL contains .git"
+                      // required
+                    />
                   </div>
                 </div>
 

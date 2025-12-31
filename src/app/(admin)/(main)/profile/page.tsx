@@ -4,14 +4,11 @@ import Loader from "@/components/common/Loading";
 import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import UserMetaCard from "@/components/user-profile/UserMetaCard";
-import { LucideArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter()
 
   const fetchProfile = async () => {
     try {
@@ -55,7 +52,7 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  if (loading) return <div className="w-full h-full flex justify-center items-center">
+  if (loading) return <div className="w-full h-[80vh] flex justify-center items-center">
     <Loader />
   </div>;
   if (!user) return <p>No user found</p>;
@@ -63,19 +60,18 @@ export default function Profile() {
   return (
     <div>
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        <div className="flex justify-start items-center gap-1 py-4">
-        <button onClick={() => router.back()} className="text-gray-500"> Back</button>
-        <div className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          | Profile
-        </div>
-        </div>
+        <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
+          Profile
+        </h3>
 
         <div className="space-y-6">
           <UserMetaCard user={user} onUpdate={updateProfile} />
 
           <UserInfoCard user={user} onUpdate={updateProfile} />
 
-          <UserAddressCard user={user} onUpdate={updateProfile}/>
+        {
+          user.role !== "CLIENT" && <UserAddressCard user={user} onUpdate={updateProfile} />
+        }
         </div>
       </div>
     </div>

@@ -744,6 +744,9 @@ span.flatpickr-weekday,
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
+  --font-mono: var(--font-mono);
+  --font-outfit: var(--font-outfit);
+  --font-poppins: var(--font-poppins);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
@@ -867,6 +870,17 @@ span.flatpickr-weekday,
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+@layer utilities {
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
   }
 }
 

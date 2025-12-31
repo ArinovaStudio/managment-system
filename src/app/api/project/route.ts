@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, summary, priority, basicDetails, memberIds, budget, projectType, startDate, deadline, supervisorAdmin, clientName } = body;
+    const { name, summary, priority, basicDetails, memberIds, budget, projectType, startDate, deadline, supervisorAdmin, clientName, repository } = body;
 
     if (!name || !priority) {
       return Response.json(
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
         name,
         summary,
         priority,
+        repository: repository || null,
         basicDetails,
         projectInfo: {
           create: {
@@ -151,7 +152,7 @@ export async function DELETE(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { projectId, name, summary, priority, basicDetails, budget, projectType, startDate, deadline, supervisorAdmin } = body;
+    const { projectId, name, summary, priority, basicDetails, budget, projectType, startDate, deadline, supervisorAdmin, repository } = body;
 
     if (!projectId) {
       return Response.json({
@@ -166,6 +167,7 @@ export async function PUT(req: Request) {
         name,
         summary,
         priority,
+        repository: repository || null,
         basicDetails,
         projectInfo: {
           update: {

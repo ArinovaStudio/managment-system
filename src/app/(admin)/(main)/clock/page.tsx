@@ -287,7 +287,6 @@ function Clock() {
         // Get user info to check role
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-        console.log(userData);
         
         if (userData.user?.isDev) {
           setShowDeveloperPopup(true);
@@ -340,8 +339,6 @@ function Clock() {
       if (result.success) {
         setShowAuthPopup(false);
         setPassword('');
-        console.log(result);
-        
         // If clocking out, check for developer workflow or show summary
         if (result.action === 'clock-out-auth') {
           if (result.isDev) {
@@ -422,7 +419,6 @@ function Clock() {
         // Get user info from API to check workingAs
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-        // console.log(userData);
         
         if (userData.user?.isDev) {
           setShowDeveloperPopup(true);

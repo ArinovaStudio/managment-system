@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowUp, CheckCheck, LucideEdit3, LucideTrash, User, X } from "lucide-react";
+import { ArrowUp, CheckCheck, LucideCheckCheck, LucideCopy, LucideEdit3, LucideTrash, User, X } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
 import LatestUpdates from "./LatestUpdates";
@@ -22,6 +22,7 @@ type Member = {
 type Project = {
   id: string;
   name: string;
+  repository: string;
   summary: string;
   priority: "HIGH" | "MEDIUM" | "LOW" | string;
   basicDetails: string | null;
@@ -51,6 +52,7 @@ const EditModal = ({showModel, projectData}) => {
       name: projectData.name,
       summary: projectData.summary,
       priority: projectData.priority,
+      repository: projectData.repository,
       basicDetails: projectData.basicDetails,
       budget: projectData.projectInfo.budget,
       projectType: projectData.projectInfo.projectType,
@@ -73,6 +75,7 @@ const EditModal = ({showModel, projectData}) => {
             priority: formData.priority,
             basicDetails: formData.basicDetails,
             budget: formData.budget,
+            repository: formData.repository,
             projectType: formData.projectType,
             startDate: formData.startDate,
             deadline: formData.deadline,
@@ -83,12 +86,17 @@ const EditModal = ({showModel, projectData}) => {
         const result = await response.json();
         if (result.success) {
           toast.success("Project updated successfully");
+          showModel(false)
         } else {
           toast.error("Failed to update project");
         }
       } catch (err) {
         console.error("Failed to create project:", err);
         toast.error("Failed to create project");
+      }
+      finally {
+        setLoading(false);
+        window.location.reload()
       }
     }
 
@@ -239,6 +247,20 @@ const EditModal = ({showModel, projectData}) => {
                       )): (<option value="" disabled>No admins available</option>)}
                     </select>
                   </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Repository
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.repository || ""}
+                      onChange={(e) => setFormData({ ...formData, repository: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Make sure URL contains .git"
+                      // required
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -284,7 +306,7 @@ const EditModal = ({showModel, projectData}) => {
                     {loading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Creating...
+                        Updating...
                       </>
                     ) : (
                       <>
@@ -364,6 +386,17 @@ export default function OverviewTab({ project }: OverviewTabProps) {
   const [editModel, setEditModel] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const copyTextToClipboard = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
 
   const router = useRouter();
 
@@ -503,10 +536,29 @@ export default function OverviewTab({ project }: OverviewTabProps) {
             </div>
           </div>
         </div>
+        {
+          project?.repository && (
+        <div className="">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Repository</h2>
+          <div className="w-full h-28 bg-blue-400/10 border border-blue-500 rounded-lg px-4 py-4">
+            <p className="text-xs text-gray-400">{project.repository?.split("/")[4]?.split(".git")[0]}</p>
+            <div className="my-1 w-full h-11 rounded-lg relative px-1 border border-blue-600/80 bg-blue-400/20 flex items-center justify-between">
+              <p className="font-mono px-2 font-medium">{project.repository}</p>
+              <div onClick={() => {isCopied ? () => {} :  copyTextToClipboard(project.repository)}} className={`w-8 h-8 cursor-pointer bg-blue-500 rounded-sm grid place-items-center transition-all`}>
+                {
+                  isCopied ? <LucideCheckCheck className={`${isCopied ? "opacity-100" : "opacity-0"} transition-all`} size={16} /> : <LucideCopy className={`${isCopied ? "opacity-0" : "opacity-100"} transition-all`} size={16}/>
+                }
+              </div>
+            </div>
+            <p className="text-xs text-gray-200 text-right w-full">Clone the Repository</p>
+          </div>
+        </div>
+          )
+        }
 
         {/* Team Members - Full width below */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Team Members</h2>
+        <div className="">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Team Members</h2>
           {project.members && project.members.length > 0 ? (
             project.members.slice(0, 3).map((member) => (
               <TeamMemberCard key={member.user.id} member={member} />

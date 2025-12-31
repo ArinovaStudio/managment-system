@@ -44,7 +44,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, documents });
   } catch (error) {
-    console.log(error)
     return NextResponse.json({ error: "Failed to fetch documents", err: error }, { status: 500 });
   }
 }

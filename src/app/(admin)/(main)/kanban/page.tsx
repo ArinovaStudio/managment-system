@@ -994,7 +994,6 @@ const KanbanBoard: React.FC = () => {
       });
 
       const data = await res.json();
-      console.log(data.tasks);
       
       setTasks(data.tasks ?? []);
     } catch (err) {

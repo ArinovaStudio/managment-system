@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 
 const StatusCard = () => {
   const [isOnline, setIsOnline] = useState<boolean>(false);
-  const [isOnBreak, setIsOnBreak] = useState<boolean>(false);
 
   useEffect(() => {
     checkUserStatus();
@@ -15,8 +14,7 @@ const StatusCard = () => {
     try {
       const response = await fetch('/api/user');
       const data = await response.json();
-      setIsOnBreak(data.isLogin);
-      setIsOnline(data.isLogin);
+      setIsOnline(data.user.isLogin);
     } catch (error) {
       console.error('Failed to check user status:', error);
     }
@@ -35,7 +33,7 @@ const StatusCard = () => {
           isOnline ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
         }`}
       >
-        {isOnBreak ? "On Break" : isOnline ? "You're online" : "You're offline"}
+        {isOnline ? "You're online" : "You're offline"}
       </p>
     </div>
   );
