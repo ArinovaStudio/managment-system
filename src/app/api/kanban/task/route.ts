@@ -200,6 +200,43 @@ export async function PUT(req: NextRequest) {
       const formData = await req.formData();
 
       id = formData.get("id") as string;
+      const attachmentFile = formData.get("attachment") as File | null
+
+      const attachments: any[] = [];
+
+    if (attachmentFile && attachmentFile.size > 0) {
+      if (attachmentFile.size > 10 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "File must be under 10MB" },
+          { status: 400 }
+        );
+      }
+
+      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+
+      const uploadResult: any = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "kanban_attachments",
+            resource_type: "auto",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+
+        uploadStream.end(buffer);
+      });
+
+      attachments.push({
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+        size: attachmentFile.size,
+        contentType: attachmentFile.type,
+        originalName: attachmentFile.name,
+      });
+    }
 
       data = {
         title: formData.get("title") as string,
@@ -208,6 +245,7 @@ export async function PUT(req: NextRequest) {
         priority: formData.get("priority") as string,
         status: formData.get("status") as string,
         dueDate: new Date(formData.get("dueDate") as string),
+        attachments,
         tags: (formData.get("tags") as string)
           ?.split(",")
           .map(t => t.trim()),
@@ -224,6 +262,15 @@ export async function PUT(req: NextRequest) {
     const updatedTask = await db.task.update({
       where: { id },
       data,
+      include: {
+        comments: true,
+        Project: {
+          select: {
+            name: true,
+            id: true,
+          }
+        },
+      },
     });
 
     return NextResponse.json({ success: true, task: updatedTask });

@@ -14,8 +14,12 @@ import {
   Search,
   Send,
   AlertCircle,
-  Tag
+  Tag,
+  LucideLoader
 } from 'lucide-react';
+import { SidePanel } from '@/app/(admin)/(main)/kanban/page';
+import toast from 'react-hot-toast';
+import Loader from '../common/Loading';
 
 interface Comment {
   id: string;
@@ -29,6 +33,7 @@ interface Task {
   id: string;
   title: string;
   description: string;
+  Project: {name: string, id: string}
   assignee: string;
   assigneeAvatar: string;
   priority: 'low' | 'medium' | 'high';
@@ -54,6 +59,7 @@ type NewTaskShape = {
   tags: string[];
   status: 'assigned' | 'in-progress' | 'completed';
   attachmentFile: File | null;
+  projectId: string;
 };
 
 interface KanbanTabProps {
@@ -62,14 +68,16 @@ interface KanbanTabProps {
 
 const NewTaskModal: React.FC<{
   isOpen: boolean;
+  isLoading: boolean;
   onClose: () => void;
   newTask: NewTaskShape;
   setNewTask: (t: NewTaskShape) => void;
   handleCreateTask: () => void;
   handleAddTag: (tag: string) => void;
   handleRemoveTag: (tag: string) => void;
-  currentUser: { name: string } | null;
-}> = ({ isOpen, onClose, newTask, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag, currentUser }) => {
+  currentUser: { name: string, id: string } | null;
+  mode: string
+}> = ({ isOpen, onClose, newTask, isLoading, setNewTask, handleCreateTask, handleAddTag, handleRemoveTag, currentUser, mode }) => {
   if (!isOpen) return null;
 
   return (
@@ -186,12 +194,48 @@ const NewTaskModal: React.FC<{
               className="w-full px-4 py-3 rounded-lg border bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+                    <div
+                      className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 bg-gray-50 dark:border-gray-800 dark:bg-[#111]"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          setNewTask({ ...newTask, attachmentFile: file });
+                        }
+                      }}
+                      onClick={() => document.getElementById("task-file-input")?.click()}
+                    >
+                      <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                      <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-600">PDF, DOC, Images up to 10MB</p>
+          
+                      <input
+                        id="task-file-input"
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setNewTask({ ...newTask, attachmentFile: file });
+                        }}
+                      />
+                      {newTask.attachmentFile && (
+                        <p className="text-sm mt-2 text-green-600 dark:text-green-400">
+                          Selected: {newTask.attachmentFile.name}
+                        </p>
+                      )}
+                    </div>
+
           <div className="flex gap-3 pt-4">
             <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
               Cancel
             </button>
-            <button onClick={handleCreateTask} disabled={!newTask.title.trim()} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
-              Create Task
+            <button onClick={isLoading ? () => {} : handleCreateTask} disabled={!newTask.title.trim()} 
+            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors grid place-items-center">
+              {isLoading ? (<LucideLoader className='animate-spin text-white' size={24} />) : 
+                mode === "edit" ? "Update Task" : "Create Task"
+              }
             </button>
           </div>
         </div>
@@ -200,124 +244,25 @@ const NewTaskModal: React.FC<{
   );
 };
 
-const SidePanel: React.FC<{
-  selectedTask: Task | null;
-  onClose: () => void;
-  commentText: string;
-  setCommentText: (v: string) => void;
-  handleAddComment: () => void;
-}> = ({ selectedTask, onClose, commentText, setCommentText, handleAddComment }) => {
-  if (!selectedTask) return null;
-
-  return (
-    <div className="fixed inset-0 z-9999 flex justify-end">
-      <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-[600px] h-full bg-white dark:bg-[#0a0a0a] shadow-2xl overflow-y-auto">
-        <div className="sticky top-0 z-10 border-b px-6 py-4 border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0a0a0a]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Task Details</h2>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-        <div className="p-6 space-y-6">
-          <div>
-            <div className="flex items-start justify-between mb-2">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTask.title}</h1>
-              <span className={`px-3 py-1 rounded-lg text-sm font-medium border ${priorityClasses[selectedTask.priority]}`}>
-                <Flag className="w-3 h-3 inline mr-1" />
-                {selectedTask.priority}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Task ID: #{selectedTask.id}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</h3>
-            <p className="text-gray-600 dark:text-gray-400">{selectedTask.description}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-gray-50 dark:bg-[#111]">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Assignee</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-blue-400 to-purple-400 text-white dark:from-blue-500 dark:to-green-500">
-                  {selectedTask.assignee.charAt(0)}
-                </div>
-                <span className="font-medium text-gray-900 dark:text-white">{selectedTask.assignee}</span>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Due Date</span>
-              </div>
-              <span className="font-medium text-gray-900 dark:text-white">
-                {new Date(selectedTask.dueDate).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </span>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-              <MessageSquare className="w-5 h-5" />
-              Comments ({selectedTask?.comments?.length})
-            </h3>
-            <div className="space-y-4 mb-4">
-              {selectedTask.comments?.map(comment => (
-                <div key={comment.id} className="p-4 rounded-xl bg-gray-50 dark:bg-[#111]">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-green-400 to-teal-400 text-white dark:from-green-500 dark:to-teal-500">{comment.avatar}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-900 dark:text-white">{comment.author}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-500">{new Date(comment.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}</span>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="p-4 rounded-xl border bg-gray-50 border-gray-200 dark:bg-[#111] dark:border-gray-800">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Add a comment..."
-                className="w-full px-3 py-2 rounded-lg border resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#0a0a0a] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600"
-                rows={3}
-              />
-              <div className="flex justify-end mt-3">
-                <button onClick={handleAddComment} disabled={!commentText.trim()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium flex items-center gap-2">
-                  <Send className="w-4 h-4" />
-                  Comment
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function KanbanTab({ projectId }: KanbanTabProps) {
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ name: string, employeeId: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string, employeeId: string, id: string } | null>(null);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [reportCount, setReportCount] = useState(0);
+  const [reportMessages, setReportMessages] = useState<{ message: string }[]>([]);
+  const [taskMode, setTaskMode] = useState<"create" | "edit">("create");
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const [transition, setTransition] = useState(false);
+
   const [newTask, setNewTask] = useState<NewTaskShape>({
     title: '',
     description: '',
@@ -326,7 +271,8 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
     dueDate: '',
     tags: [],
     status: 'assigned',
-    attachmentFile: null
+    attachmentFile: null,
+    projectId: ''
   });
   const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -354,13 +300,15 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
   const fetchTasks = async () => {
     try {
-
+      setLoading(true);
       const res = await fetch(`/api/kanban/task?projectId=${projectId}`);
       const data = await res.json();
-
       if (data.tasks) setTasks(data.tasks);
     } catch (err) {
       console.error("Failed to load tasks", err);
+    }
+    finally {
+      setLoading(false)
     }
   };
 
@@ -409,6 +357,108 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
     setDraggedTask(null);
   };
 
+    const handleEditTask = (task: Task) => {
+      setTaskMode("edit");
+      setTaskToEdit(task);
+
+      setNewTask({
+        title: task.title,
+        description: task.description,
+        assignee: task.assignee,
+        priority: task.priority,
+        dueDate: task.dueDate.split("T")[0],
+        tags: task.tags,
+        status: task.status,
+        attachmentFile: null,
+        projectId: task.Project.id
+      });
+  
+      setShowNewTaskModal(true);
+    };
+  
+  const handleUpdateTask = async () => {
+    if (!taskToEdit) return;
+
+    try {
+      setTransition(true)
+      const formData = new FormData();
+      formData.append("id", taskToEdit.id);
+      formData.append("title", newTask.title.trim());
+      formData.append("description", newTask.description.trim());
+      formData.append("assignee", newTask.assignee);
+      formData.append("priority", newTask.priority);
+      formData.append("dueDate", newTask.dueDate);
+      formData.append("status", newTask.status);
+      formData.append("tags", newTask.tags.join(","));
+      formData.append("projectId", newTask.projectId)
+
+      if (newTask.attachmentFile) {
+        formData.append("attachment", newTask.attachmentFile);
+      }
+
+      const res = await fetch("/api/kanban/task", {
+        method: "PUT",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error("Update failed");
+        return;
+      }
+
+      setTasks(prev =>
+        prev.map(t => (t.id === data.task.id ? data.task : t))
+      );
+
+      setSelectedTask(data.task);
+      setShowNewTaskModal(false);
+      setTaskMode("create");
+      setTaskToEdit(null);
+      toast.success("Task updated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+    finally {
+      setTransition(false)
+    }
+  };
+
+
+  const handleSubmitTask = async () => {
+    if (taskMode === "edit") {
+      await handleUpdateTask();
+    } else {
+      await handleCreateTask();
+    }
+  };
+
+    const handleDeleteTask = async (taskId: string) => {
+      try {
+        const res = await fetch("/api/kanban/task", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: taskId }),
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          toast.error(data.message || "Failed to delete task");
+          return;
+        }
+  
+        toast.success("Task deleted successfully");
+  
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        setSelectedTask(null);
+      } catch (err) {
+        console.error("Delete error:", err);
+        toast.error("Something went wrong");
+      }
+    };
+
   const handleAddComment = async () => {
     if (!commentText.trim() || !selectedTask) return;
 
@@ -437,16 +487,148 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
     setCommentText("");
   };
+    const handleEditComment = async (commentId: string, newContent: string) => {
+    if (!selectedTask) return;
+
+    try {
+      const res = await fetch("/api/kanban/comment", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          commentId,
+          content: newContent,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const updatedComments = selectedTask.comments.map(c =>
+          c.id === commentId ? { ...c, content: newContent } : c
+        );
+
+        setTasks(tasks.map(task =>
+          task.id === selectedTask.id
+            ? { ...task, comments: updatedComments }
+            : task
+        ));
+
+        setSelectedTask({
+          ...selectedTask,
+          comments: updatedComments,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to edit comment:", err);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!selectedTask) return;
+
+    try {
+      const res = await fetch("/api/kanban/comment", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const updatedComments = selectedTask.comments.filter(c => c.id !== commentId);
+
+        setTasks(tasks.map(task =>
+          task.id === selectedTask.id
+            ? { ...task, comments: updatedComments }
+            : task
+        ));
+
+        setSelectedTask({
+          ...selectedTask,
+          comments: updatedComments,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to delete comment:", err);
+    }
+  };
+
+
+  const fetchReports = async (taskId: string) => {
+    try {
+      setReportsLoading(true);
+      setReportMessages([]);
+
+      const res = await fetch(`/api/kanban/report?taskId=${taskId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setReportCount(data.count || 0);
+        setReportMessages(data.messages || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch reports:", err);
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+    useEffect(() => {
+      if (!selectedTask) return;
+      fetchReports(selectedTask.id);
+    }, [selectedTask?.id]);
+    
+
+    const handleReport = async () => {
+      if (!message.trim() || !selectedTask) {
+        toast.error("Message cannot be empty");
+        return;
+      }
+  
+      try {
+        setLoading(true);
+  
+        const res = await fetch("/api/kanban/report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            taskId: selectedTask.id
+          }),
+        });
+  
+        const data = await res.json();
+  
+        if (data.success) {
+          setReportCount(prev => prev + 1);
+          toast.success("Report submitted successfully");
+          setMessage("");
+          setOpen(false);
+          await fetchReports(selectedTask.id);
+        } else {
+          toast.error(data.error || "Failed to send report");
+        }
+      } catch (err) {
+        console.error("Report error:", err);
+        toast.error("Something went wrongg");
+  
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+
 
   const handleCreateTask = async () => {
     if (!newTask.title.trim()) return;
 
     try {
+      setTransition(true)
       const formData = new FormData();
-
       const assigneeName = newTask.assignee || "Unassigned";
-
-
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
       formData.append("assignee", assigneeName);
@@ -483,10 +665,14 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
         dueDate: "",
         tags: [],
         status: "assigned",
-        attachmentFile: null,
+        attachmentFile: newTask.attachmentFile,
+        projectId: ''
       });
     } catch (error) {
       console.error("Create Task Exception:", error);
+    }
+    finally {
+      setTransition(false)
     }
   };
 
@@ -507,6 +693,13 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
 
   const getTasksByStatus = (status: Task['status']) => filteredTasks.filter(task => task.status === status);
 
+  if (loading) {
+    return (
+      <div className="w-full h-[50vh] flex justify-center items-center">
+        <LucideLoader className='animate-spin text-blue-300' size={40} />
+      </div>
+    )
+  }
   return (
     <div className="min-h-screen transition-colors duration-200">
       <div className="border-b sticky top-0 z-10">
@@ -614,9 +807,23 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
       <SidePanel
         selectedTask={selectedTask}
         onClose={() => setSelectedTask(null)}
+        onEditTask={handleEditTask}
+        onDeleteTask={handleDeleteTask}
         commentText={commentText}
         setCommentText={setCommentText}
         handleAddComment={handleAddComment}
+        reportsLoading={reportsLoading}
+        loading={loading}
+        open={open}
+        setOpen={setOpen}
+        message={message}
+        setMessage={setMessage}
+        handleReport={handleReport}
+        reportCount={reportCount}
+        reportMessages={reportMessages}
+        currentUserId={currentUser?.id || ''}
+        handleEditComment={handleEditComment}
+        handleDeleteComment={handleDeleteComment}
       />
 
       <NewTaskModal
@@ -624,10 +831,12 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
         onClose={() => setShowNewTaskModal(false)}
         newTask={newTask}
         setNewTask={setNewTask}
-        handleCreateTask={handleCreateTask}
+        handleCreateTask={handleSubmitTask}
         currentUser={currentUser}
         handleAddTag={handleAddTag}
         handleRemoveTag={handleRemoveTag}
+        mode={taskMode}
+        isLoading={transition}
       />
     </div>
   );

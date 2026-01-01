@@ -278,9 +278,6 @@ const NewTaskModal: React.FC<{
             <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
               Cancel
             </button>
-            {/* <button onClick={handleCreateTask} disabled={!newTask.title.trim()} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors">
-              Create Task
-            </button> */}
 
             <button
               onClick={handleSubmit}
@@ -297,7 +294,7 @@ const NewTaskModal: React.FC<{
   );
 };
 
-const SidePanel: React.FC<{
+export const SidePanel: React.FC<{
   selectedTask: Task | null;
   onClose: () => void;
   onEditTask: (task: Task) => void;
@@ -436,7 +433,7 @@ const SidePanel: React.FC<{
 
             <div>
               <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</h3>
-              <p className="text-gray-600 dark:text-gray-400">{selectedTask.description}</p>
+              <p className="text-gray-400 dark:text-gray-200">{selectedTask.description}</p>
             </div>
 
 
@@ -1614,8 +1611,7 @@ const KanbanBoard: React.FC = () => {
         onClose={() => {
           setShowNewTaskModal(false);
           setTaskMode("create");
-          setTaskToEdit(null);
-        }}
+          setTaskToEdit(null)}}
         mode={taskMode}
         newTask={newTask}
         setNewTask={setNewTask}
