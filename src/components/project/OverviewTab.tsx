@@ -14,6 +14,8 @@ type Member = {
     name: string;
     email: string;
     image: string;
+    role: string;
+    isLogin: boolean;
   }
   role?: string;
   isLeader: boolean;
@@ -209,7 +211,8 @@ const EditModal = ({showModel, projectData}) => {
                       type="date"
                       value={formData.startDate.split("T")[0]}
                       min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      disabled
+                      // onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required
                     />
@@ -360,13 +363,19 @@ const ProgressGauge = ({ progress }: { progress?: number }) => {
 };
 
 const TeamMemberCard = ({ member }: { member: Member }) => (
-  <div className="bg-white border border-gray-300 dark:bg-gray-900 dark:border-gray-600 rounded-xl p-4">
+  <div className="bg-white border border-gray-300 dark:bg-gray-900 dark:border-gray-600 rounded-xl p-4 mt-3">
     <div className="flex items-center gap-3">
-      <div className="w-14 h-14 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+      <div className="w-14 h-14 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center">
         {member.user.image ? (
-          <img src={member.user.image} alt={member.user.name} className="w-14 h-14 rounded-full object-cover" />
+          <div className="w-14 h-14 relative">
+          <div className={`absolute w-3 h-3 rounded-full ${member.user.isLogin ? "bg-green-400" : "bg-gray-400"} right-0 bottom-1 z-50`}></div>
+          <img src={member.user.image} alt={member.user.name} className="w-full h-full rounded-full object-cover" />
+          </div>
         ) : (
+          <div className="w-14 h-14 relative flex items-center justify-center">
+            <div className={`absolute w-3 h-3 rounded-full ${member.user.isLogin ? "bg-green-400" : "bg-gray-400"} right-0 bottom-1 z-50`}></div>
           <User size={28} className="text-gray-500 dark:text-gray-400" />
+          </div>
         )}
       </div>
       <div>
@@ -387,6 +396,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
   const [updating, setUpdating] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isEmployee, setEmployee] = useState(false)
 
   const copyTextToClipboard = async (link: string) => {
     try {
@@ -410,9 +420,14 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         const response = await fetch('/api/user');
         
         const data = await response.json();
+
         project.members.filter((v: any) => v.user.id === data.user.id).map((e) => {
           setIsLeader(e.isLeader)
         })
+        
+        if (data.user && data.user.role === "EMPLOYEE") {
+        setEmployee(true);
+        }
          
         if (data.user && data.user.role === 'ADMIN') {
           setIsAdmin(true);
@@ -560,9 +575,16 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         <div className="">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Team Members</h2>
           {project.members && project.members.length > 0 ? (
-            project.members.slice(0, 3).map((member) => (
-              <TeamMemberCard key={member.user.id} member={member} />
-            ))
+            project.members.map((member) => {
+          if (isEmployee && member.user.role === "CLIENT") {
+            return null;
+          }
+              return (
+                <TeamMemberCard key={member.user.id} member={member} />
+              )
+            }
+
+            )
           ) : (
             <p className="text-gray-500 dark:text-gray-400">No team members assigned</p>
           )}
@@ -574,7 +596,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         {/* Project Information */}
         <div className="bg-white border border-gray-300 dark:bg-gray-900 dark:border-gray-600 rounded-2xl p-6">
           <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             Project Information
           </h2>
           {

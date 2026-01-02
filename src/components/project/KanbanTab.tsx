@@ -231,7 +231,7 @@ const NewTaskModal: React.FC<{
             <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
               Cancel
             </button>
-            <button onClick={isLoading ? () => {} : handleCreateTask} disabled={!newTask.title.trim()} 
+            <button onClick={isLoading ? () => {} : handleCreateTask} disabled={isLoading || !newTask.title.trim() || !newTask.description.trim() || !newTask.dueDate} 
             className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors grid place-items-center">
               {isLoading ? (<LucideLoader className='animate-spin text-white' size={24} />) : 
                 mode === "edit" ? "Update Task" : "Create Task"

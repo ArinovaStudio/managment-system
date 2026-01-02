@@ -155,7 +155,20 @@ export async function GET(req: Request) {
     const tasks = await db.task.findMany({
       where: whereClause,
       include: {
-        comments: true,
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true
+              }
+            }
+          }
+        },
         Project: {
           select: {
             name: true,
@@ -262,7 +275,7 @@ export async function PUT(req: NextRequest) {
     const updatedTask = await db.task.update({
       where: { id },
       data,
-      include: {
+       include: {
         comments: true,
         Project: {
           select: {

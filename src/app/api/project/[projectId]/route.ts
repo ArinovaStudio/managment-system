@@ -17,7 +17,9 @@ const project = await db.project.findUnique({
             id: true,
             name: true,
             email: true,
-            image: true
+            image: true,
+            role: true,
+            isLogin: true,
           }
         }
       }

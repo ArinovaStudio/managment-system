@@ -25,13 +25,11 @@ import {
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 interface Comment {
   id: string;
-  author: string;
-  userId: string;
-  authorId: string;
-  avatar: string;
+  user: {id: string, name: string, image: string}
   content: string;
   createdAt: Date;
 }
@@ -73,6 +71,7 @@ type NewTaskShape = {
 
 const NewTaskModal: React.FC<{
   isOpen: boolean;
+  isLoading: boolean;
   onClose: () => void;
   mode: "create" | "edit";
   newTask: NewTaskShape;
@@ -83,7 +82,7 @@ const NewTaskModal: React.FC<{
   handleRemoveTag: (tag: string) => void;
   projectsLoading: boolean;
   projects: { id: string; name: string }[];
-}> = ({ isOpen, onClose, mode, assignee, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
+}> = ({ isOpen, onClose, mode, isLoading, assignee, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
   if (!isOpen) return null;
 
   return (
@@ -280,8 +279,8 @@ const NewTaskModal: React.FC<{
             </button>
 
             <button
-              onClick={handleSubmit}
-              disabled={!newTask.title.trim()}
+              onClick={isLoading ? () => {} : handleSubmit}
+              disabled={isLoading || !newTask.title.trim() || !newTask.description.trim() || !newTask.dueDate}
               className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg"
             >
               {mode === "edit" ? "Update Task" : "Create Task"}
@@ -333,12 +332,11 @@ export const SidePanel: React.FC<{
   reportMessages,
   currentUserId,
   handleEditComment,
-  handleDeleteComment
+  handleDeleteComment,
 }) => {
     const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Task | null>(null);
     const [deleting, setDeleting] = useState(false);
-    
     const [editContent, setEditContent] = useState('');
     const [deleteComment, setDeleteComment] = useState<{
       id: string;
@@ -346,6 +344,13 @@ export const SidePanel: React.FC<{
     } | null>(null);
 
     if (!selectedTask) return null;
+
+    console.log(selectedTask);
+    
+    // const handleAttachmentDelete = async (id: string) => {
+    //   const res = await fetch("/api/kanban/task")
+    // }
+
 
     const startEdit = (comment: Comment) => {
       setEditingCommentId(comment.id);
@@ -510,23 +515,6 @@ export const SidePanel: React.FC<{
                       ? "Found a problem? Let us know and we'll help resolve it."
                       : "Issue reported. Team will review soon."}
                   </p>
-                  {/* {reportMessages.length > 0 && (
-                    <div className="space-y-2 mb-3">
-                      {reportMessages.map((msg, index) => (
-                        <div
-                          key={index}
-                          className="text-sm p-2 rounded-md bg-red-100/70 dark:bg-red-500/10 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
-                        >
-                          • {msg.message}
-
-                        </div>
-
-
-                      ))}
-
-                    </div>
-                  )} */}
-
                   {/* Reports Section */}
                   {reportsLoading ? (
                     <div className="text-sm text-red-700 dark:text-red-300 mb-3">
@@ -611,7 +599,7 @@ export const SidePanel: React.FC<{
                       key={file.id ?? id}
                       className="flex items-center justify-between p-3 rounded-lg border bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-[#111] dark:border-gray-800 dark:hover:border-gray-700 transition-colors group"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-2xl">{getFileIcon(file.type)}</span>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate text-gray-900 dark:text-white">
@@ -627,9 +615,9 @@ export const SidePanel: React.FC<{
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md"
                       >
-                        <Eye className='hover:text-blue-400' />
+                        <Eye className='hover:text-blue-400' size={20} />
                       </a>
                       <button
                         onClick={async () => {
@@ -638,17 +626,16 @@ export const SidePanel: React.FC<{
 
                           const a = document.createElement("a");
                           a.href = URL.createObjectURL(blob);
+                          a.title = file.name;
                           a.download = file.name;
                           a.click();
 
                           URL.revokeObjectURL(a.href);
                         }}
-                        className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-sm px-3 py-1 rounded-md 00"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-sm py-1 rounded-md"
                       >
-                        <Download className='hover:text-green-300' />
+                        <Download className='hover:text-green-300' size={20} />
                       </button>
-
-
                     </div>
                   ))}
                 </div>
@@ -661,18 +648,34 @@ export const SidePanel: React.FC<{
                 <MessageSquare className="w-5 h-5" />
                 Comments ({selectedTask?.comments?.length})
               </h3>
-
+            
               <div className="space-y-4 mb-4">
                 {selectedTask.comments?.map(comment => (
-                  <div key={comment.id} className="p-4 rounded-xl bg-gray-50 dark:bg-[#111] group">
+                  <div key={comment.id} className="p-4 pt-3 rounded-xl bg-gray-50 dark:bg-[#111] group">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-green-400 to-teal-400 text-white dark:from-green-500 dark:to-teal-500">
-                        {comment.avatar}
+
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-green-400 to-teal-400 text-white dark:from-green-500 dark:to-teal-500 mt-2">
+                      {
+                        comment.user?.image ? (
+                          <div className="w-full h-full overflow-hidden rounded-full border border-blue-600">
+                          <Image 
+                          src={comment.user.image}
+                          alt='avatar'
+                          width={1080}
+                          height={1080}
+                          className='w-full h-full object-cover'
+                          />
+                          </div>
+                        ) : (
+                          <p>
+                          {comment.user.name.charAt(0)}
+                          </p>
+                        )
+                      }
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-900 dark:text-white">{comment.author}</span>
+                          <div className="w-full flex justify-start items-start flex-col">
                             <span className="text-xs text-gray-500 dark:text-gray-500">
                               {new Date(comment.createdAt).toLocaleDateString('en-US', {
                                 month: 'short',
@@ -681,10 +684,11 @@ export const SidePanel: React.FC<{
                                 minute: '2-digit'
                               })}
                             </span>
+                            <span className="font-semibold text-gray-900 dark:text-white">{comment.user.name}</span>
                           </div>
 
                           {/* EDIT/DELETE BUTTONS - Only show if current user is the author */}
-                          {comment.authorId === currentUserId && (
+                          {comment.user.id === currentUserId && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               {editingCommentId === comment.id ? (
                                 <>
@@ -716,7 +720,7 @@ export const SidePanel: React.FC<{
                                     onClick={() =>
                                       setDeleteComment({
                                         id: comment.id,
-                                        author: comment.author,
+                                        author: comment.user.name,
                                       })
                                     }
                                     className="p-1.5 rounded-md hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400"
@@ -906,6 +910,7 @@ const KanbanBoard: React.FC = () => {
   const [reportsLoading, setReportsLoading] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [transition, setTransition] = useState(false)
 
   const fetchProjects = async () => {
     try {
@@ -1025,8 +1030,8 @@ const KanbanBoard: React.FC = () => {
     if (!taskToEdit) return;
 
     try {
+      setTransition(true)
       const formData = new FormData();
-
       formData.append("id", taskToEdit.id);
       formData.append("title", newTask.title.trim());
       formData.append("description", newTask.description.trim());
@@ -1064,6 +1069,9 @@ const KanbanBoard: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong");
+    }
+    finally {
+      setTransition(false)
     }
   };
 
@@ -1288,6 +1296,7 @@ const KanbanBoard: React.FC = () => {
     if (!newTask.title.trim()) return;
 
     try {
+      setTransition(true)
       const formData = new FormData();
       const assigneeName = assigne || "Unassigned";
       const employeeId = taskemployee || currentUser.employeeId || "";
@@ -1344,6 +1353,9 @@ const KanbanBoard: React.FC = () => {
 
     } catch (error) {
       console.error("Create Task Exception:", error);
+    }
+    finally {
+      setTransition(false);
     }
   };
 
@@ -1620,6 +1632,7 @@ const KanbanBoard: React.FC = () => {
         handleRemoveTag={handleRemoveTag}
         projectsLoading={projectsLoading}
         projects={projects}
+        isLoading={transition}
       />
 
     </div>
