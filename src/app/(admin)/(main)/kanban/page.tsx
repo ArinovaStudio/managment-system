@@ -345,7 +345,7 @@ export const SidePanel: React.FC<{
 
     if (!selectedTask) return null;
 
-    console.log(selectedTask);
+    // console.log(selectedTask);
     
     // const handleAttachmentDelete = async (id: string) => {
     //   const res = await fetch("/api/kanban/task")

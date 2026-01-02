@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 interface DailyReport {
     id: string;
@@ -23,7 +24,7 @@ const DailyReports = () => {
     const [reports, setReports] = useState<DailyReport[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
-    const [breaks, setBreaks] = useState([])
+
     useEffect(() => {
         fetchReports();
     }, []);
@@ -34,6 +35,8 @@ const DailyReports = () => {
             const data = await res.json();
 
             if (data.success) {
+                // console.log(data.reports);
+                
                 setReports(data.reports);
             }
         } catch (err) {
@@ -43,6 +46,12 @@ const DailyReports = () => {
         }
     };
 
+    async function handleDelete() {
+        const res = await fetch("/api/clock/work-summary")
+        if (res.status === 200) {
+            toast.success("Deleted All")
+        }
+    }
     const getStatusClasses = (role: string) => {
         if (role?.toLowerCase().includes('web')) {
             return {
@@ -65,9 +74,6 @@ const DailyReports = () => {
         };
     };
 
-    const activeUsers = reports.filter(
-        (report) => report.clockOut === "-" || !report.summary
-    );
 
     if (loading) {
         return (
@@ -93,72 +99,19 @@ const DailyReports = () => {
                         year: 'numeric'
                     })}
                 </p>
-
+            <div className="flex justify-center items-center gap-2">
+                <button 
+                onClick={() => handleDelete()}
+                className="px-4 py-2 border border-red-400/80 bg-red-400/20 text-red-400 scale-90 transition-all rounded-lg">Delete All</button>
                 <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white text-sm"
-                >
+                    >
                     <option>All</option>
                     <option>Submitted</option>
                 </select>
-            </div>
-
-            {/* TOP HORIZONTAL TEAM ROW */}
-            <div className="flex gap-4 relative overflow-x-auto no-scrollbar pb-2">
-                {activeUsers.map((report) => {
-                    const status = getStatusClasses(report.user.workingAs);
-
-                    return (
-                        <div
-                            key={`${report.id}-horizontal`}
-                            className="min-w-[260px]"
-                        >
-                            {/* Role Badge */}
-                            <span
-                                className={`relative top-2 left-25 ${status.badge} text-[11px] px-1 py-1 rounded-full z-10 shadow-sm`}
-                            >
-                                {report.user.workingAs}
-                            </span>
-
-                            {/* Card */}
-                            <div
-                                className={`flex bg-white items-center gap-3 rounded-full border-2 ${status.ring} ${status.cardBg} dark:bg-gray-800 shadow-sm px-4 py-3`}
-                            >
-                                <div
-                                    className={`ring-2 ${status.ring} rounded-full w-10 h-10 overflow-hidden`}
-                                >
-                                    {
-                                        report.user?.image ? (                                    
-                                        <Image
-                                        src={report.user.image || "/images/user/user-01.png"}
-                                        alt={report.user.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover rounded-full"
-                                    />) : (
-                                        <div className="bg-pink-700 text-white">{report.user.name.charAt(0)}</div>
-                                    )
-                                    }
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm truncate">
-                                        {report.user.name}
-                                    </p>
-                                    <p className="text-[11px] text-gray-500">
-                                        {report.user.workingAs}
-                                    </p>
-                                </div>
-
-                                {/* Still clocked in */}
-                                <span className="text-sm font-semibold text-orange-600">
-                                    Working…
-                                </span>
-                            </div>
-                        </div>
-                    );
-                })}
+                    </div>
             </div>
 
 

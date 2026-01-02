@@ -4,9 +4,6 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    const userId = await getUserId(req);
-    
-    // Get work summaries from the last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     

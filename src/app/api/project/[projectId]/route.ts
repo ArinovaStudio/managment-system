@@ -88,7 +88,7 @@ const project = await db.project.findUnique({
       dashboardData
     });
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     return Response.json(
       { success: false, message: "Failed to fetch project overview", err },
       { status: 500 }
