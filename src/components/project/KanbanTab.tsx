@@ -20,6 +20,8 @@ import {
 import { SidePanel } from '@/app/(admin)/(main)/kanban/page';
 import toast from 'react-hot-toast';
 import Loader from '../common/Loading';
+import RichTextEditor from '../common/editor/Editor';
+import { htmlToText } from '../common/editor/htmlToText';
 
 interface Comment {
   id: string;
@@ -104,14 +106,11 @@ const NewTaskModal: React.FC<{
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</label>
-            <textarea
-              value={newTask.description}
-              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              placeholder="Describe the task..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-lg border resize-none bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Describe Your Task</label>
+                        <RichTextEditor
+                        content={newTask.description}
+                        onChange={(e) => setNewTask({ ...newTask, description: e })}
+                        />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -768,7 +767,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
                           {task.priority}
                         </span>
                       </div>
-                      <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{task.description}</p>
+                      <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{htmlToText(task.description)}</p>
                       <div className="flex flex-wrap gap-2 mb-3">
                         {task.tags.map(tag => (
                           <span key={tag} className="px-2 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20">
@@ -807,7 +806,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
       <SidePanel
         selectedTask={selectedTask}
         onClose={() => setSelectedTask(null)}
-        onEditTask={handleEditTask}
+        onEditTask={handleEditTask as any}
         onDeleteTask={handleDeleteTask}
         commentText={commentText}
         setCommentText={setCommentText}

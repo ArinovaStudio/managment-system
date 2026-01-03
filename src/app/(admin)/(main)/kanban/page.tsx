@@ -21,11 +21,16 @@ import {
   Save,
   SquarePen,
   Download,
-  Eye
+  Eye,
+  LucideLoader2,
+  LucideLoader
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
 import Image from 'next/image';
+import RichTextEditor from '@/components/common/editor/Editor';
+import RenderRichText from '@/components/common/editor/Render';
+import { htmlToText } from '@/components/common/editor/htmlToText';
 
 interface Comment {
   id: string;
@@ -69,7 +74,7 @@ type NewTaskShape = {
   projectId: string;
 };
 
-const NewTaskModal: React.FC<{
+export const NewTaskModal: React.FC<{
   isOpen: boolean;
   isLoading: boolean;
   onClose: () => void;
@@ -115,13 +120,11 @@ const NewTaskModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</label>
-            <textarea
-              value={newTask.description}
-              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-              placeholder="Describe the task..."
-              rows={4}
-              className="w-full px-4 py-3 rounded-lg border resize-none bg-white dark:bg-[#111] border-gray-300 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Describe Your Task</label>
+            
+            <RichTextEditor 
+            content={newTask.description}
+            onChange={(e) => setNewTask({ ...newTask, description: e })}
             />
           </div>
 
@@ -278,12 +281,11 @@ const NewTaskModal: React.FC<{
               Cancel
             </button>
 
-            <button
-              onClick={isLoading ? () => {} : handleSubmit}
-              disabled={isLoading || !newTask.title.trim() || !newTask.description.trim() || !newTask.dueDate}
-              className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg"
-            >
-              {mode === "edit" ? "Update Task" : "Create Task"}
+            <button onClick={isLoading ? () => {} : handleSubmit} disabled={isLoading || !newTask.title.trim() || !newTask.description.trim() || !newTask.dueDate} 
+            className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-lg font-medium transition-colors grid place-items-center">
+              {isLoading ? (<LucideLoader className='animate-spin text-white' size={24} />) : 
+                mode === "edit" ? "Update Task" : "Create Task"
+              }
             </button>
 
           </div>
@@ -437,8 +439,9 @@ export const SidePanel: React.FC<{
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Description</h3>
-              <p className="text-gray-400 dark:text-gray-200">{selectedTask.description}</p>
+              <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">Explaination</h3>
+              <RenderRichText html={selectedTask.description} />
+              {/* <p className="text-gray-400 dark:text-gray-200">{selectedTask.description}</p> */}
             </div>
 
 
@@ -1555,7 +1558,7 @@ const KanbanBoard: React.FC = () => {
                             </span>
                           </div>
 
-                          <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{task.description}</p>
+                          <p className="text-sm mb-3 line-clamp-2 text-gray-600 dark:text-gray-400">{htmlToText(task.description)}</p>
 
                           <div className="flex flex-wrap gap-2 mb-3">
                             {task.tags.map(tag => (
