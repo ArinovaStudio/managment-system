@@ -98,22 +98,29 @@ const Calendar: React.FC = () => {
     const dateStr = date.toISOString().split('T')[0];
     const events = [];
 
+    // Helper function to normalize dates to local timezone
+    const normalizeDate = (dateString: string) => {
+      const d = new Date(dateString);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().split('T')[0];
+    };
+
     holidays.forEach(h => {
-      if (new Date(h.date).toISOString().split('T')[0] === dateStr) {
+      if (normalizeDate(h.date) === dateStr) {
         events.push({ ...h, type: 'HOLIDAY', color: 'bg-red-500' });
       }
     });
 
     workdays.forEach(w => {
-      if (new Date(w.date).toISOString().split('T')[0] === dateStr) {
+      if (normalizeDate(w.date) === dateStr) {
         events.push({ ...w, type: 'WORKDAY', color: 'bg-green-500' });
       }
     });
 
     leaves.forEach(l => {
-      const start = new Date(l.startDate);
-      const end = new Date(l.endDate);
-      if (date >= start && date <= end) {
+      const startStr = normalizeDate(l.startDate);
+      const endStr = normalizeDate(l.endDate);
+      const currentStr = dateStr;
+      if (currentStr >= startStr && currentStr <= endStr) {
         events.push({ ...l, title: `Leave: ${l.leaveType || 'Personal'}`, type: 'LEAVE', color: 'bg-orange-500' });
       }
     });

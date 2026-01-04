@@ -214,6 +214,7 @@ export default function MilestoneTab({ projectId }: any) {
               case 'COMPLETED': return { bg: 'bg-green-50 border-green-200 dark:bg-green-500/20', text: 'text-green-500', badge: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800' };
               case 'IN_PROGRESS': return { bg: 'bg-blue-50 border-blue-200 dark:bg-blue-500/20', text: 'text-blue-500', badge: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800' };
               case 'CANCELLED': return { bg: 'bg-red-50 border-red-200 dark:bg-red-500/20', text: 'text-red-500', badge: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800' };
+              case 'DELAYED': return { bg: 'bg-orange-50 border-orange-200 dark:bg-orange-500/20', text: 'text-orange-500', badge: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800' };
               default: return { bg: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-500/20', text: 'text-yellow-500', badge: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800' };
             }
           };
@@ -250,7 +251,9 @@ export default function MilestoneTab({ projectId }: any) {
                   <div className={`text-xs font-medium ${statusColors.text}`}>
                     {m.status === 'COMPLETED' ? '✓ Completed' :
                       m.status === 'IN_PROGRESS' ? '⏳ In Progress' :
-                        m.status === 'CANCELLED' ? '✗ Cancelled' : '⏸ Pending'}
+                        m.status === 'CANCELLED' ? '✗ Cancelled' :
+                        m.status === "DELAYED" ? 'Delayed' :
+                        '⏸ Pending'}
                   </div>
 
                   <div>
@@ -348,6 +351,7 @@ export default function MilestoneTab({ projectId }: any) {
                 <option value="PENDING">Pending</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="COMPLETED">Completed</option>
+                <option value="DELAYED">Delayed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
             </div>

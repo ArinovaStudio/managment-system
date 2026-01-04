@@ -173,7 +173,7 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
                 <Label>Github Profile</Label>
                 <Input
                   type="text"
-                  placeholder="Username must start from @"
+                  placeholder="Paste Your Github Username Without '@', i.e, ArinovaStudio"
                   value={formData.github}
                   onChange={(e) =>
                     setFormData({ ...formData, github: e.target.value })

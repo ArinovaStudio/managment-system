@@ -111,7 +111,9 @@ export default function LeaveRequestsPage() {
                                 >
                                     {/* TOP SECTION */}
                                     <div className="flex gap-5">
-                                        <Image
+                                        {
+                                            req.user?.image ? (
+                                                                                        <Image
                                             src={req.user?.image}
                                             alt={req.empName}
                                             width={50}
@@ -120,6 +122,11 @@ export default function LeaveRequestsPage() {
                                             className="w-12 h-12 rounded-full object-cover"
                                         />
 
+                                            ) : (
+                                            <div className="w-12 h-12 rounded-full bg-blue-600/20 text-blue-500 grid place-items-center">{req.empName.charAt(0)}</div>
+                                        
+                                            )
+                                        }
                                         <div className="flex flex-col w-full">
                                             <div className="flex justify-between w-full">
                                                 <h2 className="font-bold text-lg">{req.empName}</h2>

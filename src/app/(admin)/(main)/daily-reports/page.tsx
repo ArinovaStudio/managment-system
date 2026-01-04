@@ -47,9 +47,10 @@ const DailyReports = () => {
     };
 
     async function handleDelete() {
-        const res = await fetch("/api/clock/work-summary")
+        const res = await fetch("/api/clock/work-summary", {method: "DELETE"})
         if (res.status === 200) {
             toast.success("Deleted All")
+            fetchReports()
         }
     }
     const getStatusClasses = (role: string) => {
@@ -100,9 +101,14 @@ const DailyReports = () => {
                     })}
                 </p>
             <div className="flex justify-center items-center gap-2">
-                <button 
-                onClick={() => handleDelete()}
-                className="px-4 py-2 border border-red-400/80 bg-red-400/20 text-red-400 scale-90 transition-all rounded-lg">Delete All</button>
+                {
+                    reports.length > 0 && (
+                        <button 
+                        onClick={() => handleDelete()}
+                        className="px-4 py-2 border border-red-400/80 bg-red-400/20 text-red-400 scale-90 transition-all rounded-lg">Delete All</button>
+                        
+                    )
+                }
                 <select
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf, LucideTrash, LucideEdit2 } from "lucide-react";
+import { Mail, Phone, Calendar, User, MapPin, Edit2, Trash2, Plus, Leaf, LucideTrash, LucideEdit2, LucideGithub, LucideCopy } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -12,6 +12,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  githubProfile?: string
   isDev?: boolean;
   password: string;
   employeeId?: string | null;
@@ -314,6 +315,17 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
   return (
                   <div className={`relative ${rect ? "mt-8": "mt-12"}`} key={u.id}>
                         <div className="flex gap-2 justify-end pr-6 absolute -top-8 right-2 z-50">
+                          {
+                            u.githubProfile &&
+                        <button
+                        onClick={async () => {await navigator.clipboard.writeText(u.githubProfile)}}
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
+                          title="Copu"
+                        >
+                          <LucideGithub className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      }         
+
                         <button
                           onClick={() => {
                             setEditUser(u);
@@ -401,6 +413,14 @@ export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDele
                               Leaves: {leaveStats.remaining} - {leaveStats.total}
                             </span>
                           </div>
+                          {u.isDev && 
+                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                            <LucideGithub className="w-4 h-4" />
+                            <span className="text-gray-600 dark:text-gray-400 flex justify-center items-center gap-2">
+                              {u.githubProfile ? `@${u.githubProfile}` : "Not Provided"}
+                            </span>
+                          </div>
+                          }
                         </div>
                       </div>
                     </div>

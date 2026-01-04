@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     const documents = await db.docs.findMany({
       include: {Projects: {
         select: { id: true, name: true}
-      }},
+      }, User: {select: {id: true, name: true}}},
       orderBy: { createdAt: 'desc' }
     });
 

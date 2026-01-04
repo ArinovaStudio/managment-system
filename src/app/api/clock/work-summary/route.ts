@@ -123,9 +123,12 @@ export async function DELETE(req: Request) {
           not: null
         }
   }})
-  return NextResponse.json({ success: true, deletedCount: danger.count });
+    console.log(danger);
+    
+  return NextResponse.json({ success: true, deletedCount: danger.count }, {status: 200});
   }
-  catch {
+  catch (error) {
+    console.log(error);
     return NextResponse.json({ error: 'Failed to delete summaries' }, { status: 500 });
   }
 }

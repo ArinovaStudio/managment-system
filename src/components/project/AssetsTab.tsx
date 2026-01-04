@@ -1,8 +1,123 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Image, FileArchive, FileText, Plus, Loader2, Eye, Download, Trash2 } from "lucide-react";
+import { FileArchive, FileText, Plus, Loader2, LucideDownload, LucideScanEye, LucideTrash2, LucideImage } from "lucide-react";
 import toast from "react-hot-toast";
+import Image from "next/image";
+import svg from "/public/images/shape/assets.svg"
+
+
+function AssetsCard({imageLink, userImage, title, author, viewLink, handleDelete, type, createdAt}: {
+  imageLink: string,
+  title: string,
+  author: string,
+  userImage: string,
+  viewLink: () => void,
+  handleDelete: () => void,
+  type: string
+  createdAt: string
+}) {
+
+const handleDownload = async (imageUrl: string, title: string) => {
+  try {
+    const response = await fetch(imageUrl, {
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch image");
+    }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = `${title}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+
+    toast.success("Downloaded successfully");
+  } catch (error) {
+    console.error(error);
+    toast.error("Download failed");
+  }
+};
+
+
+    const getIcon = (type: string) => {
+    if (type === "image") return <LucideImage className="text-gray-400" size={16} />;
+    if (type === "zip") return <FileArchive className="text-gray-400" size={16} />;
+    return <FileText className="text-gray-400" size={24} />;
+  };
+
+  return (
+            <div className="relative w-96 h-80 rounded-4xl border-8 border-black dark:border-gray-700 overflow-hidden">
+    <img
+    src={imageLink}
+    alt={title}
+    className="w-full h-full object-cover"
+    />
+<div className="absolute bottom-0 w-full h-2/3 overflow-hidden">
+<svg
+    viewBox="0 0 500 242"
+    preserveAspectRatio="xMidYMid meet"
+    className="
+      min-w-full min-h-full
+      fill-black dark:fill-gray-700
+    "
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M0 30C0 13.4315 13.4315 0 30 0H149.076C154.27 0 159.374 1.34832 163.89 3.91303L221.11 36.4071C225.626 38.9718 230.73 40.3202 235.924 40.3202H470C486.569 40.3202 500 53.7516 500 70.3202V214C500 230.569 486.569 244 470 244H30C13.4315 244 0 230.569 0 214V30Z" />
+</svg>
+<div className="w-full h-full absolute inset-0 z-9999 px-6 py-3">
+      <p className="text-neutral-500 dark:text-neutral-400 font-medium text-lg mb-3 flex justify-start items-center gap-1">{getIcon(type)} {type}</p>
+        <p className="text-white dark:text-white font-medium text-xl">{title}</p>
+        <p className="text-gray-400 font-normal text-xs mt-2">Created on: {createdAt?.split("T")[0]}</p>
+
+      <div className="w-full absolute bottom-4 flex justify-between items-center">
+        <div className="flex justify-center items-center gap-2 rounded-full  text-sm">
+          <div className="w-6 h-6 overflow-hidden  rounded-full flex justify-center items-center bg-blue-500/20 text-blue-400 border border-blue-400">
+          {
+            userImage ? (
+          <img 
+          src={userImage}
+          alt="Avatar"
+          className="w-full h-full object-cover rounded-full"
+          />
+            ) : (
+              <p>{author ? author?.charAt(0) : "A"}</p>
+            )
+          }
+        </div>
+        <p className="text-gray-400">
+           {author || "ADMIN"}
+        </p>
+            </div>
+        <div className="flex justify-center items-center gap-2 pr-12">
+          <div onClick={handleDelete} className="cursor-pointer w-6 h-6 text-white hover:text-red-400 flex justify-center items-center rounded-full">
+            <LucideTrash2 size={20} strokeWidth={2} />
+          </div>
+          <div onClick={viewLink} className="cursor-pointer w-8 h-8 text-white hover:text-blue-400 flex justify-center items-center rounded-full">
+            <LucideScanEye size={20} strokeWidth={2} />
+          </div>
+          <div onClick={() => handleDownload(imageLink, title)} className="cursor-pointer w-8 h-8 bg-white dark:bg-black hover:scale-90 hover:bg-green-400 transition-all flex justify-center items-center rounded-full">
+            <LucideDownload size={14} strokeWidth={2.5} />
+          </div>
+
+        </div>
+      </div>
+</div>
+
+</div>
+
+
+        </div>
+  )
+}
 
 export default function AssetsTab({ projectId }: { projectId: string }) {
   const [assets, setAssets] = useState<any[]>([]);
@@ -13,12 +128,17 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [type, setType] = useState("image");
   const [title, setTitle] = useState("");
+  const [user, setUser] = useState("");
+  const [image, setImage] = useState("");
+
 
     const checkUserRole = async () => {
     try {
       const response = await fetch('/api/user');
       const data = await response.json();
       if (data.user && data.user.role === 'ADMIN') {
+        setImage(data.user.image);
+        setUser(data.user.name);
         setIsAdmin(true);
       }
     } catch (error) {
@@ -57,6 +177,8 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
     formData.append("projectId", projectId);
     formData.append("type", type);
     formData.append("title", title || file.name);
+    formData.append("uploadedBy", user);
+    formData.append("userImage", image);
 
     try {
       setUploading(true);
@@ -106,11 +228,6 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
     }
   };
 
-  const getIcon = (type: string) => {
-    if (type === "image") return <Image className="text-blue-500" size={24} />;
-    if (type === "zip") return <FileArchive className="text-yellow-500" size={24} />;
-    return <FileText className="text-gray-400" size={24} />;
-  };
 
   return (
     <div className="space-y-6">
@@ -140,52 +257,17 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
           No assets uploaded yet.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {assets.map((a) => (
-            <div
-              key={a.id}
-              className="p-4 border rounded-xl bg-white dark:bg-gray-800 dark:border-gray-700 flex gap-4 items-center"
-            >
-              {/* Thumbnail */}
-              <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
-                {a.type === "image" ? (
-                  <img src={a.url} className="object-cover w-full h-full" />
-                ) : (
-                  getIcon(a.type)
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="flex-1">
-                <p className="font-semibold dark:text-white">{a.title}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  UpdatedBy: {a.updatedBy || "Admin"} 
-                </p>
-              </div>
-
-              {/* View & Delete */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => window.open(a.url, '_blank')}
-                  className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
-                  title="View asset"
-                >
-                  <Eye className="text-blue-500" size={18} />
-                </button>
-                <button
-                  onClick={() => deleteAsset(a.id)}
-                  className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
-                  title="Delete asset"
-                >
-                  <Trash2 className="text-red-500" size={18} />
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-y-16">
+          {
+            assets.length > 0 ? assets.map((a) => (
+              <AssetsCard key={a.id} imageLink={a.url} author={a.uploadedBy} userImage={a.userImage} viewLink={() => window.open(a.url, '_blank')} title={a.title} handleDelete={() => deleteAsset(a.id)} type={a.type} createdAt={a.createdAt} />
+            )) : (
+              <p className="text-center w-full">No Assets uploaded.</p>
+            )
+          }
         </div>
-      )}
 
-      {/* UPLOAD MODAL */}
+      )}
       {open && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-xl max-w-md w-full border dark:border-gray-700">

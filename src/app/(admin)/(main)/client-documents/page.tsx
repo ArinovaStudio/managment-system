@@ -139,7 +139,7 @@ export default function AdminDocuments() {
                                     <div className="flex items-center gap-3">
                                         <FileText className="text-blue-600" size={20} />
                                         <div>
-                                            <p className="font-normal text-xs text-gray-500">{doc?.Projects.name} - {doc?.User.name}</p>
+                                            <p className="font-normal text-xs text-gray-500">{doc?.Projects?.name} - {doc?.User?.name}</p>
                                             <p className="font-medium text-gray-900 dark:text-white mb-1">{doc.title}</p>
                                             <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                                         </div>

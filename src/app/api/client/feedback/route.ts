@@ -14,8 +14,7 @@ export async function GET(req: NextRequest) {
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const feedbacks = await db.feedback.findMany({
-      where: { byEmpId: user.employeeId || userId },
+    const feedbacks = await db.clientfeedback.findMany({
       orderBy: { id: 'desc' }
     });
 
@@ -53,5 +52,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, feedback });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create feedback" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const url = new URL(req.url)
+    const searchParams = url.searchParams.get("id")
+    await db.clientfeedback.deleteMany({
+      where: {id: searchParams}
+    })
+    return NextResponse.json({success: true}, {status: 200})
+  }
+  catch (err) {
+    return NextResponse.json({success: false}, {status: 500})
   }
 }

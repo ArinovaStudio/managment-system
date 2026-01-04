@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { User, IdCard, Send } from "lucide-react";
+import { User, IdCard, Send, LucideTrash } from "lucide-react";
 import Wrapper from "@/layout/Wrapper";
 import toast from "react-hot-toast";
 
@@ -20,39 +20,20 @@ export default function FeedbackForm() {
   const [employeeFeedbacks, setEmployeeFeedbacks] = useState<any[]>([]);
 
 
-
-  // const fetchAllFeedbacks = async () => {
-  //   try {
-  //     const response = await fetch('/api/feedbacks?all=true');
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setFeedbacks(data.feedbacks || []);
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to fetch feedbacks:', error);
-  //   }
-  // };
-
-
   const fetchAllFeedbacks = async () => {
     try {
-      const [feedbackRes, clientFeedbackRes] = await Promise.all([
+      const [feedbackRes] = await Promise.all([
         fetch('/api/feedbacks?all=true', { credentials: 'include' }),
-        fetch('/api/feedbacks/clientfeedback?all=true', { credentials: 'include' }),
       ]);
 
       const feedbackData = feedbackRes.ok
         ? await feedbackRes.json()
         : { feedbacks: [] };
 
-      const clientFeedbackData = clientFeedbackRes.ok
-        ? await clientFeedbackRes.json()
-        : { feedbacks: [] };
 
       // ✅ Merge both arrays
       setFeedbacks([
         ...(feedbackData.feedbacks || []),
-        ...(clientFeedbackData.feedbacks || []),
       ]);
 
     } catch (error) {
@@ -89,7 +70,33 @@ export default function FeedbackForm() {
     }
   };
 
+    async function fetchUser() {
+      try {
+        const response = await fetch('/api/user', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+          if (data.user?.role === 'ADMIN') {
+            setIsAdmin(true);
+            await fetchEmployees();
+            await fetchAllFeedbacks();
+          } else {
+            await fetchEmployeeFeedbacks();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    }
 
+  const handleDelete = async (id: string) => {
+      const res = await fetch(`/api/feedbacks?id=${id}`, {method: "DELETE"})
+      if (res.status === 200) {
+        toast.success("Deleted Successfully");
+        fetchUser()
+      }
+    }
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,25 +143,8 @@ export default function FeedbackForm() {
     }
   };
 
+  
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch('/api/user', { credentials: 'include' });
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
-          if (data.user?.role === 'ADMIN') {
-            setIsAdmin(true);
-            await fetchEmployees();
-            await fetchAllFeedbacks();
-          } else {
-            await fetchEmployeeFeedbacks();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-      }
-    }
     fetchUser();
     fetchAllFeedbacks();
   }, []);
@@ -232,7 +222,12 @@ export default function FeedbackForm() {
                         <span key={i} className={`text-lg ${i < fb.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}>
                           ★
                         </span>
-                      ))}
+                      ))} 
+                      
+                        <LucideTrash size={14} className="ml-2 text-red-400 cursor-pointer" 
+                        onClick={() => handleDelete(fb.id)} 
+                        />
+                      
                     </div>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{fb.desc}</p>

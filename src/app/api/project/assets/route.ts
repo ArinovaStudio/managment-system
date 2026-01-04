@@ -8,6 +8,8 @@ export async function POST(req: Request) {
         const projectId = formData.get("projectId") as string;
         const type = formData.get("type") as string;
         const title = formData.get("title") as string | null;
+        const uploadedBy = formData.get("uploadedBy") as string;
+        const userImage = formData.get("userImage") as string;
 
         if (!file || !projectId || !type) {
             return Response.json(
@@ -48,6 +50,9 @@ export async function POST(req: Request) {
                 url: (uploadResult as any).secure_url,
                 publicId: (uploadResult as any).public_id,
                 title: title || file.name,
+                uploadedBy,
+                userImage
+
             },
         });
 

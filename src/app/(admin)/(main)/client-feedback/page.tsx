@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Star, Plus } from "lucide-react";
+import { MessageSquare, Star, Plus, LucideTrash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loading";
 
@@ -29,28 +29,6 @@ export default function AdminFeedbacksPage() {
     }
   };
 
-  const submitFeedback = async () => {
-    if (!newFeedback.type || !newFeedback.desc) {
-      toast.error('Please fill all fields');
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/client/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newFeedback)
-      });
-      if (res.ok) {
-        toast.success('Feedback submitted successfully');
-        setShowModal(false);
-        setNewFeedback({ type: "", rating: 5, desc: "", isAnynonyms: false });
-        fetchFeedbacks();
-      }
-    } catch (error) {
-      toast.error('Failed to submit feedback');
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -69,11 +47,14 @@ export default function AdminFeedbacksPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {feedbacks.map((fb) => (
+          {feedbacks.length > 0 ? feedbacks.map((fb) => (
             <div
               key={fb.id}
-              className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
+              className="bg-white relative dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
             >
+              <div className="absolute right-2 top-4 w-8 h-8">
+                <LucideTrash2 className="text-red-400 hover:text-red-600 cursor-pointer" size={20} strokeWidth={1.3}/>
+              </div>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <MessageSquare className="text-blue-600" size={20} />
@@ -82,21 +63,18 @@ export default function AdminFeedbacksPage() {
                       {fb.byName}
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {fb.type} • Rating: {fb.rating}/10
+                      {fb.project}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {[...Array(Math.floor(fb.rating / 2))].map((_, i) => (
-                    <Star key={i} size={16} className="text-yellow-500 fill-current" />
-                  ))}
-                </div>
               </div>
               <p className="mt-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                {fb.desc}
+                {fb.message}
               </p>
             </div>
-          ))}
+          )) : (
+            <p className="text-center text-gray-400">No Feedbacks Provided.</p>
+          )}
         </div>
       )}
     </div>
