@@ -1,16 +1,129 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LucideLoader2, LucideShredder } from "lucide-react";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+
+
+const Cards = ({
+    id, image, department, empName, empId, leaveType, startDate, endDate, desc, status, handleDelete, updateLeaveStatus, isLoading
+}: {
+    id: string
+    image: string,
+    department: string,
+    empName: string,
+    empId: string,
+    leaveType: string,
+    startDate: string,
+    endDate: string,
+    desc: string,
+    status: string,
+    handleDelete: (id: string) => void,
+    updateLeaveStatus: (id: string, type: string) => void
+    isLoading: boolean
+}) => {
+    const totalDays = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const [open, SetOpen] = useState<string | null>(null);
+
+    const Isopen = open === id;
+
+
+    return (
+    <div className="w-full h-auto dark:bg-gray-800 bg-gray-100 rounded-4xl p-6 py-4 relative">
+                            <div className={`absolute px-4 py-1.5 
+                            ${status === "Pending"
+                                                            ? "bg-yellow-200 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"
+                                                            : status === "Approved"
+                                                                ? "bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                                                                : status === "Rejected"
+                                                                    ? "bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                                                                    : "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                                                        }
+                            right-6 top-5 rounded-full text-xs
+                                `}>{status}</div>
+                            <div className="flex justify-start items-center gap-1.5">
+                                <div className="w-16 h-16 rounded-full bg-blue-600/20 text-blue-500 grid place-items-center">
+                                {
+                                    image ? (
+                                        <Image
+                                            src={image}
+                                            alt={empName}
+                                            width={50}
+                                            height={50}
+                                            className="w-full h-16 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <p className="text-lg">{empName?.charAt(0)}</p>
+                                    )
+                                }
+                                </div>
+                                <div className="">
+                                    <p className="text-sm dark:text-gray-400 text-gray-500">{department}</p>
+                                    <h1 className="text-xl font-semibold -mt-0.5">{empName}</h1>
+                                    <p className="text-sm dark:text-gray-200 text-gray-600 dark:font-light font-normal">{empId}</p>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <h1 className="text-lg font-medium tracking-tight">{leaveType} • <span className="text-lg text-blue-400">{totalDays} Days</span></h1>
+                                <div className="mt-0 flex justify-between items-center">
+                                <p className="text-sm font-medium dark:text-gray-300 text-gray-700">{new Date(startDate).toDateString()} • {new Date(endDate).toDateString()}</p>
+                                <button onClick={() => SetOpen(open ? null : id)} className="text-base font-medium dark:text-gray-300 text-gray-700 flex justify-center items-center gap-1">
+                                    {Isopen ? "Collapse" : "View"} <ChevronDown size={20} className={`${Isopen ? "rotate-180" : "rotate-0"}`} />
+                                    </button>
+                                </div>
+
+                            <div className={`dark:bg-gray-900 bg-gray-200 rounded-xl p-4 mt-3 dark:text-zinc-400 text-zinc-700 text-sm ${Isopen ? "py-2.5" : "line-clamp-1 py-1"}`}>
+                                {desc}
+                            </div>
+                            {
+                                Isopen && (
+                            <div className="flex justify-between items-center mt-4">
+                                <button disabled={isLoading} onClick={isLoading ? () => {} :() => handleDelete(id)} className="w-10 h-10 cursor-pointer rounded-4xl bg-red-200 dark:bg-red-400/20 dark:text-red-300 text-red-400 grid place-items-center">
+                                    {
+                                        isLoading ? <LucideLoader2 className={`animate-spin`} size={18} strokeWidth={1.8} /> : <LucideShredder size={18} strokeWidth={1.8} />
+                                    }
+                                </button>
+
+                                <div className="flex justify-center items-center gap-2.5">
+                                {
+                                    status === "Approved" ? <p className="text-sm px-4 py-2 bg-green-200 dark:bg-green-400/10 text-green-600 rounded-lg">Approved</p> : status === "Rejected" ? <p className="text-sm px-4 py-2 bg-red-200 dark:bg-red-400/10 text-red-400 rounded-lg">Rejected</p> : (
+                                        <>
+                                        {
+                                            isLoading ? (
+                                                <div className="">
+                                                    <LucideLoader2 className={`animate-spin text-purple-300`} size={16} />
+                                                </div>
+                                            ) : (
+                                                <>
+                                        <button disabled={isLoading} onClick={isLoading ? () => {} : () => updateLeaveStatus(id, "Rejected")} className="text-base text-red-400">Decline</button>
+                                        <button disabled={isLoading} onClick={isLoading ? () => {} : () => updateLeaveStatus(id, "Approved")} className="text-base bg-green-200 dark:bg-green-400/20 dark:text-green-400 text-green-600 rounded-xl px-4 py-2">Approve</button>
+                                                </>
+                                            )
+                                        }
+                                        </>
+                                    )
+                                }
+                                </div>
+                            </div>
+                                )
+                            }
+                            </div>
+                        </div>
+                        
+    )
+}
+
 
 export default function LeaveRequestsPage() {
     const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [openCard, setOpenCard] = useState<string | null>(null);
+    const [transition, startTransition] = useState<boolean>(false);
 
     async function updateLeaveStatus(id: string, newStatus: string) {
         try {
+            startTransition(true)
             const res = await fetch(`/api/leaves/${id}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -27,10 +140,12 @@ export default function LeaveRequestsPage() {
         } catch (err) {
             console.error("Error updating leave status:", err);
         }
+        finally {
+            startTransition(false)
+        }
     }
 
-    useEffect(() => {
-        async function loadRequests() {
+            async function loadRequests() {
             try {
                 const res = await fetch("/api/leaves", { method: "GET" });
                 const data = await res.json();
@@ -41,8 +156,23 @@ export default function LeaveRequestsPage() {
                 setLoading(false);
             }
         }
+
+
+        async function handleDelete(id: string) {
+        startTransition(true);
+        const res = await fetch(`/api/leaves/${id}`, {method: "DELETE"})
+        if (res.status === 200) {
+            toast.success("Deleted Successfully!")
+            startTransition(false);
+            loadRequests()
+        }
+    }
+
+    useEffect(() => {        
         loadRequests();
     }, []);
+
+
 
     return (
         <div className="p-6">
@@ -84,141 +214,109 @@ export default function LeaveRequestsPage() {
                 <div>
                     {/* HEADER */}
                     <div className="flex items-center mb-5">
-                        <h1 className="text-2xl">Leave Approval</h1>
+                        <h1 className="text-2xl">Requeseted Leaves</h1>
 
-                        <span className="ml-2 mt-1 bg-[#ff9768] text-white rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="ml-2 mt-1 bg-amber-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                             {leaveRequests.filter(req => req.status === "Pending").length}
                         </span>
-
-                        <span className="ml-2 mt-1 text-[#ff9768] opacity-75 text-sm">Pending</span>
+                        <span className="ml-2 mt-1 text-amber-400 opacity-75 text-sm">Pending</span>
                     </div>
 
-                    {/* CARDS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 items-start">
-                        {leaveRequests.map((req) => {
-                            const totalDays =
-                                Math.ceil(
-                                    (new Date(req.endDate).getTime() - new Date(req.startDate).getTime()) /
-                                    (1000 * 60 * 60 * 24)
-                                ) + 1;
 
-                            const isOpen = openCard === req.id;
-
-                            return (
-                                <div
-                                    key={req.id}
-                                    className="p-4 border rounded shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 self-start transition-all duration-200"
-                                >
-                                    {/* TOP SECTION */}
-                                    <div className="flex gap-5">
-                                        {
-                                            req.user?.image ? (
-                                                                                        <Image
-                                            src={req.user?.image}
-                                            alt={req.empName}
-                                            width={50}
-                                            height={50}
-                                            unoptimized
-                                            className="w-12 h-12 rounded-full object-cover"
-                                        />
-
-                                            ) : (
-                                            <div className="w-12 h-12 rounded-full bg-blue-600/20 text-blue-500 grid place-items-center">{req.empName.charAt(0)}</div>
-                                        
-                                            )
-                                        }
-                                        <div className="flex flex-col w-full">
-                                            <div className="flex justify-between w-full">
-                                                <h2 className="font-bold text-lg">{req.empName}</h2>
-
-                                                <p className="text-sm">{req.department}</p>
-
-                                                <span className="px-3 py-1 text-xs rounded-full bg-blue-100 dark:bg-blue-100/20 text-[#0f8fe4]">
-                                                    {totalDays} Days
-                                                </span>
-                                                <span
-                                                    className={`px-3 py-1 text-xs font-semibold rounded-full
-    ${req.status === "Pending"
-                                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300"
-                                                            : req.status === "Approved"
-                                                                ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                                                                : req.status === "Rejected"
-                                                                    ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
-                                                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
-                                                        }
-  `}
-                                                >
-                                                    {req.status}
-                                                </span>
-
-                                            </div>
-
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">
-                                                {req.user?.employeeId}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* DATE + TYPE */}
-                                    <div className="flex justify-between items-center mt-3">
-                                        <div>
-                                            <p className="text-sm font-semibold">{req.leaveType}</p>
-
-                                            <div className="flex items-center gap-1 text-sm">
-                                                <span>{new Date(req.startDate).toLocaleDateString("en-GB")}</span>
-                                                <span>-</span>
-                                                <span>{new Date(req.endDate).toLocaleDateString("en-GB")}</span>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            className="text-sm text-[#0e78be] flex items-center"
-                                            onClick={() => setOpenCard(isOpen ? null : req.id)}
-                                        >
-                                            Details
-                                            <ChevronDown
-                                                className={`ml-1 w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    {/* EXPANDED SECTION */}
-                                    {isOpen && (
-                                        <div>
-                                            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg shadow">
-                                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {req.reason}
-                                                </p>
-
-                                                {req.status === "Pending" && (
-                                                    <div className="flex justify-end gap-4 mt-3">
-                                                        <button
-                                                            onClick={() => updateLeaveStatus(req.id, "Approved")}
-                                                            className="text-sm text-[#0e78be] hover:text-blue-500"
-                                                        >
-                                                            Approve
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => updateLeaveStatus(req.id, "Rejected")}
-                                                            className="text-sm text-[#0e78be] hover:text-blue-500"
-                                                        >
-                                                            Deny
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                            </div>
-
-                                            {/* ACTION BUTTONS */}
-
-                                        </div>
-                                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                        {
+                           leaveRequests.filter(req => req.status === "Pending").length > 0 ? leaveRequests.filter(req => req.status === "Pending").map((items, index) => (
+                            <Cards 
+                            key={index}
+                            id={items.id}
+                            department={items.department}
+                            desc={items.reason}
+                            empName={items.empName}
+                            empId={items.user?.employeeId}
+                            endDate={items.endDate}
+                            startDate={items.startDate}
+                            image={items.user?.image}
+                            leaveType={items.leaveType}
+                            status={items.status}
+                            handleDelete={handleDelete}
+                            updateLeaveStatus={updateLeaveStatus}
+                            isLoading={transition}
+                            /> 
+                           )) : (
+                            <p className="text-base text-gray-400">No Pending Requests</p>
+                           )
+                        }
+                    </div>
 
 
-                                </div>
-                            );
-                        })}
+                    <div className="flex items-center my-5">
+                        <h1 className="text-2xl">Approved Leaves</h1>
+
+                        <span className="ml-2 mt-1 bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                            {leaveRequests.filter(req => req.status === "Approved").length}
+                        </span>
+                        <span className="ml-2 mt-1 text-green-400 opacity-75 text-sm">Approved</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                        {
+                           leaveRequests.filter(req => req.status === "Approved").length > 0 ? leaveRequests.filter(req => req.status === "Approved").map((items, index) => (
+                            <Cards 
+                            key={index}
+                            id={items.id}
+                            department={items.department}
+                            desc={items.reason}
+                            empName={items.empName}
+                            empId={items.user?.employeeId}
+                            endDate={items.endDate}
+                            startDate={items.startDate}
+                            image={items.user?.image}
+                            leaveType={items.leaveType}
+                            status={items.status}
+                            handleDelete={handleDelete}
+                            updateLeaveStatus={updateLeaveStatus}
+                            isLoading={transition}
+                            /> 
+                           )) : (
+                            <p className="text-base text-gray-400">No Approved Requests</p>
+                           )
+                        }
+                    </div>
+                    
+
+
+                    <div className="flex items-center my-5">
+                        <h1 className="text-2xl">Rejected Leaves</h1>
+
+                        <span className="ml-2 mt-1 bg-red-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                            {leaveRequests.filter(req => req.status === "Rejected").length}
+                        </span>
+                        <span className="ml-2 mt-1 text-red-400 opacity-75 text-sm">Rejected</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                        {
+                           leaveRequests.filter(req => req.status === "Rejected").length > 0 ? leaveRequests.filter(req => req.status === "Rejected").map((items, index) => (
+                            <Cards 
+                            key={index}
+                            id={items.id}
+                            department={items.department}
+                            desc={items.reason}
+                            empName={items.empName}
+                            empId={items.user?.employeeId}
+                            endDate={items.endDate}
+                            startDate={items.startDate}
+                            image={items.user?.image}
+                            leaveType={items.leaveType}
+                            status={items.status}
+                            handleDelete={handleDelete}
+                            updateLeaveStatus={updateLeaveStatus}
+                            isLoading={transition}
+                            /> 
+                           )) : (
+                            <p className="text-base text-gray-400">No Rejected Requests</p>
+                           )
+                        }
                     </div>
                 </div>
             )}

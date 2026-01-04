@@ -6,9 +6,12 @@ interface Params {
 }
 
 export async function GET(_: Request, { params }: Params) {
+  
+  const {id} = await params;
+
   try {
     const leave = await db.leaveReq.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       
     });
 
@@ -26,6 +29,7 @@ export async function GET(_: Request, { params }: Params) {
 }
 
 export async function PUT(req: Request, { params }: Params) {
+    const {id} = await params;
   try {
     const body = await req.json();
     const {
@@ -40,7 +44,7 @@ export async function PUT(req: Request, { params }: Params) {
     } = body;
 
     const updatedLeave = await db.leaveReq.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         empName,
         empId,
@@ -63,9 +67,10 @@ export async function PUT(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_: Request, { params }: Params) {
+    const {id} = await params;
   try {
     const deletedLeave = await db.leaveReq.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json(
