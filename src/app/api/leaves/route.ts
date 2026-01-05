@@ -1,8 +1,31 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/client";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const empId = url.searchParams.get("empId")
+  const id = url.searchParams.get("id")
+
+  if (id) {
+    const leaveRequests = await db.leaveReq.findMany({
+      where: {empId: empId},
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: { user: true },
+    });
+    const leaveStats = await db.UserLeaves.findMany({
+      where: {
+        userId: id
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+    return NextResponse.json({leaveRequests, leaveStats}, { status: 200 });
+  }
   try {
+
     const leaveRequests = await db.leaveReq.findMany({
       orderBy: {
         createdAt: "desc",
