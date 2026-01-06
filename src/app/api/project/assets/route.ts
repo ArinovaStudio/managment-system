@@ -10,45 +10,48 @@ export async function POST(req: Request) {
         const title = formData.get("title") as string | null;
         const uploadedBy = formData.get("uploadedBy") as string;
         const userImage = formData.get("userImage") as string;
+        const url = formData.get("url") as string;
 
-        if (!file || !projectId || !type) {
+        let uploadResult: any
+        if (!projectId || !type) {
             return Response.json(
-                { success: false, message: "file, projectId, type are required" },
+                { success: false, message: "projectId, type are required" },
                 { status: 400 }
             );
         }
 
-        const allowedTypes = ["image", "zip", "document"];
+        if (file) {            
+            const allowedTypes = ["image", "zip", "document"];
+    
+            if (!allowedTypes.includes(type)) {
+                return Response.json(
+                    { success: false, message: "Invalid type" },
+                    { status: 400 }
+                );
+            }
 
-        if (!allowedTypes.includes(type)) {
-            return Response.json(
-                { success: false, message: "Invalid type" },
-                { status: 400 }
-            );
+            // Convert File -> Buffer
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+    
+            // Cloudinary Upload
+            uploadResult = await new Promise((resolve, reject) => {
+                cloudinary.uploader
+                    .upload_stream({ resource_type: "auto" }, (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    })
+                    .end(buffer);
+            });
         }
-
-
-        // Convert File -> Buffer
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        // Cloudinary Upload
-        const uploadResult = await new Promise((resolve, reject) => {
-            cloudinary.uploader
-                .upload_stream({ resource_type: "auto" }, (err, result) => {
-                    if (err) reject(err);
-                    else resolve(result);
-                })
-                .end(buffer);
-        });
 
         // Save in database
         const asset = await db.asset.create({
             data: {
                 projectId,
                 type,
-                url: (uploadResult as any).secure_url,
-                publicId: (uploadResult as any).public_id,
+                url: url ? url : (uploadResult as any).secure_url,
+                publicId: url ? `LINK for ${title}` : (uploadResult as any).public_id,
                 title: title || file.name,
                 uploadedBy,
                 userImage

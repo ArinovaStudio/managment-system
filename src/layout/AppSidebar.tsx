@@ -4,13 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+
+
+// HorizontaLDots,
 import {
   ChevronDownIcon,
-  HorizontaLDots,
-  ListIcon,
-} from "../icons/index";
-
-import {
   AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, Handshake, HeartPulseIcon, MessageSquareMore,
   Presentation,
   Lightbulb,
@@ -25,6 +23,7 @@ import {
   ChartNoAxesCombined,
   HeartPlus
 } from "lucide-react"
+import { HorizontaLDots } from "@/icons";
 
 type NavItem = {
   name: string;

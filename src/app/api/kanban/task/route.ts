@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse, NextRequest } from "next/server";
 import db from "@/lib/client";
 import cloudinary from "@/lib/cloudinary";
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
     const tagsRaw = formData.get("tags") as string;
     const status = (formData.get("status") as string)?.trim();
     const projectId = formData.get("projectId") as string | null;
-    const attachmentFile = formData.get("attachment") as File | null;
+    const attachmentFiles = formData.getAll("attachment") as File[];
 
     if (!title || !description || !assignee || !priority || !dueDate || !status) {
       return NextResponse.json(
@@ -28,41 +30,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const attachments: any[] = [];
+const attachments: any[] = [];
 
-    if (attachmentFile && attachmentFile.size > 0) {
-      if (attachmentFile.size > 10 * 1024 * 1024) {
-        return NextResponse.json(
-          { error: "File must be under 10MB" },
-          { status: 400 }
-        );
-      }
 
-      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
-
-      const uploadResult: any = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "kanban_attachments",
-            resource_type: "auto",
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-
-        uploadStream.end(buffer);
-      });
-
-      attachments.push({
-        url: uploadResult.secure_url,
-        public_id: uploadResult.public_id,
-        size: attachmentFile.size,
-        contentType: attachmentFile.type,
-        originalName: attachmentFile.name,
-      });
+if (attachmentFiles.length > 0) {
+  for (const attachmentFile of attachmentFiles) {
+    // 🔒 Per-file size check (10MB)
+    if (attachmentFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: `File ${attachmentFile.name} exceeds 10MB limit` },
+        { status: 400 }
+      );
     }
+
+    const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+
+    const uploadResult: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "kanban_attachments",
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+
+    attachments.push({
+      url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      size: attachmentFile.size,
+      contentType: attachmentFile.type,
+      originalName: attachmentFile.name,
+    });
+  }
+}
+
 
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()) : [];
 
@@ -213,43 +220,46 @@ export async function PUT(req: NextRequest) {
       const formData = await req.formData();
 
       id = formData.get("id") as string;
-      const attachmentFile = formData.get("attachment") as File | null
+      const attachmentFiles = formData.getAll("attachment") as File[]
 
       const attachments: any[] = [];
-
-    if (attachmentFile && attachmentFile.size > 0) {
-      if (attachmentFile.size > 10 * 1024 * 1024) {
-        return NextResponse.json(
-          { error: "File must be under 10MB" },
-          { status: 400 }
-        );
-      }
-
-      const buffer = Buffer.from(await attachmentFile.arrayBuffer());
-
-      const uploadResult: any = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "kanban_attachments",
-            resource_type: "auto",
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-
-        uploadStream.end(buffer);
-      });
-
-      attachments.push({
-        url: uploadResult.secure_url,
-        public_id: uploadResult.public_id,
-        size: attachmentFile.size,
-        contentType: attachmentFile.type,
-        originalName: attachmentFile.name,
-      });
+      if (attachmentFiles.length > 0) {
+  for (const attachmentFile of attachmentFiles) {
+    // 🔒 Per-file size check (10MB)
+    if (attachmentFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: `File ${attachmentFile.name} exceeds 10MB limit` },
+        { status: 400 }
+      );
     }
+
+    const buffer = Buffer.from(await attachmentFile.arrayBuffer());
+
+    const uploadResult: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "kanban_attachments",
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      uploadStream.end(buffer);
+    });
+
+    attachments.push({
+      url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      size: attachmentFile.size,
+      contentType: attachmentFile.type,
+      originalName: attachmentFile.name,
+    });
+  }
+}
+
 
       data = {
         title: formData.get("title") as string,

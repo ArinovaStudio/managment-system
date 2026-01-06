@@ -2,7 +2,7 @@
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { EyeClosed, EyeIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -137,7 +137,7 @@ const ForgotPassword = () => {
                                             {showPassword ? (
                                                 <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                                             ) : (
-                                                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                                                <EyeClosed className="fill-gray-500 dark:fill-gray-400" />
                                             )}
                                         </span>
                                     </div>

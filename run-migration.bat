@@ -1,2 +1,0 @@
-npx prisma generate --schema ./src/prisma/schema.prisma
-npx prisma db push --schema ./src/prisma/schema.prisma

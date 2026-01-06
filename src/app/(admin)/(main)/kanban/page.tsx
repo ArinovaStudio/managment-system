@@ -23,7 +23,8 @@ import {
   Download,
   Eye,
   LucideLoader2,
-  LucideLoader
+  LucideLoader,
+  LucideXCircle
 } from 'lucide-react';
 
 import { Toaster, toast } from 'react-hot-toast';
@@ -50,7 +51,7 @@ interface Task {
   dueDate: string;
   tags: string[];
   comments: Comment[];
-  attachments: Array<{ id: string; name: string; size: string; type: string, url: string; }>;
+  attachments: Array<{ id: string; originalName: string; name: string; size: string; type: string, url: string; }>;
   status: 'assigned' | 'in-progress' | 'completed';
 }
 
@@ -70,7 +71,7 @@ type NewTaskShape = {
   dueDate: string;
   tags: string[];
   status: 'assigned' | 'in-progress' | 'completed';
-  attachmentFile: File | null;
+  attachments: File[] | null;
   projectId: string;
 };
 
@@ -88,7 +89,22 @@ export const NewTaskModal: React.FC<{
   projectsLoading: boolean;
   projects: { id: string; name: string }[];
 }> = ({ isOpen, onClose, mode, isLoading, assignee, newTask, setNewTask, handleSubmit, handleAddTag, handleRemoveTag, projectsLoading, projects, }) => {
+  
+  
   if (!isOpen) return null;
+  
+const removeAttachment = (index: number) => {
+  setNewTask((prev) => {
+    if (!prev.attachments) return prev;
+
+    const updated = prev.attachments.filter((_, i) => i !== index);
+
+    return {
+      ...prev,
+      attachments: updated.length ? updated : null,
+    };
+  });
+};
 
   return (
     <div className="fixed inset-0 z-9999 flex items-center justify-center p-4">
@@ -244,37 +260,81 @@ export const NewTaskModal: React.FC<{
             />
           </div>
 
-          <div
-            className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 bg-gray-50 dark:border-gray-800 dark:bg-[#111]"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const file = e.dataTransfer.files?.[0];
-              if (file) {
-                setNewTask({ ...newTask, attachmentFile: file });
-              }
-            }}
-            onClick={() => document.getElementById("task-file-input")?.click()}
-          >
-            <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-            <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">Click to upload or drag and drop</p>
-            <p className="text-xs text-gray-500 dark:text-gray-600">PDF, DOC, Images up to 10MB</p>
+<div
+  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
+             border-gray-300 bg-gray-50
+             dark:border-gray-800 dark:bg-[#111]"
+  onDragOver={(e) => e.preventDefault()}
+onDrop={(e) => {
+  e.preventDefault();
+  const files = Array.from(e.dataTransfer.files || []);
+  if (!files.length) return;
 
-            <input
-              id="task-file-input"
-              type="file"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setNewTask({ ...newTask, attachmentFile: file });
-              }}
-            />
-            {newTask.attachmentFile && (
-              <p className="text-sm mt-2 text-green-600 dark:text-green-400">
-                Selected: {newTask.attachmentFile.name}
-              </p>
-            )}
-          </div>
+  setNewTask((prev) => {
+    const existing = prev.attachments ?? [];
+
+    return {
+      ...prev,
+      attachments: [...existing, ...files],
+    };
+  });
+}}
+
+
+  onClick={() => document.getElementById("task-file-input")?.click()}
+>
+  <Paperclip className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+
+  <p className="text-sm mb-1 text-gray-600 dark:text-gray-400">
+    Click to upload or drag and drop
+  </p>
+  <p className="text-xs text-gray-500 dark:text-gray-600">
+    PDF, DOC, Images up to 10MB each
+  </p>
+
+  <input
+    id="task-file-input"
+    type="file"
+    multiple
+    className="hidden"
+onChange={(e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+
+  setNewTask((prev) => {
+    const existing = prev.attachments ?? [];
+
+    return {
+      ...prev,
+      attachments: [...existing, ...files],
+    };
+  });
+
+  e.target.value = '';
+}}
+
+
+  />
+</div>
+
+
+  {newTask.attachments?.length > 0 && (
+    <div className="mt-3 space-y-2">
+      {newTask.attachments.map((file, index) => (
+        <div
+          key={`${file.name}-${index}`}
+          className="flex items-center justify-between text-sm px-4 pr-3 py-3.5 rounded-lg bg-white dark:bg-[#111] border border-gray-300 dark:border-gray-800 dark:text-white text-gray-900">
+          <span className="truncate max-w-[80%]">{file.name}</span>
+
+          <button
+            type="button"
+            onClick={() => removeAttachment(index)}>
+            <LucideXCircle size={18} className="text-red-400"/>
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
 
           <div className="flex gap-3 pt-4">
             <button onClick={onClose} className="flex-1 px-6 py-3 rounded-lg font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -606,7 +666,7 @@ export const SidePanel: React.FC<{
                         <span className="text-2xl">{getFileIcon(file.type)}</span>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate text-gray-900 dark:text-white">
-                            {file.name}
+                            {file.originalName}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-500">
                             {file.size}
@@ -895,7 +955,7 @@ const KanbanBoard: React.FC = () => {
     dueDate: '',
     tags: [],
     status: 'assigned',
-    attachmentFile: null,
+    attachments: null,
     projectId: '',
   });
 
@@ -999,6 +1059,7 @@ const KanbanBoard: React.FC = () => {
       });
 
       const data = await res.json();
+      console.log(data);
       
       setTasks(data.tasks ?? []);
     } catch (err) {
@@ -1045,9 +1106,11 @@ const KanbanBoard: React.FC = () => {
       formData.append("tags", newTask.tags.join(","));
       formData.append("projectId", newTask.projectId)
 
-      if (newTask.attachmentFile) {
-        formData.append("attachment", newTask.attachmentFile);
-      }
+if (newTask.attachments?.length) {
+  newTask.attachments.forEach((file) => {
+    formData.append("attachment", file);
+  });
+}
 
       const res = await fetch("/api/kanban/task", {
         method: "PUT",
@@ -1098,7 +1161,7 @@ const KanbanBoard: React.FC = () => {
       dueDate: task.dueDate.split("T")[0],
       tags: task.tags,
       status: task.status,
-      attachmentFile: null,
+      attachments: null,
       projectId: task?.Project?.id || "",
     });
 
@@ -1324,9 +1387,11 @@ const KanbanBoard: React.FC = () => {
       formData.append("status", newTask.status);
       formData.append("tags", newTask.tags.join(","));
 
-      if (newTask.attachmentFile) {
-        formData.append("attachment", newTask.attachmentFile);
-      }
+if (newTask.attachments?.length) {
+  newTask.attachments.forEach((file) => {
+    formData.append("attachment", file);
+  });
+}
 
       const res = await fetch("/api/kanban/task", {
         method: "POST",
@@ -1350,7 +1415,7 @@ const KanbanBoard: React.FC = () => {
         dueDate: "",
         tags: [],
         status: "assigned",
-        attachmentFile: null,
+        attachments: null,
         projectId: "",
       });
 

@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FileArchive, FileText, Plus, Loader2, LucideDownload, LucideScanEye, LucideTrash2, LucideImage } from "lucide-react";
+import { FileArchive, FileText, Plus, Loader2, LucideDownload, LucideScanEye, LucideTrash2, LucideImage, LucideLink, SquareArrowOutUpRight, LucideCopy, LucideCopyCheck } from "lucide-react";
 import toast from "react-hot-toast";
-import Image from "next/image";
-import svg from "/public/images/shape/assets.svg"
 
-
-function AssetsCard({imageLink, userImage, title, author, viewLink, handleDelete, type, createdAt}: {
+function AssetsCard({imageLink, userImage, url, title, author, viewLink, handleDelete, type, createdAt}: {
   imageLink: string,
   title: string,
   author: string,
+  url?: string,
   userImage: string,
   viewLink: () => void,
   handleDelete: () => void,
@@ -18,6 +16,7 @@ function AssetsCard({imageLink, userImage, title, author, viewLink, handleDelete
   createdAt: string
 }) {
 
+  const [isCopied, setIsCopied] = useState(false);
 const handleDownload = async (imageUrl: string, title: string) => {
   try {
     const response = await fetch(imageUrl, {
@@ -51,13 +50,24 @@ const handleDownload = async (imageUrl: string, title: string) => {
     const getIcon = (type: string) => {
     if (type === "image") return <LucideImage className="text-gray-400" size={16} />;
     if (type === "zip") return <FileArchive className="text-gray-400" size={16} />;
-    return <FileText className="text-gray-400" size={24} />;
+    if (type === "link") return <LucideLink className="text-gray-400" size={16} />
+    return <FileText className="text-gray-400" size={16} />;
+  };
+
+    const copyTextToClipboard = async (link: string) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   return (
             <div className="relative w-96 h-80 rounded-4xl border-8 border-black dark:border-gray-700 overflow-hidden">
     <img
-    src={imageLink}
+    src={type === "link" ? "/images/shape/link.png" : imageLink}
     alt={title}
     className="w-full h-full object-cover"
     />
@@ -76,7 +86,7 @@ const handleDownload = async (imageUrl: string, title: string) => {
 <div className="w-full h-full absolute inset-0 z-9999 px-6 py-3">
       <p className="text-neutral-500 dark:text-neutral-400 font-medium text-lg mb-3 flex justify-start items-center gap-1">{getIcon(type)} {type}</p>
         <p className="text-white dark:text-white font-medium text-xl">{title}</p>
-        <p className="text-gray-400 font-normal text-xs mt-2">Created on: {createdAt?.split("T")[0]}</p>
+        <p className="text-gray-400 font-normal text-xs mt-2">Uploaded on: {createdAt?.split("T")[0]}</p>
 
       <div className="w-full absolute bottom-4 flex justify-between items-center">
         <div className="flex justify-center items-center gap-2 rounded-full  text-sm">
@@ -101,11 +111,11 @@ const handleDownload = async (imageUrl: string, title: string) => {
           <div onClick={handleDelete} className="cursor-pointer w-6 h-6 text-white hover:text-red-400 flex justify-center items-center rounded-full">
             <LucideTrash2 size={20} strokeWidth={2} />
           </div>
-          <div onClick={viewLink} className="cursor-pointer w-8 h-8 text-white hover:text-blue-400 flex justify-center items-center rounded-full">
-            <LucideScanEye size={20} strokeWidth={2} />
+          <div onClick={type === "link" ? () => copyTextToClipboard(url) : viewLink} className="cursor-pointer w-8 h-8 text-white hover:text-blue-400 flex justify-center items-center rounded-full">
+            {type === "link" ? isCopied ? <LucideCopyCheck size={20} strokeWidth={2}/> : <LucideCopy size={20} strokeWidth={2}/> : <LucideScanEye size={20} strokeWidth={2} />}
           </div>
           <div onClick={() => handleDownload(imageLink, title)} className="cursor-pointer w-8 h-8 bg-white dark:bg-black hover:scale-90 hover:bg-green-400 transition-all flex justify-center items-center rounded-full">
-            <LucideDownload size={14} strokeWidth={2.5} />
+            {type === "link" ? <SquareArrowOutUpRight size={14} strokeWidth={2.5}/> : <LucideDownload size={14} strokeWidth={2.5} />}
           </div>
 
         </div>
@@ -130,6 +140,7 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
   const [title, setTitle] = useState("");
   const [user, setUser] = useState("");
   const [image, setImage] = useState("");
+  const [url, setUrl] = useState("");
 
 
     const checkUserRole = async () => {
@@ -167,18 +178,20 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
   };
 
   const uploadAsset = async () => {
-    if (!file) {
-      toast.error("Please select a file");
+
+    if (!title) {
+      toast.error("Please Give a title");
       return;
     }
 
     const formData = new FormData();
-    formData.append("file", file);
     formData.append("projectId", projectId);
     formData.append("type", type);
-    formData.append("title", title || file.name);
+    formData.append("title", title);
     formData.append("uploadedBy", user);
     formData.append("userImage", image);
+    formData.append("url", url);
+    // formData.append("file", file);
 
     try {
       setUploading(true);
@@ -260,7 +273,7 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-y-16">
           {
             assets.length > 0 ? assets.map((a) => (
-              <AssetsCard key={a.id} imageLink={a.url} author={a.uploadedBy} userImage={a.userImage} viewLink={() => window.open(a.url, '_blank')} title={a.title} handleDelete={() => deleteAsset(a.id)} type={a.type} createdAt={a.createdAt} />
+                <AssetsCard key={a.id} imageLink={a.url} author={a.uploadedBy} userImage={a.userImage} viewLink={() => window.open(a.url, '_blank')} title={a.title} handleDelete={() => deleteAsset(a.id)} type={a.type} createdAt={a.createdAt} url={a.url} />
             )) : (
               <p className="text-center w-full">No Assets uploaded.</p>
             )
@@ -275,11 +288,12 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
               Upload Asset
             </h2>
 
-            {/* File */}
             <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="mb-3"
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-800 mb-4"
             />
 
             {/* Type */}
@@ -294,16 +308,31 @@ export default function AssetsTab({ projectId }: { projectId: string }) {
               <option value="image">Image</option>
               <option value="zip">Zip</option>
               <option value="document">Document</option>
+              <option value="link">Link</option>
             </select>
 
-            {/* Title */}
+          {
+            type === "link" ? (
+              <>
             <input
               type="text"
-              placeholder="Title (optional)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-800 mb-4"
-            />
+              placeholder="Paste Your URL"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full p-2 rounded-lg bg-gray-100 dark:bg-gray-800 mb-4 mt-2"
+              />
+              </>
+            ) : (
+              <>
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="mb-3"
+              />
+              </>
+            )
+          }
+
 
             {/* Buttons */}
             <div className="flex justify-end gap-3">

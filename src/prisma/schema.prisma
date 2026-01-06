@@ -6,29 +6,28 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model User {
-  id              String           @id @default(cuid())
-  employeeId      String?          @unique
-  email           String           @unique
-  isDev           Boolean?         @default(false) 
+  id              String            @id @default(cuid())
+  employeeId      String?           @unique
+  email           String            @unique
+  isDev           Boolean?          @default(false)
   githubProfile   String?
   name            String
   password        String
-  role            ROLES            @default(CLIENT)
+  role            ROLES             @default(CLIENT)
   workingAs       String?
   department      String?
   phone           String?
   bio             String?
   image           String?
   dob             String?
-  isLogin         Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  isLogin         Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   faceDescriptor  String?
   breaks          Break[]
   clockRecords    ClockRecord[]
-  Documents       Docs[]           @relation("UserDocuments")
+  Documents       Docs[]            @relation("UserDocuments")
   meetingRequests MeetingRequest[]
   memo            Memo[]
   milestones      Milestone[]
@@ -50,7 +49,7 @@ model Docs {
   fileUrl   String
   createdAt DateTime @default(now())
   userId    String?
-  projectId String?  
+  projectId String?
   Projects  Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   User      User?    @relation("UserDocuments", fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -214,7 +213,7 @@ model Task {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   projectId      String?
-  comments       Comment[] 
+  comments       Comment[]
   Project        Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
@@ -291,15 +290,16 @@ model Milestone {
 }
 
 model Asset {
-  id        String   @id @default(cuid())
-  projectId String
-  type      String
-  url       String
-  publicId  String
-  title     String?
+  id         String   @id @default(cuid())
+  type       String
+  url        String
+  title      String
   uploadedBy String?
-  createdAt DateTime @default(now())
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userImage  String?
+  createdAt  DateTime @default(now())
+  projectId  String
+  publicId   String?
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Ticket {
@@ -321,24 +321,25 @@ model UsefulTip {
 }
 
 model MeetingRequest {
-  id        String   @id @default(cuid())
-  clientId  String
-  reason    String
-  meetDate  DateTime
-  meetTime  String
-  status    String   @default("pending")
-  duration  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  memo      Memo[]
-  client    User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  reason      String
+  meetDate    DateTime
+  meetTime    String
+  status      String   @default("pending")
+  meetingLink String?
+  createdBy   String?
+  duration    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  memo        Memo[]
+  clientId    String
+  client      User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model Memo {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   meetingId String
   message   String
   clientId  String
