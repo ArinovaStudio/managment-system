@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Clock, User, AlertCircle, Plus, Users, Trash2 } from "lucide-react";
+import { Calendar, Clock, User, AlertCircle, Plus, Users, Trash2, UserCheck2 } from "lucide-react";
 import CreateMeetingModal from "@/components/meetings/CreateMeetingModal";
 import Link from "next/link";
 
@@ -138,10 +138,18 @@ export default function MeetingsPage() {
                   </span>
                 </div>
                 {isAdmin ? (
+                  <>
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Users size={16} />
-                    <span>{meeting.attendees?.length || 0} attendees</span>
+                    <span>{meeting.attendees?.length || 0} attendees -</span>
                   </div>
+
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 flex-wrap"> 
+                    <UserCheck2 size={16} />
+                     {meeting.attendees.length > 0 && meeting.attendees.map((items, idx) => (
+                      <p key={idx}>{items.user.name},</p>
+                    ))}</div>
+                  </>
                 ) : (
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <User size={16} />

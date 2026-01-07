@@ -43,7 +43,7 @@ function page() {
               data.length > 0 && data.map((items, index) => (
                 <Link href={`/project-plan/document?id=${items.id}`} key={index} className="w-full h-80 border border-gray-700 rounded-lg bg-gray-600/10 text-gray-400 grid place-items-center">
                     <div className="flex flex-col justify-center items-center">
-                    <FolderOpen strokeWidth={1.6} size={42} />
+                    <FolderOpen strokeWidth={1.2} size={42} />
                     <p className='text-xl font-semibold dark:text-white text-black mt-3'>{items.name}</p>
                     <p className='text-base mt-1 font-normal text-gray-500 dark:text-gray-400'>{items.createdBy}</p>
                     <p className='text-xs font-normal text-gray-500 dark:text-gray-400'>{new Date(items.createdAt.split("T")[0]).toDateString()}</p>
