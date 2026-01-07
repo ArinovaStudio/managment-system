@@ -21,7 +21,8 @@ import {
   TentTree,
   Flag,
   ChartNoAxesCombined,
-  HeartPlus
+  HeartPlus,
+  LucideClipboardPenLine
 } from "lucide-react"
 import { HorizontaLDots } from "@/icons";
 
@@ -150,6 +151,12 @@ const adminOnlyItem: NavItem[] = [
     icon: <Dices strokeWidth={1.5} />,
     name: "Quotes",
     path: "/quotes",
+    role: "ADMIN"
+  },
+    {
+    icon: <LucideClipboardPenLine strokeWidth={1.5} />,
+    name: "Project Plan",
+    path: "/project-plan",
     role: "ADMIN"
   },
 ];

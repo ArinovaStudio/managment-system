@@ -506,6 +506,14 @@ model OtpVerification {
   @@index([email, type])
 }
 
+model PlanDocs {
+  id        String   @id @default(nanoid())
+  name      String   @default("United")
+  content   String
+  createdBy String
+  createdAt DateTime @default(now())
+}
+
 enum OtpType {
   SIGNUP
   FORGOT_PASSWORD

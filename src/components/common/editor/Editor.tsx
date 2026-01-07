@@ -5,6 +5,7 @@ import Toolbar from "./Toolbar";
 import { extensions } from "./extensions";
 
 type Props = {
+  isBigEditor?: boolean;
   content?: string;
   onChange: (html: string) => void;
 };
@@ -46,7 +47,7 @@ const editorClassName = [
   "prose-code:rounded",
 ].join(" ");
 
-export default function RichTextEditor({ content, onChange }: Props) {
+export default function RichTextEditor({ isBigEditor = false, content, onChange }: Props) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions,
@@ -64,9 +65,18 @@ export default function RichTextEditor({ content, onChange }: Props) {
   if (!editor) return null;
 
   return (
-    <div className="w-full rounded-xl min-h-[220px] h-auto border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0d0d0d] shadow-sm">
+    isBigEditor ? (
+      <div className="relative  w-full">
+      <Toolbar editor={editor} isBigEditor={true} />
+      <div className="mt-4 rounded-xl min-h-[73vh] h-auto border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 shadow-sm">
+      <EditorContent editor={editor} />
+      </div>
+      </div>
+    ) : (
+      <div className={`w-full rounded-xl min-h-[220px] h-auto border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0d0d0d] shadow-sm`}>
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
-    </div>
+      </div>
+    )
   );
 }

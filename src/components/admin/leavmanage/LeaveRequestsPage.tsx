@@ -214,7 +214,7 @@ export default function LeaveRequestsPage() {
                 <div>
                     {/* HEADER */}
                     <div className="flex items-center mb-5">
-                        <h1 className="text-2xl">Requeseted Leaves</h1>
+                        <h1 className="text-2xl">Requested Leaves</h1>
 
                         <span className="ml-2 mt-1 bg-amber-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                             {leaveRequests.filter(req => req.status === "Pending").length}

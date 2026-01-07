@@ -16,13 +16,14 @@ import {
   AlignCenter,
   AlignRight,
   LinkIcon,
+  Highlighter
 } from "lucide-react";
 import { IconSelect } from "./IconsSelect";
 import { useState } from "react";
 
-export default function Toolbar({ editor }: { editor: Editor }) {
+export default function Toolbar({ isBigEditor = false, editor }: { isBigEditor?: boolean, editor: Editor }) {
   const [color, setColor] = useState("#000000");
-
+  const [highlightColor, setHighlightColor] = useState("#fef08a"); // soft yellow
   /* -------- CURRENT STATES -------- */
 
   const headingIcon =
@@ -37,7 +38,7 @@ export default function Toolbar({ editor }: { editor: Editor }) {
     <AlignLeft size={16} />;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#0f0f0f] rounded-t-xl">
+    <div className={`flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 ${isBigEditor ? "rounded-lg dark:bg-gray-800 bg-gray-100" : "bg-gray-50 dark:bg-[#0f0f0f] rounded-t-xl"}`}>
 
       {/* Heading Select */}
       <IconSelect
@@ -85,6 +86,53 @@ export default function Toolbar({ editor }: { editor: Editor }) {
           { icon: <AlignRight size={16} />, onClick: () => editor.chain().focus().setTextAlign("right").run() },
         ]}
       />
+
+      <Group>
+<ToolButton
+  active={editor.isActive("highlight")}
+  onClick={() => {
+    const isActive = editor.isActive("highlight");
+
+    if (isActive) {
+      editor.chain().focus().unsetHighlight().run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .setHighlight({ color: highlightColor })
+        .run();
+    }
+  }}
+>
+  <Highlighter size={16} />
+</ToolButton>
+
+
+  {/* Highlight Color Picker */}
+  <div className="relative">
+<input
+  type="color"
+  value={highlightColor}
+  onChange={(e) => {
+    const color = e.target.value;
+    setHighlightColor(color);
+
+    editor
+      .chain()
+      .focus()
+      .setHighlight({ color })
+      .run();
+  }}
+  className="absolute inset-0 opacity-0 cursor-pointer"
+/>
+
+    <div
+      className="h-6 w-6 rounded-full border border-gray-300 dark:border-gray-700"
+      style={{ backgroundColor: highlightColor }}
+    />
+  </div>
+</Group>
+
 
       <Group>
         <ToolButton

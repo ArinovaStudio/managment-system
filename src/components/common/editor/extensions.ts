@@ -18,12 +18,17 @@ import {Table} from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
+import Highlight from "@tiptap/extension-highlight";
 
 export const extensions = [
   StarterKit.configure({
     bulletList: false,
     orderedList: false,
     listItem: false,
+  }),
+
+  Highlight.configure({
+    multicolor: true,
   }),
 
   BulletList,
