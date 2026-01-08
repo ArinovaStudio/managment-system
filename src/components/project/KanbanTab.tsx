@@ -40,6 +40,7 @@ interface Task {
   assignee: string;
   assigneeAvatar: string;
   priority: 'low' | 'medium' | 'high';
+  projectId?: string | null
   dueDate: string;
   tags: string[];
   comments: Comment[];
@@ -400,6 +401,30 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
           status: newStatus,
         }),
       });
+
+      if (draggedTask.projectId && newStatus === "completed") {   
+        await fetch("/api/project/work-done", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+      projectId: draggedTask.projectId,
+      taskId: draggedTask.id,
+      title: draggedTask.title,
+      description: draggedTask.description,
+      priority: draggedTask.priority,
+      dueDate: draggedTask.dueDate,
+      tags: draggedTask.tags,
+      userId: currentUser.id,
+        }),
+      })
+      }
+
+      if (draggedTask.projectId && draggedTask.status === "completed" && newStatus !== "completed") {
+        await fetch(`/api/project/work-done?taskId=${draggedTask.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" }
+      })
+      }
 
       if (!res.ok) {
         throw new Error("Failed to update");

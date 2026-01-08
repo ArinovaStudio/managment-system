@@ -41,6 +41,7 @@ model User {
   leaveRequests   leaveReq[]
   todoTasks       TodoTask[]
   comments        Comment[]
+  workDone        workDone[]
 }
 
 model Docs {
@@ -512,6 +513,21 @@ model PlanDocs {
   content   String
   createdBy String
   createdAt DateTime @default(now())
+}
+
+model workDone {
+  id        String   @id @default(nanoid())
+  projectId String
+  taskId   String    @unique
+  title          String
+  description    String
+  priority       String
+  dueDate        DateTime
+  tags           String[]
+  userId         String
+  completedBy    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum OtpType {

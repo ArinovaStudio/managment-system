@@ -114,7 +114,7 @@ const handleDownload = async (imageUrl: string, title: string) => {
           <div onClick={type === "link" ? () => copyTextToClipboard(url) : viewLink} className="cursor-pointer w-8 h-8 text-white hover:text-blue-400 flex justify-center items-center rounded-full">
             {type === "link" ? isCopied ? <LucideCopyCheck size={20} strokeWidth={2}/> : <LucideCopy size={20} strokeWidth={2}/> : <LucideScanEye size={20} strokeWidth={2} />}
           </div>
-          <div onClick={() => handleDownload(imageLink, title)} className="cursor-pointer w-8 h-8 bg-white dark:bg-black hover:scale-90 hover:bg-green-400 transition-all flex justify-center items-center rounded-full">
+          <div onClick={type === "link" ? () => window.open(url, "_blank") : () => handleDownload(imageLink, title)} className="cursor-pointer w-8 h-8 bg-white dark:bg-black hover:scale-90 hover:bg-green-400 transition-all flex justify-center items-center rounded-full">
             {type === "link" ? <SquareArrowOutUpRight size={14} strokeWidth={2.5}/> : <LucideDownload size={14} strokeWidth={2.5} />}
           </div>
 
