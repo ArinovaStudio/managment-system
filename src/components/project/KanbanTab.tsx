@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Tag,
   LucideLoader,
-  LucideXCircle
+  LucideXCircle,
+  BellElectric
 } from 'lucide-react';
 import { SidePanel } from '@/app/(admin)/(main)/kanban/page';
 import toast from 'react-hot-toast';
@@ -45,7 +46,7 @@ interface Task {
   tags: string[];
   comments: Comment[];
   attachments: Array<{ id: string; name: string; size: string; type: string }>;
-  status: 'assigned' | 'in-progress' | 'completed';
+  status: 'assigned' | 'in-progress' | 'completed' | 'on-hold';
 }
 
 const priorityClasses = {
@@ -61,7 +62,7 @@ type NewTaskShape = {
   priority: 'low' | 'medium' | 'high';
   dueDate: string;
   tags: string[];
-  status: 'assigned' | 'in-progress' | 'completed';
+  status: 'assigned' | 'in-progress' | 'completed' | 'on-hold';
   attachments: File[];
   projectId: string;
 };
@@ -177,7 +178,7 @@ const removeAttachment = (index: number) => {
               >
                 <option value="assigned">Assigned</option>
                 <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
               </select>
             </div>
           </div>
@@ -369,6 +370,7 @@ export default function KanbanTab({ projectId }: KanbanTabProps) {
   };
 
   const columns = [
+    { id: 'on-hold', title: 'On Hold', icon: BellElectric, color: 'orange' },
     { id: 'assigned', title: 'Assigned', icon: User, color: 'blue' },
     { id: 'in-progress', title: 'In Progress', icon: Clock, color: 'yellow' },
     { id: 'completed', title: 'Completed', icon: CheckCircle2, color: 'green' }
@@ -810,7 +812,7 @@ if (newTask.attachments?.length) {
       </div>
 
       <div className="max-w-[1600px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-4 gap-6">
           {columns.map(column => {
             const Icon = column.icon;
             const columnTasks = getTasksByStatus(column.id as Task['status']);
@@ -820,7 +822,7 @@ if (newTask.attachments?.length) {
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-800">
                   <div className="flex items-center gap-2">
                     <div className={`p-2 rounded-lg ${column.color === 'blue' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
-                        column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' :
+                        column.color === 'yellow' ? 'bg-yellow-50 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400' : column.color === "orange" ? "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400" :
                           'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
                       }`}>
                       <Icon className="w-5 h-5" />
