@@ -125,7 +125,7 @@ export default function AdminMeetRequests() {
         body: JSON.stringify(newMeeting)
       });
       if (res.ok) {
-        toast.success('Meeting request submitted successfully');
+        toast.success('Meeting request submitted & Mail sent.');
         setShowRequestModal(false);
         setNewMeeting({ clientId: "", projectId: "", reason: "", meetDate: "", meetTime: "", meetLink: "", duration: 30, adminName: '' });
         fetchMeetings();

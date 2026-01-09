@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
 import db from "@/lib/client";
+import { sendMailToClient } from "@/lib/mailer";
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,6 +50,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
+  function toAmPm(time24: string): string {
+  if (!time24) return ""
+
+  const [hourStr, minute] = time24.split(":")
+  let hour = Number(hourStr)
+
+  if (isNaN(hour)) return time24
+
+  const period = hour >= 12 ? "PM" : "AM"
+  hour = hour % 12 || 12
+
+  return `${hour}:${minute} ${period}`
+}
+
     const meeting = await db.meetingRequest.create({
       data: {
         clientId: clientId ? clientId : userId,
@@ -59,9 +74,19 @@ export async function POST(req: NextRequest) {
         meetTime,
         duration,
         projectId
+      },
+      include: {
+        project: {
+          select: {name: true, id: true}
+        },
+        client: {
+          select: {
+            name: true, id: true, email: true}
+          }
       }
     });
 
+    await sendMailToClient(meeting.client.email, meeting.project.name, new Date(meetDate).toDateString(), toAmPm(meetTime),  duration, meeting.client.name, "to-client");
     return NextResponse.json({ success: true, meeting });
   } catch (error) {
     console.log(error);

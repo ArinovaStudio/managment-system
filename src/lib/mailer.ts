@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { forgetTemplate, loginTemplate, mailToClient, signupTemplate } from './node_mock'
 
 const email = process.env.EMAIL
 const pass = process.env.EMAIL_PASS
@@ -23,7 +24,7 @@ if (isEmailConfigured) {
   })
 }
 
-export async function sendOtp(useremail: string, otp: number, type: 'signup' | 'login' | 'forgot-password' = 'signup'): Promise<boolean> {
+export async function sendOtp(useremail: string, otp: number, type: 'signup' | 'login' | 'forgot-password' | 'to-client' | 'from-client' = 'signup', Client_Name?: string): Promise<boolean> {
   // Use fallback in development if email not configured
 
   try {
@@ -33,223 +34,38 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
       ? 'Please use this code to complete your account registration.'
       : type === "login" ? 'Please use this code to login to your account.' : 'Please use this code to reset your password.'
     
-    const signupTemplate = `<!DOCTYPE html>
-
-<html>
-<body style="margin:0; padding:0; background-color:#0F0A1F; font-family:Arial, Helvetica, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0"
-          style="background:#18122B; margin-top:40px; border-radius:8px; border:1px solid #2E1065;">
-
-      <tr>
-        <td align="center" style="padding:32px;">
-          <img src="cid:logo" alt="Company Logo" style="max-height:56px;" />
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:0 40px 36px 40px;">
-          <h2 style="color:#EDE9FE; margin-bottom:16px;">
-            ${title}
-          </h2>
-
-          <p style="color:#C4B5FD; font-size:14px;">
-            Hello There,
-          </p>
-
-          <p style="color:#C4B5FD; font-size:14px;">
-            Please confirm your email address to activate your <b>Arinova Studio</b> Management System.
-            Use the verification code below:
-          </p>
-
-          <div style="text-align:center; margin:32px 0;">
-            <div style="
-              display:inline-block;
-              padding:16px 28px;
-              background:#2E1065;
-              border-radius:6px;
-              font-size:28px;
-              letter-spacing:6px;
-              font-weight:bold;
-              color:#EDE9FE;">
-              ${otp}
-            </div>
-          </div>
-          
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
-          <p style="color:#C4B5FD; font-size:14px;">
-            This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
-            If you did not sign up, you can safely ignore this email.
-          </p>
-
-          <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Support: support@arinova.studio
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
-    </p>
-  </td>
-</tr>
-
-  </table>
-</body>
-</html>`
-
-    const loginTemplate = `<!DOCTYPE html>
-
-<html>
-<body style="margin:0; padding:0; background-color:#0F0A1F; font-family:Arial, Helvetica, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0"
-          style="background:#18122B; margin-top:40px; border-radius:8px; border:1px solid #2E1065;">
 
 
-      <tr>
-        <td align="center" style="padding:32px;">
-          <img src="cid:logo" alt="Company Logo" style="max-height:56px;" />
-        </td>
-      </tr>
+    let htmlTemplate: string
 
-      <tr>
-        <td style="padding:0 40px 36px 40px;">
-          <h2 style="color:#EDE9FE;">
-                        ${title}
-          </h2>
+    switch (type) {
+      case "signup":
+        htmlTemplate = signupTemplate.replace("{{TITLE}}", title).replace("{{OTP}}", `${otp}`).replace("{{MESSAGE}}", message)
+        break;
 
-          <p style="color:#C4B5FD; font-size:14px;">
-            Hello There,
-          </p>
+      case "login":
+        htmlTemplate = loginTemplate.replace("{{TITLE}}", title).replace("{{OTP}}", `${otp}`).replace("{{MESSAGE}}", message)
+        break;
 
-          <p style="color:#C4B5FD; font-size:14px;">
-            A login attempt was made to your account.
-            Enter the following OTP to continue:
-          </p>
-
-          <div style="text-align:center; margin:32px 0;">
-            <div style="
-              display:inline-block;
-              padding:14px 26px;
-              background:#7C3AED;
-              border-radius:6px;
-              font-size:26px;
-              letter-spacing:5px;
-              font-weight:bold;
-              color:#FFFFFF;">
-              ${otp}
-            </div>
-          </div>
-
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
-          <p style="color:#C4B5FD; font-size:14px;">
-            This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
-            If you did not sign up, you can safely ignore this email.
-          </p>
-
-          <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Support: support@arinova.studio
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
-    </p>
-  </td>
-</tr>
-
-  </table>
-</body>
-</html>`
-
-    const forgetTemplate = `<!DOCTYPE html>
-
-<html>
-<body style="margin:0; padding:0; background-color:#0F0A1F; font-family:Arial, Helvetica, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0"
-          style="background:#18122B; margin-top:40px; border-radius:8px; border:1px solid #2E1065;">
-
-      <tr>
-        <td align="center" style="padding:32px;">
-          <img src="cid:logo" alt="Company Logo" style="max-height:56px;" />
-        </td>
-      </tr>
-
-      <tr>
-        <td style="padding:0 40px 36px 40px;">
-          <h2 style="color:#EDE9FE;">
-            ${title}
-          </h2>
-
-          <p style="color:#C4B5FD; font-size:14px;">
-            Hello There,
-          </p>
-
-          <p style="color:#C4B5FD; font-size:14px;">
-            You requested to reset your password.
-            Use the OTP below to proceed:
-          </p>
-
-          <div style="text-align:center; margin:32px 0;">
-            <div style="
-              display:inline-block;
-              padding:16px 28px;
-              background:#3B0764;
-              border-radius:6px;
-              font-size:28px;
-              letter-spacing:6px;
-              font-weight:bold;
-              color:#F5F3FF;">
-              ${otp}
-            </div>
-          </div>
-
-          <p style="color: #C4B5FD; font-size:14px;">${message}</p>
-          <p style="color:#C4B5FD; font-size:14px;">
-            This code expires in <span style="color: deeppink;"><b>10 min.</b></span> <br>
-            If you did not sign up, you can safely ignore this email.
-          </p>
-
-          <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Need help? support@arinova.studio
-          </p>
-        </td>
-      </tr>
-    </table>
-
-    <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
-    </p>
-  </td>
-</tr>
-
-  </table>
-</body>
-</html>`
-
+      case "forgot-password":
+        htmlTemplate = forgetTemplate.replace("{{TITLE}}", title).replace("{{OTP}}", `${otp}`).replace("{{MESSAGE}}", message)
+        break;
+      
+      default:
+        break;
+    }
     const mailOptions = {
       from: email,
       to: useremail,
       subject,
-      html: type === 'signup' ? signupTemplate : type === "login" ? loginTemplate : forgetTemplate,
-      attachments: [
-      {
-      filename: "logo.jpg",
-      path: "https://management.arinova.studio/images/logo/logo.jpg",
-      cid: "logo",
-      },
-      ]
+      html: htmlTemplate,
+      // attachments: [
+      // {
+      // filename: "logo.jpg",
+      // path: "https://management.arinova.studio/images/logo/logo.jpg",
+      // cid: "logo",
+      // },
+      // ]
     }
     
     await transporter.sendMail(mailOptions)
@@ -260,6 +76,37 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
   }
 }
 
+
+export async function sendMailToClient(useremail: string, Project_Name: string, Meeting_Date: string, Meeting_Time: string,  Duration_Minutes: string, Client_Name?: string, type: 'to-client' | 'from-client' = 'to-client'): Promise<boolean> {
+
+  try {
+    const subject = type === 'to-client' ? "Management@Arinova.Studio - You've got Meeting request." : type === "from-client" ? `Management@Arinova.Studio - ${Client_Name} has Requested for meet` : 'Management@Arinova.Studio - Welcome To Arinova Studio'
+
+
+    let htmlTemplate: string
+
+    switch (type) {
+      case "to-client":
+        htmlTemplate = mailToClient.replace("{{Client_Name}}", Client_Name).replace("{{Project_Name}}", Project_Name).replace("{{Meeting_Date}}", Meeting_Date).replace("{{Meeting_Time}}", Meeting_Time).replace("{{Duration_Minutes}}", Duration_Minutes)
+        break;
+
+      default:
+        break;
+    }
+    const mailOptions = {
+      from: email,
+      to: useremail,
+      subject,
+      html: htmlTemplate,
+    }
+    
+    await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Failed to send OTP email:', error)
+    throw new Error('Failed to send OTP email')
+  }
+}
 // export async function sendBugreport(
 //   name: string, 
 //   email: string, 
