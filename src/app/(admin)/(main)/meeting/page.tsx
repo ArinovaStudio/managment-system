@@ -11,7 +11,7 @@ interface Meeting {
   description: string;
   scheduledAt: string;
   meetingLink?: string;
-  createdBy: string | { name: string };
+  createdBy: string | null;
   attendees?: { user: { name: string } }[];
 }
 
@@ -153,7 +153,7 @@ export default function MeetingsPage() {
                 ) : (
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <User size={16} />
-                    <span>Organized by: <span className="text-blue-600 dark:text-blue-400 font-medium">{meeting.scheduledAt}</span></span>
+                    <span>Organized by: <span className="text-blue-600 dark:text-blue-400 font-medium">{meeting.createdBy}</span></span>
                   </div>
                 )}
               </div>

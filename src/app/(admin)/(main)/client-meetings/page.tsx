@@ -4,6 +4,7 @@ import React, { useState, useEffect, useTransition } from "react";
 import { Calendar, Plus, Clock, Trash2, LucideLoader2, LucideLoader } from "lucide-react";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loading";
+import { useRouter } from "next/navigation";
 
 export default function AdminMeetRequests() {
   const [meetRequests, setMeetRequests] = useState([]);
@@ -22,17 +23,20 @@ export default function AdminMeetRequests() {
   const [project, setProjects] = useState([])
   const [transition, startTransition] = useTransition()
   const [projectTransition, startProject] = useTransition()
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState(false);
+
+
+  const router = useRouter();
 
   const checkUserRole = async () => {
     const userResponse = await fetch('/api/user');
     const userData = await userResponse.json();
     const adminStatus: boolean = userData.user && userData.user.role === 'ADMIN';
-    
+
     setNewMeeting(prev => ({
-    ...prev,
-    adminName: userData.user.name,
-  }));
+      ...prev,
+      adminName: userData.user.name,
+    }));
 
     setUserRole(adminStatus);
   };
@@ -49,12 +53,14 @@ export default function AdminMeetRequests() {
     setProjects(data.projects || []);
   })
 
-  
+
   const fetchMeetings = async () => {
     try {
       const res = await fetch('/api/client/meeting');
       const data = await res.json();
       if (data.success) {
+        console.log(data.meetings);
+
         setMeetRequests(data.meetings);
       }
     } catch (error) {
@@ -87,11 +93,11 @@ export default function AdminMeetRequests() {
 
   const approveHandler = (id: string, meetLink: string | null) => {
     setSelectedId(id);
-  if (meetLink) {
-    submitMeetLink()
-    return
-  }
-  setOpenModal(true);
+    if (meetLink) {
+      submitMeetLink()
+      return
+    }
+    setOpenModal(true);
   };
 
   const rejectHandler = async (id: string) => {
@@ -109,6 +115,19 @@ export default function AdminMeetRequests() {
       toast.error('Failed to reject meeting');
     }
   };
+
+  const handleLinkClick = (e: React.MouseEvent, meeting: any) => {
+    e.stopPropagation();
+
+    // Start meeting
+    setActiveMeetingId(meeting.id);
+    setElapsedSeconds(0);
+
+    console.log("Opening:", meeting.meetingLink);
+
+    window.open(meeting.meetingLink, "_blank", "noopener,noreferrer");
+  };
+
 
 
   const submitMeetingRequest = async () => {
@@ -164,18 +183,18 @@ export default function AdminMeetRequests() {
 
 
   function toAmPm(time24: string): string {
-  if (!time24) return ""
+    if (!time24) return ""
 
-  const [hourStr, minute] = time24.split(":")
-  let hour = Number(hourStr)
+    const [hourStr, minute] = time24.split(":")
+    let hour = Number(hourStr)
 
-  if (isNaN(hour)) return time24
+    if (isNaN(hour)) return time24
 
-  const period = hour >= 12 ? "PM" : "AM"
-  hour = hour % 12 || 12
+    const period = hour >= 12 ? "PM" : "AM"
+    hour = hour % 12 || 12
 
-  return `${hour}:${minute} ${period}`
-}
+    return `${hour}:${minute} ${period}`
+  }
 
 
   const now = new Date();
@@ -219,7 +238,7 @@ export default function AdminMeetRequests() {
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
 
-    
+
   }, [activeMeetingId]);
 
 
@@ -241,7 +260,7 @@ export default function AdminMeetRequests() {
         >
           <Plus size={16} />
           Request Meeting
-        </button> 
+        </button>
       </div>
 
       {loading ? (
@@ -256,10 +275,12 @@ export default function AdminMeetRequests() {
               onMouseLeave={() => setHoveredId(null)}
               key={m.id}
               onClick={() => {
-                if (isActive) {
-                  window.open(`/memo?meetingId=${activeMeetingId}&seconds=${elapsedSeconds}`, "_blank", "noopener,noreferrer");
-                };
+                if (activeMeetingId === m.id) {
+                  router.push(`/memo?meetingId=${m.id}&seconds=${elapsedSeconds}`);
+                }
               }}
+
+
               className=
               {` bg-white dark:bg-gray-900 p-4 rounded-xl
               border border-gray-200 dark:border-gray-800
@@ -272,13 +293,13 @@ export default function AdminMeetRequests() {
                 {/* Title row */}
                 <div className="flex justify-between items-start">
                   <div className="">
-                  <p className="text-sm text-gray-400">
-                    {m?.project?.name}
-                  </p>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                    {m.reason}
-                  </h3>
-                  {m.client && (
+                    <p className="text-sm text-gray-400">
+                      {m?.project?.name}
+                    </p>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                      {m.reason}
+                    </h3>
+                    {m.client && (
                       <span className="text-sm text-gray-500">
                         By {m?.createdBy ? m.createdBy : m.client.name}
                       </span>
@@ -312,13 +333,14 @@ export default function AdminMeetRequests() {
                   <div className="flex items-center gap-2">
 
                     {/* {m.status === "approved" ? (
-                    <a
-                      href={m.meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cursor-pointer text-sm bg-sky-500 px-3 py-1 rounded-lg text-white hover:bg-sky-600 transition"
-                    >Join Meeting</a>
-                  ) : null} */}
+                      <button
+                        onClick={(e) => handleLinkClick(e, m)}
+                        className="bg-blue-600 px-4 py-2 text-white rounded-lg text-sm hover:bg-blue-700"
+                      >
+                        Join Meeting
+                      </button>
+
+                    ) : null} */}
 
                     {m.status === "approved" && (() => {
                       const meetingStart = getMeetingStartTime(m.meetDate, m.meetTime);
@@ -332,18 +354,13 @@ export default function AdminMeetRequests() {
                             {(elapsedSeconds % 60).toString().padStart(2, "0")}
                           </span>
                         ) : (
-                          <a
-                            href={m.meetLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => {
-                              setActiveMeetingId(m.id);
-                              setElapsedSeconds(0);
-                            }}
+                          <button
+                            onClick={(e) => handleLinkClick(e, m)}
                             className="cursor-pointer text-sm bg-blue-600 px-4 py-2 rounded-lg text-white hover:bg-blue-700 transition"
                           >
                             Join Meeting
-                          </a>
+                          </button>
+
                         ))
                       ) : (
                         <span className="text-xs text-gray-500 italic">
@@ -396,31 +413,31 @@ export default function AdminMeetRequests() {
             <div className="space-y-4">
               <select
                 value={newMeeting.clientId}
-                onChange={(e) => setNewMeeting({ ...newMeeting, clientId: e.target.value})}
+                onChange={(e) => setNewMeeting({ ...newMeeting, clientId: e.target.value })}
                 className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
               >
                 {
                   transition ? <option value="">Loading...</option> : clients.length > 0 && clients.map((items, index) => (
                     <React.Fragment key={index}>
-                    <option disabled value="">Select Client</option>
-                    <option key={index} value={items.id}>{items.name} - {items.email}</option>
+                      <option disabled value="">Select Client</option>
+                      <option key={index} value={items.id}>{items.name} - {items.email}</option>
                     </React.Fragment>
                   ))
                 }
               </select>
 
-            <select
+              <select
                 disabled={project.length > 0 ? false : true}
                 value={newMeeting.projectId}
-                onChange={(e) => setNewMeeting({ ...newMeeting, projectId: e.target.value})}
+                onChange={(e) => setNewMeeting({ ...newMeeting, projectId: e.target.value })}
                 className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
               >
                 {
                   projectTransition ? <option value="">Loading...</option> : project.length > 0 ? project.map((items, index) => (
                     <React.Fragment key={index}>
-                    
-                    <option disabled value="">Select</option>
-                    <option key={index} value={items.project.id}>{items.project.name}</option>
+
+                      <option disabled value="">Select</option>
+                      <option key={index} value={items.project.id}>{items.project.name}</option>
                     </React.Fragment>
                   )) : (
                     <option value="" disabled className="cursor-not-allowed">Select Client First</option>

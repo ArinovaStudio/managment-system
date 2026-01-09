@@ -16,7 +16,7 @@ interface DailyReport {
         workingAs: string;
         image?: string;
         department: string;
-        breaks: {duration: number, type: string}[]
+        breaks: { duration: number, type: string }[]
     };
 }
 
@@ -25,10 +25,13 @@ const DailyReports = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
 
-    useEffect(() => {
-        fetchReports();
-    }, []);
-
+    function formatWorkTime(hours: number) {
+        if (hours < 1) {
+            const minutes = Math.round(hours * 60);
+            return `${minutes} min`;
+        }
+        return `${hours.toFixed(1)} hrs`;
+    }
     const fetchReports = async () => {
         try {
             const res = await fetch('/api/clock/work-summary');
@@ -36,7 +39,8 @@ const DailyReports = () => {
 
             if (data.success) {
                 // console.log(data.reports);
-                
+                console.log(data.reports);
+
                 setReports(data.reports);
             }
         } catch (err) {
@@ -47,12 +51,17 @@ const DailyReports = () => {
     };
 
     async function handleDelete() {
-        const res = await fetch("/api/clock/work-summary", {method: "DELETE"})
+        const res = await fetch("/api/clock/work-summary", { method: "DELETE" })
         if (res.status === 200) {
             toast.success("Deleted All")
             fetchReports()
         }
     }
+
+    useEffect(() => {
+        fetchReports();
+    }, []);
+
     const getStatusClasses = (role: string) => {
         if (role?.toLowerCase().includes('web')) {
             return {
@@ -100,24 +109,24 @@ const DailyReports = () => {
                         year: 'numeric'
                     })}
                 </p>
-            <div className="flex justify-center items-center gap-2">
-                {
-                    reports.length > 0 && (
-                        <button 
-                        onClick={() => handleDelete()}
-                        className="px-4 py-2 border border-red-400/80 bg-red-400/20 text-red-400 scale-90 transition-all rounded-lg">Delete All</button>
-                        
-                    )
-                }
-                <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white text-sm"
+                <div className="flex justify-center items-center gap-2">
+                    {
+                        reports.length > 0 && (
+                            <button
+                                onClick={() => handleDelete()}
+                                className="px-4 py-2 border border-red-400/80 bg-red-400/20 text-red-400 scale-90 transition-all rounded-lg">Delete All</button>
+
+                        )
+                    }
+                    <select
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-white text-sm"
                     >
-                    <option>All</option>
-                    <option>Submitted</option>
-                </select>
-                    </div>
+                        <option>All</option>
+                        <option>Submitted</option>
+                    </select>
+                </div>
             </div>
 
 
@@ -156,7 +165,8 @@ const DailyReports = () => {
                                     <div className="font-normal flex justify-between text-gray-800 dark:text-white">
                                         {report.user.name}
                                         <span className="text-[13px]  text-gray-500 dark:text-gray-400">
-                                            {report.clockOut} - {report.clockIn} ~ <span className='text-purple-400 font-semibold'> ({report.hours.toFixed(1)} hours)</span>
+                                            {report.clockIn} - {report.clockOut}  ~ <span className='text-purple-400 font-semibold'> {formatWorkTime(report.hours)}
+                                            </span>
                                         </span>
                                     </div>
                                     <p className="text-[11px] text-gray-500 dark:text-gray-400">

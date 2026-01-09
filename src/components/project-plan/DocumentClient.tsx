@@ -1,158 +1,214 @@
 "use client";
 
-import RichTextEditor from '@/components/common/editor/Editor'
-import Loader from '@/components/common/Loading';
-import { LucideArrowLeft, LucideLoader2, LucideTrash2 } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useEffect, useState, useTransition } from 'react'
-import toast from 'react-hot-toast';
+import { ArrowLeftRight, CheckCheck } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import RichTextEditor from "@/components/common/editor/Editor";
 
-function DocumentClient() {
-    const [data, setData] = useState("")
-    const [name, setName] = useState("")
-    const [currentUser, setCurrentUser] = useState("")
-    const params = useSearchParams()
-    const [isLoading, setLoading] = useState(false);
-    const [transition, startTransition] = useTransition();
+type Project = {
+  name: string;
+  summary: string;
+  priority: string;
+  basicDetails: string;
+  createdAt: string;
+};
 
-    const router = useRouter()
-    const id = params.get("id")
+type meetingRequest = {
+  id: string;
+  reason: string;
+  project?: Project | null;
+  createdAt: string;
+  updatedAt: string;
+  meetDate: string;
+  meetTime: string;
+  duration: string;
+};
 
-    
-const handleCreate = () =>
-  startTransition(() => {
-    (async () => {
-      const content = data.trim()
+type Memo = {
+  id: string;
+  memo: string;
+  message: string;
+  totaltime: string;
+  createdAt: string;
+  meetingRequest?: meetingRequest | null;
+};
+
+const MemoDetailPage = ({ memoId }: { memoId: string }) => {
+  const [memo, setMemos] = useState<Memo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // 🔁 this replaces Editor value
+  const [editedMessage, setEditedMessage] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
+  const fetchMemos = async () => {
+    try {
+      const res = await fetch(`/api/memoperpro?id=${memoId}`);
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setMemos(data.memo);
+    } catch {
+      toast.error("Failed to load memos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setSaving(true);
+      const content = editedMessage.trim();
       if (!content) {
-        toast.error("Please add something first.")
-        return
+        toast.error("Message cannot be empty");
+        return;
       }
 
-      const req = await fetch("/api/admin/plan-docs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          content,
-          createdBy: currentUser,
-        }),
-      })
+      const res = await fetch(`/api/memoperpro?id=${memoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: content }),
+      });
 
-      if (req.ok) {
-        toast.success("Saved.")
-      }
-    })()
-  })
-
-
-const handleUpdate = () => startTransition(() => {
-      (async () => {
-        const content = data.trim()
-        if (!content) {
-          return toast.error("Please add something first.")
-        }
-  
-        const req = await fetch("/api/admin/plan-docs", {
-          method: "PUT",
-          body: JSON.stringify({id, name, content})
-        })
-  
-        if (req.status === 200) {
-          const data = await req.json();
-          const props = data.data;
-          setData(props.content);
-          setName(props.name);
-          toast.success("Updated.")
-        }
-      })()
-    })
-
-const handleDelete = () => startTransition(() => {
-  (
-    async () => {
-      if (!id) {
-        return toast.error("Please provide id");
-      }
-        const req = await fetch(`/api/admin/plan-docs?id=${id}`, {
-          method: "DELETE",
-        })
-        if (req.status === 200) {
-          toast.success("Deleted successfully!")
-          router.back()
-        }
+      if (!res.ok) throw new Error();
+      toast.success("Message updated");
+      setIsEditing(false);
+      fetchMemos();
+    } catch {
+      toast.error("Failed to save message");
+    } finally {
+      setSaving(false);
     }
-  )()
-})
-
-    const fetchSpec = async (id: string) => {
-    setLoading(true)
-    const req = await fetch(`/api/admin/plan-docs?id=${id}`);
-    if (req.status === 200) {
-      const data = await req.json();
-      const props = data.data[0];
-      setData(props.content);
-      setName(props.name);
-      setLoading(false)
-    }
-  }
-
-    const checkUserRole = async () => {
-      try {
-        const response = await fetch('/api/user');
-        const data = await response.json();
-        if (data.user) {
-        setCurrentUser(data.user.name);
-        }
-      } catch (error) {
-        console.error('Failed to check user role:', error);
-      }
-    };
+  };
 
   useEffect(() => {
-  checkUserRole()
+    fetchMemos();
+  }, []);
 
-  if (id) {
-    fetchSpec(id)
-  }
-  }, [])
+  useEffect(() => {
+    if (memo?.message) {
+      setEditedMessage(memo.message);
+    }
+  }, [memo]);
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-[60vh] grid place-items-center">
-        <Loader />
-      </div>
-    )
-  }
+  if (loading) return <p>Loading…</p>;
+  if (!memo) return <p>No memo found</p>;
+
+  const priority = memo.meetingRequest?.project?.priority?.toUpperCase();
+
+  const priorityStyles: Record<string, string> = {
+    LOW: "bg-green-100 dark:bg-green-600/20 text-green-600 dark:text-green-400 border border-green-400",
+    MEDIUM: "bg-orange-100 dark:bg-orange-600/20 text-orange-600 dark:text-orange-400 border border-orange-400",
+    HIGH: "bg-red-100 dark:bg-red-600/20 text-red-600 dark:text-red-400 border border-red-400",
+  };
+
   return (
-    <div className='w-full'>
-      <div className="flex justify-between mb-6">
-        <div className="flex justify-center items-center gap-2">
-        <button onClick={() => router.back()} className='text-blue-white bg-gray-400/20 text-gray-400 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3'>
-          <LucideArrowLeft size={18}/>
-        </button>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} className='text-gray-400 bg-gray-200 dark:bg-gray-800 py-2 px-2 rounded-lg outline-none border border-gray-300 dark:border-gray-700'/>
+    <div>
+      <div className="border rounded-xl p-4 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="flex justify-between">
+          <h1 className="text-2xl mb-8">MEETING DETAILS</h1>
+          <p className="text-[#098500] text-xl font-bold">{memo.totaltime}</p>
         </div>
-        <div className="flex justify-center items-center gap-2">
-        <button onClick={id ? handleUpdate : handleCreate} className='text-blue-white bg-blue-600 text-white font-medium rounded-xl px-4 py-2'>{transition ? <LucideLoader2 className='animate-spin text-white' size={16}/> : id ? "Update" : "Save"}</button>
-        {id && 
-        <button onClick={handleDelete} className='text-blue-white bg-red-400/20 text-red-400 rounded-xl px-4 py-3'>
-          <LucideTrash2 size={18}/>
-        </button>
-        }
-        
+
+        <div className="flex flex-col gap-1">
+          <div className="space-y-6">
+            {/* Row 1 */}
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-6 flex flex-col gap-1">
+                <label className="text-sm text-gray-500">Project Name</label>
+                <div className="bg-gray-100 dark:bg-gray-800 text-gray-500 px-4 py-3 rounded-xl border">
+                  {memo.meetingRequest?.project?.name ?? "No project"}
+                </div>
+              </div>
+
+              <div className="col-span-4 flex flex-col gap-1">
+                <label className="text-sm text-gray-500">Project Priority</label>
+                {priority && (
+                  <div className={`px-4 py-3 rounded-xl font-medium ${priorityStyles[priority]}`}>
+                    {priority}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1">
+                <label className="text-sm text-gray-500">Meeting Duration</label>
+                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border text-center font-medium">
+                  {memo.meetingRequest!.duration} min.
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2 */}
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-4 flex flex-col gap-1">
+                <label className="text-sm text-gray-500">Meeting Date</label>
+                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border">
+                  {new Date(memo.meetingRequest!.meetDate).toLocaleDateString()}
+                </div>
+              </div>
+
+              <div className="col-span-8 flex flex-col gap-1">
+                <label className="text-sm text-gray-500">Meeting Reason</label>
+                <div className="bg-gray-100 dark:bg-gray-800 text-gray-400 px-4 py-3 rounded-xl border">
+                  {memo.meetingRequest?.reason ?? "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div>
+          {!isEditing && (
+            <div className="flex justify-between items-center mt-5 text-xl">
+              <div>Message</div>
+              <div
+                onClick={() => setIsEditing(true)}
+                className="border cursor-pointer bg-blue-400 px-6 py-1 rounded-md text-white flex items-center gap-2"
+              >
+                <ArrowLeftRight size={18} />
+                <div>Editor</div>
+              </div>
+            </div>
+          )}
+
+          {isEditing && (
+            <div className="flex justify-between items-center mt-5 text-xl">
+              <div>Editor</div>
+              <div
+                onClick={saving ? () => {} : handleSubmit}
+                className={`border cursor-pointer bg-blue-400 px-6 py-1 rounded-md text-white flex items-center gap-2 ${
+                  saving ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <div>{saving ? "Saving..." : "Save"}</div>
+                <CheckCheck size={18} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="mt-3">
+          {!isEditing && (
+            <div
+              className="prose dark:prose-invert max-w-none text-gray-100 px-3 py-1 rounded-md"
+              dangerouslySetInnerHTML={{ __html: memo.message }}
+            />
+          )}
+
+          {isEditing && (
+            <RichTextEditor
+              isBigEditor={true}
+              content={editedMessage}
+              onChange={(e) => setEditedMessage(e)}
+            />
+          )}
         </div>
       </div>
-        <div className="w-full">
-            <RichTextEditor 
-            isBigEditor={true}
-            content={data}
-            onChange={(e) => setData(e)}
-            />
-            </div>
-        </div>
-  )
-}
+    </div>
+  );
+};
 
-export default DocumentClient
+export default MemoDetailPage;

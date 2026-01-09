@@ -61,7 +61,7 @@ type User = {
   }[];
 };
 
-  const departments = [
+const departments = [
   'Web Development',
   'UI / UX Design',
   'Mobile App Development',
@@ -86,7 +86,7 @@ type User = {
   'Research & Innovation',
   'HR & Talent Management'
 ];
-  const positions = [
+const positions = [
   'Frontend Developer',
   'Backend Developer',
   'Full Stack Developer',
@@ -115,343 +115,343 @@ type User = {
   'Other'
 ];
 
-export function UserModel({rect = false, editUser, setEditUser, setAddUser, leaveDays, setLeaveDays, leaveType, setLeaveType, selectedTimezone, setSelectedTimezone, allTimezones, handleSaveAllChanges, saving}: {rect?:boolean, setAddUser?: (v: boolean) => void, leaveDays: number, setLeaveDays: (v: number) => void, editUser: User | null, setEditUser: React.Dispatch<React.SetStateAction<User | null>>, leaveType: string, setLeaveType: React.Dispatch<React.SetStateAction<string>>, selectedTimezone: string, setSelectedTimezone: React.Dispatch<React.SetStateAction<string>>, allTimezones: any[], handleSaveAllChanges: () => void, saving: boolean}) {
+export function UserModel({ rect = false, editUser, setEditUser, setAddUser, leaveDays, setLeaveDays, leaveType, setLeaveType, selectedTimezone, setSelectedTimezone, allTimezones, handleSaveAllChanges, saving }: { rect?: boolean, setAddUser?: (v: boolean) => void, leaveDays: number, setLeaveDays: (v: number) => void, editUser: User | null, setEditUser: React.Dispatch<React.SetStateAction<User | null>>, leaveType: string, setLeaveType: React.Dispatch<React.SetStateAction<string>>, selectedTimezone: string, setSelectedTimezone: React.Dispatch<React.SetStateAction<string>>, allTimezones: any[], handleSaveAllChanges: () => void, saving: boolean }) {
   return (
-                          <div className={`absolute inset-0 w-full ${rect ? "h-[45vh]" : "h-screen"} top-4 dark:bg-black/50 flex items-center justify-center z-99999`}>
-                        <div className="bg-neutral-100 dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-                          <h2 className="text-lg font-bold mb-4">{setAddUser ? "Add User" : "Edit User"}</h2>
-                          <form
-                            className="space-y-3"
-                          >
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Name</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.name || "" } onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} placeholder="Enter name" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Email</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.email || "" } onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
-                            </div>
-                            <div>
-                      {
-                        setAddUser ? (
-                          <>
-                          <label className="block text-sm font-medium mb-1">Password</label>
-                          <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.password ? editUser. password: ""} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Enter Password" />
-                <div>
-                <label className="block text-sm font-medium my-2">Role *</label>
-                <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.role || ""} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}>
-                  <option value="">Select Role</option>
-                  <option value="EMPLOYEE">Employee</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="CLIENT">Client</option>
-                </select>
-              </div>
-                          </>
-                        ) : (
-                          <>
-                          <label className="block text-sm font-medium mb-1">Employee ID</label>
-                          <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
-                          </>
-                        )
-                      }
-                   </div>
+    <div className={`absolute inset-0 w-full ${rect ? "h-[45vh]" : "h-screen"} top-4 dark:bg-black/50 flex items-center justify-center z-99999`}>
+      <div className="bg-neutral-100 dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg font-bold mb-4">{setAddUser ? "Add User" : "Edit User"}</h2>
+        <form
+          className="space-y-3"
+        >
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.name || ""} onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} placeholder="Enter name" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.email || ""} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} placeholder="Enter email" />
+          </div>
+          <div>
+            {
+              setAddUser ? (
+                <>
+                  <label className="block text-sm font-medium mb-1">Password</label>
+                  <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.password ? editUser.password : ""} onChange={(e) => setEditUser({ ...editUser, password: e.target.value })} placeholder="Enter Password" />
                   <div>
-                     <label className="block text-sm font-medium mb-1">Date of Birth</label>
-                                     <input
-                  type="date"
-                  value={editUser?.dob?.split("T")[0] || ""}
-                  onChange={(e) => setEditUser({ ...editUser, dob: e.target.value })}
-                  className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded"
-                />
-                   </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Phone</label>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Department</label>
-                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}>
-                                <option value="">Select or type below</option>
-                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                              </select>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="Or type custom department" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Position</label>
-                              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}>
-                                <option value="">Select or type below</option>
-                                {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                              </select>
-                              <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
-                            </div>
-                            {/* {setAddUser && ( */}
-                              <label className="block text-sm font-medium mb-1">Is Developer</label>
-                
-              <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={`${editUser?.isDev || false}`} onChange={(e) => setEditUser({ ...editUser, isDev: Boolean(e.target.value) })}>
-                  <option value="">Is Developer?</option>
-                  <option value="true">YES</option>
-                  <option value="false">NO</option>
+                    <label className="block text-sm font-medium my-2">Role *</label>
+                    <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.role || ""} onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}>
+                      <option value="">Select Role</option>
+                      <option value="EMPLOYEE">Employee</option>
+                      <option value="ADMIN">Admin</option>
+                      <option value="CLIENT">Client</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <label className="block text-sm font-medium mb-1">Employee ID</label>
+                  <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.employeeId ? editUser.employeeId : "Not Assigned"} onChange={(e) => setEditUser({ ...editUser, employeeId: e.target.value })} placeholder="Enter EMPLOYEE ID" />
+                </>
+              )
+            }
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Date of Birth</label>
+            <input
+              type="date"
+              value={editUser?.dob?.split("T")[0] || ""}
+              onChange={(e) => setEditUser({ ...editUser, dob: e.target.value })}
+              className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Phone</label>
+            <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.phone ?? ""} onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })} placeholder="Enter phone number" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Department</label>
+            <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })}>
+              <option value="">Select or type below</option>
+              {departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.department ?? ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="Or type custom department" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Position</label>
+            <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })}>
+              <option value="">Select or type below</option>
+              {positions.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <input className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded mt-2" value={editUser?.workingAs ?? ""} onChange={(e) => setEditUser({ ...editUser, workingAs: e.target.value })} placeholder="Or type custom position" />
+          </div>
+          {/* {setAddUser && ( */}
+          <label className="block text-sm font-medium mb-1">Is Developer</label>
+
+          <select className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded" value={`${editUser?.isDev || false}`} onChange={(e) => setEditUser({ ...editUser, isDev: Boolean(e.target.value) })}>
+            <option value="">Is Developer?</option>
+            <option value="true">YES</option>
+            <option value="false">NO</option>
+          </select>
+          {/* // )} */}
+          {
+            !setAddUser && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Manage Leaves</label>
+                <select
+                  value={leaveType}
+                  onChange={(e) => setLeaveType(e.target.value)}
+                  className="w-full border px-3 py-2 rounded dark:bg-gray-700 bg-white"
+                >
+                  <option value="">Select leave type</option>
+                  <option value="remaining">Casual</option>
+                  <option value="sick">Sick</option>
+                  <option value="emergency">Emergency</option>
                 </select>
-                              {/* // )} */}
-                            {
-                              !setAddUser && (
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Manage Leaves</label>
-                              <select
-                                value={leaveType}
-                                onChange={(e) => setLeaveType(e.target.value)}
-                                className="w-full border px-3 py-2 rounded dark:bg-gray-700 bg-white"
-                              >
-                                <option value="">Select leave type</option>
-                                <option value="remaining">Casual</option>
-                                <option value="sick">Sick</option>
-                                <option value="emergency">Emergency</option>
-                              </select>
-                              <input
-                                type="number"
-                                min={1}
-                                value={leaveDays}
-                                onChange={(e) => setLeaveDays(Number(e.target.value))}
-                                className="w-full border px-3 py-2 rounded mt-2 dark:bg-gray-700 bg-white"
-                                placeholder="Number of days"
-                              />
-                            </div>
+                <input
+                  type="number"
+                  min={1}
+                  value={leaveDays}
+                  onChange={(e) => setLeaveDays(Number(e.target.value))}
+                  className="w-full border px-3 py-2 rounded mt-2 dark:bg-gray-700 bg-white"
+                  placeholder="Number of days"
+                />
+              </div>
 
-                              ) 
-                            }
-                            <div>
-                              <label className="block text-sm font-medium mb-1">
-                                Time Zone
-                              </label>
+            )
+          }
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Time Zone
+            </label>
 
-                              <select
-                                value={selectedTimezone}
-                                onChange={(e) => setSelectedTimezone(e.target.value)}
-                                className=" w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="" disabled>
-                                  Select Timezone
-                                </option>
+            <select
+              value={selectedTimezone}
+              onChange={(e) => setSelectedTimezone(e.target.value)}
+              className=" w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="" disabled>
+                Select Timezone
+              </option>
 
-                                {allTimezones.map((tz) => (
-                                  <option key={tz.code} value={tz.code}>
-                                    {tz.code} — {tz.hours}
-                                  </option>
-                                ))}
-                              </select>
+              {allTimezones.map((tz) => (
+                <option key={tz.code} value={tz.code}>
+                  {tz.code} — {tz.hours}
+                </option>
+              ))}
+            </select>
 
-                            </div>
-                            <div className="flex justify-end gap-3 mt-4">
-                              <button
-                                type="button"
-                                onClick={setAddUser ? () => {setAddUser(false), setEditUser(null)} : () => setEditUser(null)}
-                                className="px-4 py-2 rounded border dark:border-gray-600"
-                              >
-                                Cancel
-                              </button>
+          </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <button
+              type="button"
+              onClick={setAddUser ? () => { setAddUser(false), setEditUser(null) } : () => setEditUser(null)}
+              className="px-4 py-2 rounded border dark:border-gray-600"
+            >
+              Cancel
+            </button>
 
-                              <button
-                                type="button"
-                                onClick={handleSaveAllChanges}
-                                disabled={saving}
-                                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                              >
-                                {saving ? "Saving..." : "Save Changes"}
-                              </button>
-                            </div>
+            <button
+              type="button"
+              onClick={handleSaveAllChanges}
+              disabled={saving}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
 
-                          </form>
-                        </div>
-                      </div>
+        </form>
+      </div>
+    </div>
   )
 }
 
-export function DeleteModel({deleteUser, setDeleteUser, setUsers}: {deleteUser: User | null, setDeleteUser: React.Dispatch<React.SetStateAction<User | null>>, setUsers: React.Dispatch<React.SetStateAction<User[]>>}) {
+export function DeleteModel({ deleteUser, setDeleteUser, setUsers }: { deleteUser: User | null, setDeleteUser: React.Dispatch<React.SetStateAction<User | null>>, setUsers: React.Dispatch<React.SetStateAction<User[]>> }) {
   return (
-                      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
-                          <h2 className="text-lg font-bold text-red-600">Delete User</h2>
-                          <p className="text-sm mt-2">Are you sure you want to delete <strong>{deleteUser.name}</strong>? This action cannot be undone.</p>
-                          <div className="flex justify-end gap-3 mt-5">
-                            <button onClick={() => setDeleteUser(null)} className="px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Cancel</button>
-                            <button
-                              onClick={async () => {
-                                const toastId = toast.loading("Deleting user...");
-                                try {
-                                  const res = await fetch("/api/admin/user", {
-                                    method: "DELETE",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ email: deleteUser.email }),
-                                  });
-                                  const data = await res.json();
-                                  if (!res.ok) {
-                                    toast.error(data.error || "Delete failed", { id: toastId });
-                                    return;
-                                  }
-                                  setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
-                                  toast.success("User deleted successfully", { id: toastId });
-                                  setDeleteUser(null);
-                                } catch {
-                                  toast.error("Something went wrong", { id: toastId });
-                                }
-                              }}
-                              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
+        <h2 className="text-lg font-bold text-red-600">Delete User</h2>
+        <p className="text-sm mt-2">Are you sure you want to delete <strong>{deleteUser.name}</strong>? This action cannot be undone.</p>
+        <div className="flex justify-end gap-3 mt-5">
+          <button onClick={() => setDeleteUser(null)} className="px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+          <button
+            onClick={async () => {
+              const toastId = toast.loading("Deleting user...");
+              try {
+                const res = await fetch("/api/admin/user", {
+                  method: "DELETE",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: deleteUser.email }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                  toast.error(data.error || "Delete failed", { id: toastId });
+                  return;
+                }
+                setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
+                toast.success("User deleted successfully", { id: toastId });
+                setDeleteUser(null);
+              } catch {
+                toast.error("Something went wrong", { id: toastId });
+              }
+            }}
+            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
 
-export function RoleCard({rect = true, setEditUser, setSelectedTimezone, setDeleteUser, u, emergencyPhone, leaveStats}: {rect?: boolean, u: User, setEditUser: React.Dispatch<React.SetStateAction<User | null>>, setSelectedTimezone: React.Dispatch<React.SetStateAction<string>>, setDeleteUser: React.Dispatch<React.SetStateAction<User | null>>, emergencyPhone: string, leaveStats: { total: number; remaining: number; used: number; breakdown: { sick: number; emergency: number } }}) {
-    const scrollToTop = () => {
+export function RoleCard({ rect = true, setEditUser, setSelectedTimezone, setDeleteUser, u, emergencyPhone, leaveStats }: { rect?: boolean, u: User, setEditUser: React.Dispatch<React.SetStateAction<User | null>>, setSelectedTimezone: React.Dispatch<React.SetStateAction<string>>, setDeleteUser: React.Dispatch<React.SetStateAction<User | null>>, emergencyPhone: string, leaveStats: { total: number; remaining: number; used: number; breakdown: { sick: number; emergency: number } } }) {
+  const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
   return (
-                  <div className={`relative ${rect ? "mt-8": "mt-12"}`} key={u.id}>
-                        <div className="flex gap-2 justify-end pr-6 absolute -top-8 right-2 z-50">
-                          {
-                            u.githubProfile &&
-                        <button
-                        onClick={async () => {await navigator.clipboard.writeText(u.githubProfile)}}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
-                          title="Copu"
-                        >
-                          <LucideGithub className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                        </button>
-                      }         
+    <div className={`relative ${rect ? "mt-8" : "mt-12"}`} key={u.id}>
+      <div className="flex gap-2 justify-end pr-6 absolute -top-8 right-2 z-50">
+        {
+          u.githubProfile &&
+          <button
+            onClick={async () => { await navigator.clipboard.writeText(u.githubProfile) }}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
+            title="Copu"
+          >
+            <LucideGithub className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+          </button>
+        }
 
-                        <button
-                          onClick={() => {
-                            setEditUser(u);
-                            setSelectedTimezone(u.timezone?.code || "");
-                            scrollToTop()
-                          }}
+        <button
+          onClick={() => {
+            setEditUser(u);
+            setSelectedTimezone(u.timezone?.code || "");
+            scrollToTop()
+          }}
 
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                        </button>
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
+          title="Edit"
+        >
+          <Edit2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+        </button>
 
-                        <button
-                          onClick={() => {
-                            setDeleteUser(u)
-                          }}
+        <button
+          onClick={() => {
+            setDeleteUser(u)
+          }}
 
-                          className="p-2 hover:bg-red-100 dark:hover:bg-red-950 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                        </button>
-                      </div>
-                  <Link
-                    href={`/user/${u.id}`}
-                    className="hover:shadow-md relative transition-all cursor-pointer hover:scale-[1.01]"
-                    title="View Profile"
-                    key={u.id}
-                  >
-                  <div key={u.id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all">
-                    {/* Header Section */}
-                    <div className="flex items-start gap-4">
-                      {/* Avatar with Status */}
-                      <div className="relative flex-shrink-0">
-                        {
-                          u?.image ? (
-                          <Image
-                            src={u.image}
-                            alt={u.name}
-                            width={72}
-                            height={72}
-                            className="rounded-full object-cover w-18 h-18"
-                          />
-                          ) : (
-                            <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700  dark:to-black to-purple-300 text-white grid place-items-center">{u.name.charAt(0)}</div>
-                          )
-                        }
-                        <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
-                      </div>
+          className="p-2 hover:bg-red-100 dark:hover:bg-red-950 bg-gray-100 dark:bg-gray-800 rounded-t-lg"
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+        </button>
+      </div>
+      <Link
+        href={`/user/${u.id}`}
+        className="hover:shadow-md relative transition-all cursor-pointer hover:scale-[1.01]"
+        title="View Profile"
+        key={u.id}
+      >
+        <div key={u.id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-all">
+          {/* Header Section */}
+          <div className="flex items-start gap-4">
+            {/* Avatar with Status */}
+            <div className="relative flex-shrink-0">
+              {
+                u?.image ? (
+                  <Image
+                    src={u.image}
+                    alt={u.name}
+                    width={72}
+                    height={72}
+                    className="rounded-full object-cover w-18 h-18"
+                  />
+                ) : (
+                  <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700  dark:to-black to-purple-300 text-white grid place-items-center">{u.name.charAt(0)}</div>
+                )
+              }
+              <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
+            </div>
 
-                      {/* User Info */}
-                      <div className="flex-1 gap-2 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{u.name}</h3>
+            {/* User Info */}
+            <div className="flex-1 gap-2 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{u.name}</h3>
 
-                        {/* Contact Info with Icons */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Mail className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
-                            <span className="truncate">{u.email}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <Phone className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
-                            <span>{u.phone || "N/A"}</span>
-                          </div>
-                        </div>
+              {/* Contact Info with Icons */}
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Mail className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                  <span className="truncate">{u.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Phone className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+                  <span>{u.phone || "N/A"}</span>
+                </div>
+              </div>
 
-                        {/* Employee Details */}
-                        <div className="mt-3 space-y-3">
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                            <User className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span>ID: {u.employeeId || "N/A"}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span>Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                            <Phone className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span>Emergency: {emergencyPhone}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                            <Leaf className="w-4 h-4" />
-                            <span className="text-gray-600 dark:text-gray-400">
-                              Leaves: {leaveStats.remaining} - {leaveStats.total}
-                            </span>
-                          </div>
-                          {u.isDev && 
-                          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                            <LucideGithub className="w-4 h-4" />
-                            <span className="text-gray-600 dark:text-gray-400 flex justify-center items-center gap-2">
-                              {u.githubProfile ? `@${u.githubProfile}` : "Not Provided"}
-                            </span>
-                          </div>
-                          }
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Role Badge */}
-                    <div className="mt-4 flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {u.workingAs || "Employee"} - {u.department || "Department"}
-                      </span>
-                    </div>
-
-                    {/* Bio */}
-                    <p className="mt-2.5 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {u.bio || "Hardworking and result-oriented professional"}
-                    </p>
-
-                    {/* Footer - Timezone & DOB */}
-                    <div className="mt-4 pt-3.5 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>Time Zone: {u.timezone?.code || "NOT SET"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span>DOB: {u.dob || "N/A"}</span>
-                      </div>
-                    </div>
+              {/* Employee Details */}
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <User className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>ID: {u.employeeId || "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>Emergency: {emergencyPhone}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <Leaf className="w-4 h-4" />
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Leaves: {leaveStats.remaining} - {leaveStats.total}
+                  </span>
+                </div>
+                {u.isDev &&
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                    <LucideGithub className="w-4 h-4" />
+                    <span className="text-gray-600 dark:text-gray-400 flex justify-center items-center gap-2">
+                      {u.githubProfile ? `@${u.githubProfile}` : "Not Provided"}
+                    </span>
                   </div>
-                 </Link>
-                  </div>
-                );
-      
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Role Badge */}
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {u.workingAs || "Employee"} - {u.department || "Department"}
+            </span>
+          </div>
+
+          {/* Bio */}
+          <p className="mt-2.5 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            {u.bio || "Hardworking and result-oriented professional"}
+          </p>
+
+          {/* Footer - Timezone & DOB */}
+          <div className="mt-4 pt-3.5 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Time Zone: {u.timezone?.code || "NOT SET"}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span>DOB: {u.dob || "N/A"}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  );
+
 }
 
 export default function RoleDashboard() {
@@ -468,31 +468,31 @@ export default function RoleDashboard() {
   const [leaveDays, setLeaveDays] = useState(0);
 
   const createUser = async () => {
-                setSaving(true);
-                const toastId = toast.loading("Creating user...");
-                try {
-                  const res = await fetch("/api/admin/user", {
-                    method: "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({editUser, timezoneCode: selectedTimezone}),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) {
-                    toast.error(data.error || "Failed to create user", { id: toastId });
-                    return;
-                  }
-                  setUsers((prev) => [...prev, data.user]);
-                  toast.success("User created successfully", { id: toastId });
-                  setAddUser(false);
-                  setEditUser(null);
-                } catch {
-                  toast.error("Something went wrong", { id: toastId });
-                } finally {
-                  setSaving(false);
-                }
+    setSaving(true);
+    const toastId = toast.loading("Creating user...");
+    try {
+      const res = await fetch("/api/admin/user", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ editUser, timezoneCode: selectedTimezone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to create user", { id: toastId });
+        return;
+      }
+      setUsers((prev) => [...prev, data.user]);
+      toast.success("User created successfully", { id: toastId });
+      setAddUser(false);
+      setEditUser(null);
+    } catch {
+      toast.error("Something went wrong", { id: toastId });
+    } finally {
+      setSaving(false);
     }
-  
+  }
+
   async function handleSaveAllChanges() {
     if (!editUser) return;
 
@@ -691,7 +691,7 @@ export default function RoleDashboard() {
 
       {/* ADD USER MODAL */}
       {addUser && (
-        <UserModel 
+        <UserModel
           editUser={editUser}
           allTimezones={allTimezones}
           handleSaveAllChanges={createUser}
@@ -713,45 +713,45 @@ export default function RoleDashboard() {
       {/* ADMIN TABLE */}
       {!loading && selectedRole === "ADMIN" ? (
         <div>
-                        {deleteUser && (
-                <DeleteModel 
-                deleteUser={deleteUser}
-                setDeleteUser={setDeleteUser}
-                setUsers={setUsers}
-                />
-              )}
-                {editUser && !addUser && (
-                      <UserModel
-                      editUser={editUser}
-                      allTimezones={allTimezones}
-                      handleSaveAllChanges={handleSaveAllChanges}
-                      leaveDays={leaveDays}
-                      leaveType={leaveType}
-                      saving={saving}
-                      setEditUser={setEditUser}
-                      setLeaveDays={setLeaveDays}
-                      setLeaveType={setLeaveType}
-                      selectedTimezone={selectedTimezone}
-                      setSelectedTimezone={setSelectedTimezone}
-                      />
-                    )}
-        {visibleUsers.map((u) => {
-                const emergencyPhone = u.phone || "N/A";
-                const leaveStats = getLeaveStats(u);
+          {deleteUser && (
+            <DeleteModel
+              deleteUser={deleteUser}
+              setDeleteUser={setDeleteUser}
+              setUsers={setUsers}
+            />
+          )}
+          {editUser && !addUser && (
+            <UserModel
+              editUser={editUser}
+              allTimezones={allTimezones}
+              handleSaveAllChanges={handleSaveAllChanges}
+              leaveDays={leaveDays}
+              leaveType={leaveType}
+              saving={saving}
+              setEditUser={setEditUser}
+              setLeaveDays={setLeaveDays}
+              setLeaveType={setLeaveType}
+              selectedTimezone={selectedTimezone}
+              setSelectedTimezone={setSelectedTimezone}
+            />
+          )}
+          {visibleUsers.map((u) => {
+            const emergencyPhone = u.phone || "N/A";
+            const leaveStats = getLeaveStats(u);
 
-                return (
-                  <RoleCard 
-                  key={u.id}
-                  u={u}
-                  rect={false}
-                  emergencyPhone={emergencyPhone}
-                  leaveStats={leaveStats}
-                  setEditUser={setEditUser}
-                  setDeleteUser={setDeleteUser}
-                  setSelectedTimezone={setSelectedTimezone}
-                  />
-                );
-        })}
+            return (
+              <RoleCard
+                key={u.id}
+                u={u}
+                rect={false}
+                emergencyPhone={emergencyPhone}
+                leaveStats={leaveStats}
+                setEditUser={setEditUser}
+                setDeleteUser={setDeleteUser}
+                setSelectedTimezone={setSelectedTimezone}
+              />
+            );
+          })}
         </div>
       ) : (
         /* EMPLOYEE + CLIENT CARD VIEW */
@@ -760,41 +760,41 @@ export default function RoleDashboard() {
           {selectedRole === "EMPLOYEE" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 relative">
               {deleteUser && (
-                <DeleteModel 
-                deleteUser={deleteUser}
-                setDeleteUser={setDeleteUser}
-                setUsers={setUsers}
+                <DeleteModel
+                  deleteUser={deleteUser}
+                  setDeleteUser={setDeleteUser}
+                  setUsers={setUsers}
                 />
               )}
-                {!addUser && editUser && (
-                      <UserModel 
-                      rect={true}
-                      editUser={editUser}
-                      allTimezones={allTimezones}
-                      handleSaveAllChanges={handleSaveAllChanges}
-                      leaveDays={leaveDays}
-                      leaveType={leaveType}
-                      saving={saving}
-                      setEditUser={setEditUser}
-                      setLeaveDays={setLeaveDays}
-                      setLeaveType={setLeaveType}
-                      selectedTimezone={selectedTimezone}
-                      setSelectedTimezone={setSelectedTimezone}
-                      />
-                    )}
+              {!addUser && editUser && (
+                <UserModel
+                  rect={true}
+                  editUser={editUser}
+                  allTimezones={allTimezones}
+                  handleSaveAllChanges={handleSaveAllChanges}
+                  leaveDays={leaveDays}
+                  leaveType={leaveType}
+                  saving={saving}
+                  setEditUser={setEditUser}
+                  setLeaveDays={setLeaveDays}
+                  setLeaveType={setLeaveType}
+                  selectedTimezone={selectedTimezone}
+                  setSelectedTimezone={setSelectedTimezone}
+                />
+              )}
               {visibleUsers.map((u) => {
                 const emergencyPhone = u.phone || "N/A";
                 const leaveStats = getLeaveStats(u);
 
                 return (
-                  <RoleCard 
-                  key={u.id}
-                  u={u}
-                  emergencyPhone={emergencyPhone}
-                  leaveStats={leaveStats}
-                  setEditUser={setEditUser}
-                  setDeleteUser={setDeleteUser}
-                  setSelectedTimezone={setSelectedTimezone}
+                  <RoleCard
+                    key={u.id}
+                    u={u}
+                    emergencyPhone={emergencyPhone}
+                    leaveStats={leaveStats}
+                    setEditUser={setEditUser}
+                    setDeleteUser={setDeleteUser}
+                    setSelectedTimezone={setSelectedTimezone}
                   />
                 );
               })}
@@ -812,18 +812,18 @@ export default function RoleDashboard() {
                         u?.image ? (
                           <Image src={u.image ?? "/default-avatar.png"} alt={u.name} width={72} height={72} className="rounded-full object-cover w-18 h-18" />
                         ) : (
-                            <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700  dark:to-black to-purple-300 text-white grid place-items-center">{u.name.charAt(0)}</div>
+                          <div className="rounded-full object-cover w-18 h-18 bg-linear-to-br from-purple-700  dark:to-black to-purple-300 text-white grid place-items-center">{u.name.charAt(0)}</div>
                         )
                       }
                       <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900 ${u.isLogin ? "bg-green-500" : "bg-gray-400"}`} />
                     </div>
                     <div className="flex-1 min-w-0 ">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{u.name}</h3>
-                      <div className="w-10 h-10 hover:bg-gray-200/20 rounded-sm flex justify-center items-center absolute right-0 top-0 z-50" 
-                      onClick={() => {
-                            setDeleteUser(u)
-                          }}>
-                        <LucideTrash color="white" strokeWidth={1} size={18}/>
+                      <div className="w-10 h-10 hover:bg-gray-200/20 rounded-sm flex justify-center items-center absolute right-0 top-0 z-50"
+                        onClick={() => {
+                          setDeleteUser(u)
+                        }}>
+                        <LucideTrash color="white" strokeWidth={1} size={18} />
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

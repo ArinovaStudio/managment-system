@@ -35,7 +35,7 @@ export default function ScheduleMeet() {
       const res = await fetch('/api/client/meeting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason, meetDate: date, meetTime: time, duration: durationInt , projectId: selectedProject })
+        body: JSON.stringify({ reason, meetDate: date, meetTime: time, duration: durationInt, projectId: selectedProject })
       });
       if (res.ok) {
         toast.success('Meeting request submitted successfully');
@@ -149,9 +149,13 @@ export default function ScheduleMeet() {
             >
               <option value="">Select Project</option>
 
-              {projects.map((proj) => (
-                <option key={proj.id} value={proj.project.id}>
-                  {proj.project.name}
+              {Array.from(
+                new Map(
+                  projects.map(p => [p.project.id, p.project])
+                ).values()
+              ).map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
                 </option>
               ))}
             </select>
@@ -266,7 +270,7 @@ export default function ScheduleMeet() {
                   <div className="flex justify-between items-center mt-3">
                     <div className="space-y-1">
                       <p className="text-sm text-gray-700 dark:text-gray-300">
-                        Date: {m.meetDate.spilt("T")[0]}
+                        Date: {m.meetDate.split("T")[0]}
                       </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300">
                         Time: {m.meetTime}
