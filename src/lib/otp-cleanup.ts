@@ -9,7 +9,6 @@ export async function cleanupExpiredOtps() {
         }
       }
     })
-    console.log(`Cleaned up ${result.count} expired OTPs`)
     return result.count
   } catch (error) {
     console.error('Error cleaning up expired OTPs:', error)

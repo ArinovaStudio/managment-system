@@ -2,99 +2,112 @@ import { NextResponse } from "next/server";
 import db from "@/lib/client";
 import { getUserId } from "@/lib/auth";
 
+function parseTimeToMinutes(timeStr: string) {
+  // "04:28 PM" → minutes since midnight
+  const [time, period] = timeStr.split(" ");
+  let [h, m] = time.split(":").map(Number);
+
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+
+  return h * 60 + m;
+}
+
+function formatMinutesToTime(minutes: number) {
+  const h24 = Math.floor(minutes / 60);
+  const m = minutes % 60;
+
+  const period = h24 >= 12 ? "PM" : "AM";
+  const h12 = h24 === 0 ? 12 : h24 > 12 ? h24 - 12 : h24;
+
+  return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
+}
+
+function formatDecimalHours(hours: number) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return `${h}:${m.toString().padStart(2, "0")}`;
+}
+
 export async function GET(req: Request) {
   try {
     const userId = await getUserId(req);
 
-    // Get last 30 days of work hours for better averages
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const workHours = await db.workHours.findMany({
       where: {
         userId,
-        date: {
-          gte: thirtyDaysAgo
-        }
+        date: { gte: thirtyDaysAgo },
       },
-      orderBy: { date: "desc" }
+      orderBy: { date: "desc" },
     });
 
     if (workHours.length === 0) {
       return NextResponse.json({
         success: true,
         stats: {
-          avgClockIn: "9:00 AM",
-          avgClockOut: "5:00 PM", 
-          avgWorkingHours: "8:00",
-          totalPayPeriod: "0:00"
-        }
+          avgClockIn: null,
+          avgClockOut: null,
+          avgWorkingHours: null,
+          totalPayPeriod: "0:00",
+        },
+        hasActiveSession: false,
+        activeWorkSession: null,
       });
     }
 
-    // Filter out incomplete records (clockOut = '-')
-    const completedWorkHours = workHours.filter(wh => wh.clockOut !== '-');
-    
-    // Calculate averages
-    const clockInTimes = workHours.map(wh => {
-      const time = wh.clockIn.split(' ');
-      const [hours, minutes] = time[0].split(':').map(Number);
-      const isPM = time[1] === 'PM';
-      return (isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours) * 60 + minutes;
-    });
+    // Completed sessions only (have clockOut)
+    const completed = workHours.filter(w => w.clockOut !== "-");
 
-    const clockOutTimes = completedWorkHours.map(wh => {
-      const time = wh.clockOut.split(' ');
-      const [hours, minutes] = time[0].split(':').map(Number);
-      const isPM = time[1] === 'PM';
-      return (isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours) * 60 + minutes;
-    });
+    // ---- AVERAGE CLOCK-IN ----
+    const clockInMinutes = workHours
+      .map(w => parseTimeToMinutes(w.clockIn));
 
-    const avgClockInMinutes = Math.round(clockInTimes.reduce((a, b) => a + b, 0) / clockInTimes.length);
-    const avgClockOutMinutes = clockOutTimes.length > 0 
-      ? Math.round(clockOutTimes.reduce((a, b) => a + b, 0) / clockOutTimes.length)
-      : 17 * 60; // Default to 5:00 PM if no completed records
-    const avgHours = workHours.reduce((sum, wh) => sum + wh.hours, 0) / workHours.length;
-    const totalHours = workHours.reduce((sum, wh) => sum + wh.hours, 0);
+    const avgClockIn =
+      clockInMinutes.length > 0
+        ? formatMinutesToTime(
+            Math.round(clockInMinutes.reduce((a, b) => a + b, 0) / clockInMinutes.length)
+          )
+        : null;
 
-    // Convert minutes back to time format
-    const formatTime = (minutes: number) => {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      const period = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-      return `${displayHours}:${mins.toString().padStart(2, '0')} ${period}`;
-    };
+    // ---- AVERAGE CLOCK-OUT (ONLY IF EXISTS) ----
+    const clockOutMinutes = completed
+      .map(w => parseTimeToMinutes(w.clockOut));
 
-    const formatHours = (hours: number) => {
-      const h = Math.floor(hours);
-      const m = Math.round((hours - h) * 60);
-      return `${h}:${m.toString().padStart(2, '0')}`;
-    };
+    const avgClockOut =
+      clockOutMinutes.length > 0
+        ? formatMinutesToTime(
+            Math.round(clockOutMinutes.reduce((a, b) => a + b, 0) / clockOutMinutes.length)
+          )
+        : null;   // ❌ NO FAKE 5PM
 
-    // Check for active work session (no clockOut)
+    // ---- HOURS ----
+    const totalHours = completed.reduce((sum, w) => sum + w.hours, 0);
+    const avgHours =
+      completed.length > 0 ? totalHours / completed.length : null;
+
+    // ---- ACTIVE SESSION ----
     const activeWorkSession = await db.workHours.findFirst({
       where: {
         userId,
-        clockOut: '-'
+        clockOut: "-",
       },
-      orderBy: {
-        date: 'desc'
-      }
+      orderBy: { date: "desc" },
     });
 
     return NextResponse.json({
       success: true,
       stats: {
-        avgClockIn: formatTime(avgClockInMinutes),
-        avgClockOut: formatTime(avgClockOutMinutes),
-        avgWorkingHours: formatHours(avgHours),
-        totalPayPeriod: formatHours(totalHours)
+        avgClockIn,
+        avgClockOut,
+        avgWorkingHours: avgHours ? formatDecimalHours(avgHours) : null,
+        totalPayPeriod: formatDecimalHours(totalHours),
       },
       hasActiveSession: !!activeWorkSession,
-      activeWorkSession
+      activeWorkSession,
     });
-
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch stats" },

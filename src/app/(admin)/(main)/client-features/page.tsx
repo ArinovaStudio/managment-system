@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Lightbulb, Plus, Calendar, Check, X, Edit, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import Loader from "@/components/common/Loading";
 
 export default function AdminFeaturesPage() {
   const [features, setFeatures] = useState([]);
@@ -126,24 +127,25 @@ export default function AdminFeaturesPage() {
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus size={16} />
-          Request Feature
+          Suggest Feature
         </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex justify-center w-full h-[60vh] items-center">
+          <Loader />
+          {/* <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div> */}
         </div>
       ) : (
         <div className="grid gap-4">
-          {features.map((feature) => (
+          {features.length > 0 ? features.map((feature) => (
             <div
               key={feature.id}
               className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Lightbulb className="text-yellow-500" size={20} />
+                  {/* <Lightbulb className="text-yellow-500" size={20} /> */}
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {feature.title}
@@ -176,7 +178,7 @@ export default function AdminFeaturesPage() {
 
               {userRole && (
                 <div className="flex ">
-                  <div className="mt-4 flex gap-2">
+                  {/* <div className="mt-4 flex gap-2">
                     <button
                       onClick={() => updateFeatureStatus(feature.id, "accepted")}
                       className="px-3 py-1 bg-blue-50 dark:bg-blue-500/20 text-blue-500 rounded-lg text-sm"
@@ -190,7 +192,36 @@ export default function AdminFeaturesPage() {
                     >
                       {feature.status === "rejected" ? "Rejected" : "Reject"}
                     </button>
+                  </div> */}
+
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => updateFeatureStatus(feature.id, "accepted")}
+                      disabled={feature.status === "accepted"}
+                      className={`px-3 py-1 rounded-lg text-sm transition-all
+      ${feature.status === "accepted"
+                          ? "bg-blue-600 text-white cursor-not-allowed"
+                          : "bg-blue-50 dark:bg-blue-500/20 text-blue-500 hover:bg-blue-100"
+                        }
+    `}
+                    >
+                      {feature.status === "accepted" ? "Accepted" : "Accept"}
+                    </button>
+
+                    <button
+                      onClick={() => updateFeatureStatus(feature.id, "rejected")}
+                      disabled={feature.status === "rejected"}
+                      className={`px-3 py-1 rounded-lg text-sm transition-all
+      ${feature.status === "rejected"
+                          ? "bg-red-800 text-white  cursor-not-allowed"
+                          : "bg-red-50 dark:bg-red-600/20 text-red-400 hover:bg-red-100"
+                        }
+    `}
+                    >
+                      {feature.status === "rejected" ? "Rejected" : "Reject"}
+                    </button>
                   </div>
+
 
                   <div className="flex-1 flex justify-end items-end gap-2">
                     <button
@@ -203,7 +234,8 @@ export default function AdminFeaturesPage() {
                 </div>
               )}
             </div>
-          ))}
+          )) : (
+            <p className="text-gray-600 dark:text-gray-400 text-center">No feature requests found.</p>)}
         </div>
       )}
 
@@ -211,7 +243,7 @@ export default function AdminFeaturesPage() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Request New Feature</h2>
+            <h2 className="text-lg font-bold mb-4">Suggest New Feature</h2>
             <div className="space-y-4">
               <input
                 type="text"

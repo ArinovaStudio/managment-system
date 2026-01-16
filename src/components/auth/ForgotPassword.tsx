@@ -2,7 +2,7 @@
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { EyeClosed, EyeIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -15,17 +15,19 @@ const ForgotPassword = () => {
     const [step, setStep] = useState(1); // 1: email, 2: otp, 3: new password
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isEnabled, setEnabled] = useState<boolean>(false);
 
     const handleSendOtp = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
+    const TrimEmail = email.trim()
+    const TrimPass = email.trim()
         try {
             const res = await fetch("/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, action: "send-otp" }),
+                body: JSON.stringify({ TrimEmail, action: "send-otp" }),
             });
 
             const data = await res.json();
@@ -43,12 +45,14 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
+    const TrimEmail = email.trim()
+    const TrimPass = newPassword.trim()
+    const TrimOtp = otp.trim()
         try {
             const res = await fetch("/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp, newPassword, action: "reset-password" }),
+                body: JSON.stringify({ TrimEmail, TrimOtp, TrimPass, action: "reset-password" }),
             });
 
             const data = await res.json();
@@ -111,7 +115,7 @@ const ForgotPassword = () => {
                                         placeholder="Enter 6-digit OTP"
                                         type="text"
                                         value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
+                                        onChange={(e) => {setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true)}}
                                         required
                                     />
                                 </div>
@@ -133,7 +137,7 @@ const ForgotPassword = () => {
                                             {showPassword ? (
                                                 <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
                                             ) : (
-                                                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                                                <EyeClosed className="fill-gray-500 dark:fill-gray-400" />
                                             )}
                                         </span>
                                     </div>
@@ -142,7 +146,7 @@ const ForgotPassword = () => {
                                 {error && <p className="text-red-500 text-sm">{error}</p>}
 
                                 <div>
-                                    <Button type="submit" className="w-full" size="sm" disabled={loading || !otp || !newPassword}>
+                                    <Button type="submit" className="w-full" size="sm" disabled={loading || !isEnabled || !newPassword}>
                                         {loading ? "Resetting..." : "Reset Password"}
                                     </Button>
                                 </div>

@@ -30,7 +30,7 @@ export default function CertificateUpload({ onUploadSuccess, onClose }: Certific
       const response = await fetch('/api/user?all=true');
       const data = await response.json();
       if (data.success) {
-        setUsers(data.users.filter((user: any) => user.role !== 'ADMIN'));
+        setUsers(data.users.filter((user: any) => (user.role !== 'ADMIN' && user.role !== 'CLIENT')));
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);

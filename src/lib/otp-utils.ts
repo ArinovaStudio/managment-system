@@ -1,7 +1,7 @@
 import db from './client'
 import { sendOtp } from './mailer'
 
-export type OtpType = 'SIGNUP' | 'FORGOT_PASSWORD'
+export type OtpType = 'SIGNUP' | 'FORGOT_PASSWORD' | 'LOGIN'
 
 export async function generateAndSendOtp(email: string, type: OtpType): Promise<void> {
   // Generate 6-digit OTP
@@ -24,7 +24,7 @@ export async function generateAndSendOtp(email: string, type: OtpType): Promise<
   })
 
   // Send OTP email
-  const emailType = type === 'SIGNUP' ? 'signup' : 'forgot-password'
+  const emailType = type === 'SIGNUP' ? 'signup' : type === "LOGIN" ? 'login' : 'forgot-password'
   await sendOtp(email, otp, emailType)
 }
 

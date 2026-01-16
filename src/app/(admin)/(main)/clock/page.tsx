@@ -1,24 +1,9 @@
 'use client';
-import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X, SirenIcon } from 'lucide-react'
+import { ArrowUpFromDot, ClipboardClock, ClockArrowDown, ClockArrowUp, ClockFading, Cloud, Coffee, CookingPot, Play, Siren, Timer, ScanFace, X, SirenIcon, LogOut } from 'lucide-react'
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import WorkHoursChart from './Chart'
 import FaceRecognition from './FaceRecognition'
 import toast from 'react-hot-toast'
-// import { Button } from "@/components/ui/button";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectContent,
-//   SelectItem,
-//   SelectValue,
-// } from "@/components/ui/select";
 
 interface BreakType {
   id: string;
@@ -66,6 +51,8 @@ function Clock() {
       const res = await fetch("/api/clock/stats");
       const data = await res.json();
       if (data.success) {
+        console.log(data.stats,"this is status");
+        
         setStats(data.stats);
         // If there's an active session, force user status to logged in
         if (data.hasActiveSession) {
@@ -130,26 +117,7 @@ function Clock() {
   }, []);
 
   // UPDATE TIMEZONE
-  async function updateTimezone() {
-    if (!selected) return;
 
-    try {
-      const res = await fetch("/api/clock/timezone", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: "set-timezone",
-          timezone: selected,
-        }),
-      });
-
-      const data = await res.json();
-      setTimezone(data.timezone);
-    } catch (error) {
-      console.error('Failed to update timezone:', error);
-      toast.error('Failed to update timezone');
-    }
-  }
 
   // LOAD LEAVES
   useEffect(() => {
@@ -315,14 +283,14 @@ function Clock() {
 
       const data = await response.json();
       setUserStatus(data);
-
+      
       // For clock-out, skip face recognition and go directly to logout workflow
       if (data.isLoggedIn) {
         // Get user info to check role
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-
-        if (userData.user?.workingAs === 'Developer') {
+        
+        if (userData.user?.isDev) {
           setShowDeveloperPopup(true);
         } else {
           setShowSummaryPopup(true);
@@ -373,10 +341,9 @@ function Clock() {
       if (result.success) {
         setShowAuthPopup(false);
         setPassword('');
-
         // If clocking out, check for developer workflow or show summary
         if (result.action === 'clock-out-auth') {
-          if (result.userWorkingAs === 'Developer') {
+          if (result.isDev) {
             setShowDeveloperPopup(true);
           } else {
             setShowSummaryPopup(true);
@@ -400,71 +367,17 @@ function Clock() {
   const handleDeveloperResponse = (pushedCode: boolean) => {
     if (!pushedCode) {
       setShowDeveloperPopup(false);
-      toast('Please Commit and push changes');
+      toast.error('Ops! First you need to push all your work progress!');
     } else {
       setShowDeveloperPopup(false);
       setShowSummaryPopup(true);
     }
   };
 
-  const handleWorkSummary = async () => {
-    if (!workSummary.trim()) {
-      toast.error('Please provide a work summary');
-      return;
-    }
-
-    setSummaryLoading(true);
-    try {
-      const response = await fetch('/api/clock/work-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ summary: workSummary })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setShowSummaryPopup(false);
-        setWorkSummary('');
-        toast.success(`Clock-out successful! ${result.message}`);
-        await loadUserStatus();
-        await loadStats();
-      } else {
-        toast.error(`Failed to save work summary: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Work summary error:', error);
-      toast.error('Failed to save work summary. Please try again.');
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
-
-  const handleFaceAuthSuccess = async (result: any) => {
-    setShowFaceAuth(false);
-
-    if (result.action === 'clock-out') {
-      // For clock-out, check if user is developer
-      if (result.userRole === 'DEVELOPER') {
-        setShowDeveloperPopup(true);
-      } else {
-        setShowSummaryPopup(true);
-      }
-    } else {
-      toast.success(`Welcome! ${result.message}`);
-      await loadUserStatus();
-      await loadStats();
-    }
-  };
-
-  const handleFaceAuthError = () => {
-    setShowFaceAuth(false);
-    setShowAuthPopup(true);
-  };
 
   const handleSummarySubmit = async () => {
     if (!workSummary.trim()) {
-      toast.error('Please provide a work summary');
+      toast.error('Hey, Hey! Tell me what\'s your today\'s progress first?');
       return;
     }
 
@@ -479,7 +392,7 @@ function Clock() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('Clock-Out Successfully! Work summary saved.');
+        toast.success(`Clock-Out Successfully!. ${result?.message}`);
         setShowSummaryPopup(false);
         setWorkSummary('');
         await loadUserStatus();
@@ -508,8 +421,8 @@ function Clock() {
         // Get user info from API to check workingAs
         const userResponse = await fetch('/api/user');
         const userData = await userResponse.json();
-
-        if (userData.user?.workingAs === 'Developer') {
+        
+        if (userData.user?.isDev) {
           setShowDeveloperPopup(true);
         } else {
           setShowSummaryPopup(true);
@@ -574,97 +487,6 @@ function Clock() {
           <h1 className="text-xl text-right w-full text-white mt-4">
             Selected Time Zone
           </h1>
-
-          {/* Change timezone button */}
-          {/* <Dialog>
-            <DialogTrigger asChild>
-              <Button className="mt-3 bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
-                Change Timezone
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent
-              className="
-      rounded-3xl
-      border border-white/20 
-      bg-white/10 
-      backdrop-blur-2xl 
-      shadow-[0_8px_32px_rgba(0,0,0,0.2)] 
-      p-8
-      animate-in 
-      fade-in-50 
-      zoom-in-95
-    "
-            >
-              <DialogHeader>
-                <DialogTitle className="text-white text-2xl font-semibold tracking-tight">
-                  Select Timezone
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="mt-4">
-                <Select onValueChange={setSelected}>
-                  <SelectTrigger
-                    className="
-            w-full 
-            bg-white/20 
-            border border-white/30 
-            text-white 
-            rounded-xl 
-            hover:bg-white/30 
-            transition 
-            backdrop-blur-md
-          "
-                  >
-                    <SelectValue placeholder="Choose timezone..." />
-                  </SelectTrigger>
-
-                  <SelectContent
-                    className="
-            bg-white/90 
-            text-gray-900 
-            rounded-xl 
-            shadow-lg 
-            animate-in 
-            slide-in-from-top-2
-          "
-                  >
-                    {allTimezones.map((tz) => (
-                      <SelectItem
-                        key={tz.code}
-                        value={tz.code}
-                        className="
-                cursor-pointer
-                py-2
-                hover:bg-gray-200 
-                rounded-lg
-              "
-                      >
-                        <span className="font-semibold">{tz.code}</span> — {tz.hours}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                onClick={updateTimezone}
-                className="
-        w-full mt-6 py-3 
-        rounded-xl 
-        bg-gradient-to-r from-green-500 to-green-700 
-        text-white 
-        font-semibold 
-        shadow-lg 
-        hover:scale-[1.02] 
-        transition-transform
-      "
-              >
-                Save
-              </Button>
-            </DialogContent>
-          </Dialog> */}
-
         </div>
 
         {/* LEAVES CARD */}
@@ -773,12 +595,16 @@ function Clock() {
             onClick={handleFaceAuth}
             className="mx-auto cursor-pointer w-20 mt-6 h-20 bg-sky-400 shadow-[inset_4px_5px_7px_0px_#ffffff90] rounded-full grid place-items-center text-white hover:scale-105 transition-transform"
           >
+            {userStatus?.isLoggedIn ? 
+            <LogOut className='rotate-180' size={32} />
+             : 
             <ScanFace size={32} />
+            }
           </div>
 
           <h1 className="uppercase mt-8 dark:text-gray-400 text-neutral-400 text-center font-semibold text-lg">
             {userStatus?.isLoggedIn ? (
-              <span className="text-green-500">You are Logged-IN</span>
+              <span className="text-green-400">You are Logged-IN</span>
             ) : (
               <span>You are not Logged-IN</span>
             )}
@@ -800,7 +626,7 @@ function Clock() {
           const isActive = activeBreak === breakType.id;
 
           return (
-            <>
+            <React.Fragment key={breakType.id}>
               <div key={breakType.id} className="w-1/3 h-full bg-white dark:bg-white/[0.03] dark:text-white rounded-2xl flex justify-start p-4 items-center gap-3">
                 <div className={`w-20 h-5/6 ${colors.bg} text-white rounded-xl grid place-items-center`}>
                   <IconComponent size={28} strokeWidth={1.6} />
@@ -829,7 +655,7 @@ function Clock() {
                   )}
                 </button>
               </div>
-            </>
+            </React.Fragment>
           );
         })}
 
@@ -938,24 +764,24 @@ function Clock() {
       {showDeveloperPopup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-96 mx-4 animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold dark:text-white">Developer Check</h2>
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-xl font-semibold text-gray-400 text-center w-full">Before Logout</h2>
             </div>
 
-            <p className="text-gray-600 dark:text-gray-300 mb-6 text-center text-lg">
+            <p className="text-gray-800 dark:text-gray-100 mb-6 text-center text-lg">
               Did you push the codes?
             </p>
 
             <div className="flex gap-3">
               <button
                 onClick={() => handleDeveloperResponse(false)}
-                className="flex-1 py-3 px-4  text-white rounded-lg border border-gray-600 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4 dark:text-white rounded-lg border-2 border-gray-600 transition-all hover:scale-105 font-medium"
               >
                 No
               </button>
               <button
                 onClick={() => handleDeveloperResponse(true)}
-                className="flex-1 py-3 px-4 bg-sky-400 text-white rounded-lg hover:bg-sky-500 transition-all hover:scale-105 font-medium"
+                className="flex-1 py-3 px-4 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-all hover:scale-105 font-medium"
               >
                 Yes
               </button>
@@ -998,6 +824,7 @@ function Clock() {
                 onClick={() => {
                   setShowSummaryPopup(false);
                   setWorkSummary('');
+                  toast.error("Hey, Hey! Tell me what\'s your today\'s progress first?");
                 }}
                 className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white transition-all hover:scale-105"
               >

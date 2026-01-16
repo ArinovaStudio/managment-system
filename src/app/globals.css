@@ -37,7 +37,7 @@
   --color-current: currentColor;
   --color-transparent: transparent;
   --color-white: #ffffff;
-  --color-black: #101828;
+  --color-black: #000000;
 
   --color-brand-25: #f2f7ff;
   --color-brand-50: #ecf3ff;
@@ -744,6 +744,9 @@ span.flatpickr-weekday,
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
+  --font-mono: var(--font-mono);
+  --font-outfit: var(--font-outfit);
+  --font-poppins: var(--font-poppins);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
@@ -824,7 +827,7 @@ span.flatpickr-weekday,
 */
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #0a0a0a;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -869,6 +872,127 @@ span.flatpickr-weekday,
     @apply bg-background text-foreground;
   }
 }
+@layer utilities {
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+}
 
 
+
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
+.prose h1 { font-size: 2.2rem; font-weight: 700; }
+.prose h2 { font-size: 1.8rem; font-weight: 600; }
+.prose h3 { font-size: 1.4rem; font-weight: 600; }
+
+.prose p { line-height: 1.8; }
+.prose a { color: #3b82f6; }
+
+
+/* Lists */
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin: 0.35rem 0;
+}
+
+/* Task List */
+.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.task-list li {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.task-list input[type="checkbox"] {
+  margin-top: 0.35rem;
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+}
+
+/* Tables */
+.editor-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 14.5px;
+}
+
+.editor-table th,
+.editor-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px 12px;
+}
+
+.dark .editor-table th,
+.dark .editor-table td {
+  border-color: #374151;
+}
+
+.editor-table th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.dark .editor-table th {
+  background: #111827;
+}
+
+
+.toolbar-select {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+}
+
+.dark .toolbar-select {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+.toolbar-select:hover {
+  background: #e5e7eb;
+}
+
+.dark .toolbar-select:hover {
+  background: #1f2937;
+}
+
+.toolbar-select:focus {
+  outline: none;
+}
 

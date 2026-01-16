@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { MessageSquare, Send } from "lucide-react";
-import { clientDemoData } from "../demodata"
 
-const { feedback } = clientDemoData
 
 export default function FeedbacksPage() {
-    const [feedbacks, setFeedbacks] = useState(feedback);
+    const [feedbacks, setFeedbacks] = useState([]);
     const [newFeedback, setNewFeedback] = useState("");
     const [feedbackType, setFeedbackType] = useState("project");
 

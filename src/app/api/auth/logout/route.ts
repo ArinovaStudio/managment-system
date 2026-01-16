@@ -1,16 +1,24 @@
 import { NextResponse } from "next/server";
-import { deleteTokenCookie } from "@/lib/jwt"; // we'll make a helper
+import { cookies } from "next/headers";
 
 export async function POST() {
   try {
-    const response = NextResponse.json({ message: "Logged out successfully" });
+    const cookieStore = await cookies();
 
-    // Clear the token cookie
-    response.headers.set("Set-Cookie", deleteTokenCookie());
+    cookieStore.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: new Date(0),
+    });
 
-    return response;
+    return NextResponse.json({ message: "Logged out successfully" });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Logout Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Logout internal server error" },
+      { status: 500 }
+    );
   }
 }

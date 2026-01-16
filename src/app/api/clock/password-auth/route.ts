@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     // Get user with password
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, password: true, isLogin: true, workingAs: true }
+      select: { id: true, name: true, password: true, isLogin: true, isDev: true }
     });
 
     if (!user) {
@@ -73,6 +73,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
+        isDev: user.isDev,
         message: `Welcome ${user.name}! Clock-in successful at ${clockInTime}`,
         action: 'clock-in'
       });

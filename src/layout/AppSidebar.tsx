@@ -4,23 +4,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+
+
+// HorizontaLDots,
 import {
   ChevronDownIcon,
-  HorizontaLDots,
-  ListIcon,
-} from "../icons/index";
-
-import {
   AlbumIcon, AlignHorizontalJustifyStart, Clock10Icon, FolderGit2, GraduationCapIcon, Handshake, HeartPulseIcon, MessageSquareMore,
-  CalendarPlus,
+  Presentation,
   Lightbulb,
   FileUp,
-  Quote,
-  User,
-  NotebookPen,
   Calendar,
-  MessageSquare
+  Dices,
+  Layers,
+  FileText,
+  UsersRound,
+  TentTree,
+  Flag,
+  ChartNoAxesCombined,
+  HeartPlus,
+  LucideClipboardPenLine
 } from "lucide-react"
+import { HorizontaLDots } from "@/icons";
 
 type NavItem = {
   name: string;
@@ -49,21 +53,9 @@ const navItems: NavItem[] = [
 
   {
     name: "Kanban Board",
-    icon: <ListIcon />,
+    icon: <Layers />,
     path: "/kanban",
     // subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Well Being  Management",
-    icon: <HeartPulseIcon strokeWidth={1.5} />,
-    path: "/well-being-management",
-    role: "ADMIN"
-  },
-  {
-    icon: <Quote strokeWidth={1.5} />,
-    name: "Quotes",
-    path: "/quotes",
-    role: "ADMIN"
   },
   {
     icon: <HeartPulseIcon strokeWidth={1.5} />,
@@ -71,7 +63,7 @@ const navItems: NavItem[] = [
     path: "/well-being",
   },
   {
-    icon: <CalendarPlus strokeWidth={1.5} />,
+    icon: <Presentation strokeWidth={1.5} />,
     name: "Meetings",
     path: "/meeting",
   },
@@ -82,32 +74,16 @@ const othersItems: NavItem[] = [
     icon: <AlbumIcon strokeWidth={1.5} />,
     name: "Leave Requests",
     path: "/leave-requests",
-    // subItems: [
-    //   { name: "Sign In", path: "/signin", pro: false },
-    //   { name: "Sign Up", path: "/signup", pro: false },
-    // ],
   },
   {
     icon: <Handshake strokeWidth={1.5} />,
     name: "Feedbacks",
     path: "/feedbacks",
-    // subItems: [
-    //   { name: "Alerts", path: "/alerts", pro: false },
-    //   { name: "Avatar", path: "/avatars", pro: false },
-    //   { name: "Badge", path: "/badge", pro: false },
-    //   { name: "Buttons", path: "/buttons", pro: false },
-    //   { name: "Images", path: "/images", pro: false },
-    //   { name: "Videos", path: "/videos", pro: false },
-    // ],
   },
   {
     icon: <GraduationCapIcon strokeWidth={1.5} />,
     name: "Certifications",
     path: "/certificates"
-    // subItems: [
-    //   { name: "Line Chart", path: "/line-chart", pro: false },
-    //   { name: "Bar Chart", path: "/bar-chart", pro: false },
-    // ],
   },
   {
     icon: <Calendar strokeWidth={1.5} />,
@@ -118,7 +94,7 @@ const othersItems: NavItem[] = [
 
 const clientItems: NavItem[] = [
   {
-    icon: <CalendarPlus strokeWidth={1.5} />,
+    icon: <Presentation strokeWidth={1.5} />,
     name: "Meetings",
     path: "/client-meetings",
   },
@@ -137,29 +113,52 @@ const clientItems: NavItem[] = [
     name: "Feedbacks",
     path: "/client-feedback",
   },
+  {
+    icon: <FileText strokeWidth={1.5} />,
+    name: "M. Memo",
+    path: "/memobook",
+  },
 ];
 
 const adminOnlyItem: NavItem[] = [
   {
-    name: "User Management",
-    icon: <User strokeWidth={1.5} />,
-    path: "/user",
+    name: "Daily Reports",
+    icon: <Flag strokeWidth={1.5} />,
+    path: "/daily-reports",
   },
   {
     name: "Leave Management",
-    icon: <NotebookPen strokeWidth={1.5} />,
+    icon: <TentTree strokeWidth={1.5} />,
     path: "/leavemanage",
   },
   {
-    name: "User Performance",
-    icon: <GraduationCapIcon strokeWidth={1.5} />,
-    path: "/user-performance",
+    name: "User Management",
+    icon: <UsersRound strokeWidth={1.5} />,
+    path: "/user",
   },
   {
-    name: "Daily Reports",
-    icon: <MessageSquare strokeWidth={1.5} />,
-    path: "/daily-reports",
-  }
+    name: "User Performance",
+    icon: <ChartNoAxesCombined strokeWidth={1.5} />,
+    path: "/user-performance",
+  },
+    {
+    name: "Well Being  Management",
+    icon: <HeartPlus strokeWidth={1.5} />,
+    path: "/well-being-management",
+    role: "ADMIN"
+  },
+  {
+    icon: <Dices strokeWidth={1.5} />,
+    name: "Quotes",
+    path: "/quotes",
+    role: "ADMIN"
+  },
+    {
+    icon: <LucideClipboardPenLine strokeWidth={1.5} />,
+    name: "Project Plan",
+    path: "/project-plan",
+    role: "ADMIN"
+  },
 ];
 
 const AppSidebar: React.FC = () => {

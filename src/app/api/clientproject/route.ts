@@ -46,7 +46,6 @@ export async function GET() {
     });
 
   } catch (error: any) {
-    console.log(error?.message);
     return NextResponse.json(
       { success: false, message: "Invalid token" },
       { status: 401 }

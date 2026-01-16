@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, User2, Crown, Edit, Trash2, Plus } from "lucide-react";
+import { ShieldCheck, Crown, Edit, Trash2, Plus } from "lucide-react";
 
 export default function TeamTab({ projectId }: { projectId: string }) {
   const [members, setMembers] = useState<any[]>([]);
@@ -9,16 +9,40 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   const [editingMember, setEditingMember] = useState<any>(null);
   const [newRole, setNewRole] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [clientModel, setClientModel] = useState(false);
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [memberRole, setMemberRole] = useState("");
-
+  const [isClientAvailable, setIsClientAvailable] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEmployee, setEmployee] = useState(false)
+
+      const checkUserRole = async () => {
+    try {
+      const response = await fetch('/api/user');
+      const data = await response.json();
+
+      if (data.user && data.user.role === "EMPLOYEE") {
+        setEmployee(true);
+      }
+
+      if (data.user && data.user.role === 'ADMIN') {
+        setIsAdmin(true);
+      }
+
+    } catch (error) {
+      console.error('Failed to check user role:', error);
+    }
+  };
 
   useEffect(() => {
+    checkUserRole();
     if (projectId) fetchMembers();
   }, [projectId]);
 
+
+  
   const fetchMembers = async () => {
     try {
       const res = await fetch(`/api/project/member?projectId=${projectId}`);
@@ -26,6 +50,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
 
       if (data.success) {
         setMembers(data.members);
+        setIsClientAvailable(data.members.some((m: any) => m.user.role === "CLIENT"));
       }
     } catch (err) {
       console.error("Team Fetch Error:", err);
@@ -72,25 +97,11 @@ export default function TeamTab({ projectId }: { projectId: string }) {
     setNewRole("");
   };
 
-  // const fetchAvailableUsers = async () => {
-  //   try {
-  //     const res = await fetch('/api/auth/signup');
-  //     const data = await res.json();
-  //     if (data.users) {
-  //       const currentMemberIds = members.map(m => m.userId);
-  //       const available = data.users.filter(u => !currentMemberIds.includes(u.id));
-  //       setAvailableUsers(available);
-  //     }
-  //   } catch (err) {
-  //     console.error('Failed to fetch users:', err);
-  //   }
-  // };
-
-  const fetchAvailableUsers = async () => {
+  const fetchAvailableUsers = async (Type: string) => {
     setUsersLoading(true);
 
     try {
-      const res = await fetch('/api/auth/signup');
+      const res = await fetch(`/api/admin/getRoleWise?role=${Type}`);
       const data = await res.json();
 
       if (data.users) {
@@ -108,7 +119,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
   };
 
 
-  const addMember = async () => {
+  const addMember = async (isClient: boolean) => {
     if (!selectedUser) return;
 
     try {
@@ -118,7 +129,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
         body: JSON.stringify({
           projectId,
           userId: selectedUser,
-          role: memberRole || 'Member',
+          role: isClient ? "CLIENT" : memberRole || 'Member',
           isLeader: false
         })
       });
@@ -126,6 +137,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
       setShowAddModal(false);
       setSelectedUser('');
       setMemberRole('');
+      setClientModel(false);
       fetchMembers();
     } catch (err) {
       console.error('Add member failed:', err);
@@ -140,15 +152,34 @@ export default function TeamTab({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white">Project Team</h2>
+        {
+          isAdmin && (
+        <div className="flex justify-between items-center gap-4">
+        
+        <button
+          onClick={isClientAvailable ? () => {} : () => {
+            fetchAvailableUsers('CLIENT');
+            setShowAddModal(true);
+            setClientModel(true);
+          }}
+          className={`${isClientAvailable ? "opacity-40 cursor-not-allowed": "cursor-pointer hover:text-white  hover:bg-blue-700"} px-4 py-2 bg-transparent border-2 border-blue-700 text-blue-500 rounded-lg flex items-center gap-2 transition-colors`}
+        >
+          <Plus size={18} /> Add Client
+        </button>
+
         <button
           onClick={() => {
-            fetchAvailableUsers();
+            fetchAvailableUsers('EMPLOYEE');
             setShowAddModal(true);
           }}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={18} /> Add Member
         </button>
+        </div>
+          )
+        }
+      
       </div>
 
       {members.length === 0 && (
@@ -156,15 +187,18 @@ export default function TeamTab({ projectId }: { projectId: string }) {
       )}
 
       <div className="space-y-4">
-        {members.map((m: any) => (
+        {members.map((m: any) => {
+          if (isEmployee && m.role === "CLIENT") {
+            return null;
+          }
+          return (
           <div
-            key={m.id}
-            className="p-5 bg-white  dark:bg-gray-800/50 border border-gray-400 rounded-xl"
+          key={m.id}
+          className="p-5 bg-white  dark:bg-gray-800/50 border border-gray-400 rounded-xl"
           >
             <div className="flex justify-between items-center">
               <div className="flex-1">
                 <p className="font-semibold dark:text-white">{m.user.name}</p>
-
                 {editingMember?.id === m.id ? (
                   <div className="flex items-center gap-2 mt-2">
                     <input
@@ -176,7 +210,7 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                     />
                     <button
                       onClick={saveRole}
-                      className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-green-700"
                     >
                       Save
                     </button>
@@ -199,8 +233,11 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   </p>
                 )}
               </div>
-
+              {
+                isAdmin && (
               <div className="flex mt-10 items-end gap-2">
+                {
+                  m.user.role === "CLIENT" ? null : (
                 <div>
                   <button
                     onClick={() => updateRole(m.userId, m.role || "Member", !m.isLeader)}
@@ -213,9 +250,13 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                     {m.isLeader ? "Remove Leader" : "Make Leader"}
                   </button>
                 </div>
+                  )
+                }
 
                 <div className="flex items-center gap-1">
-                  <button
+                  {
+                    m.role === "CLIENT" ? null : (
+                    <button
                     onClick={() => {
                       setEditingMember(m);
                       setNewRole(m.role || "");
@@ -225,6 +266,9 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   >
                     <Edit size={14} />
                   </button>
+                    )
+                  }
+
                   <button
                     onClick={() => removeMember(m.userId)}
                     className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -234,16 +278,21 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   </button>
                 </div>
               </div>
+                )
+              }
             </div>
           </div>
-        ))}
+          )
+        }
+        )
+      }
       </div>
 
       {/* Add Member Modal */}
-      {showAddModal && (
+      {(showAddModal || clientModel) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white dark:bg-gray-900 w-full max-w-md p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-2xl">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Team Member</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add {clientModel ? "Client" : "Team Member"}</h2>
 
             <div className="space-y-4">
               <div>
@@ -292,7 +341,9 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                 <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">Role</label>
                 <input
                   type="text"
-                  value={memberRole}
+                  value={clientModel ? "CLIENT" : memberRole}
+                  disabled={clientModel}
+                  style={clientModel ? {opacity: 20, cursor: "not-allowed", color: "text-gray-600"} : {opacity: 100}}
                   onChange={(e) => setMemberRole(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter role (e.g., Developer, Designer)"
@@ -306,15 +357,16 @@ export default function TeamTab({ projectId }: { projectId: string }) {
                   setShowAddModal(false);
                   setSelectedUser('');
                   setMemberRole('');
+                  setClientModel(false);
                 }}
                 className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
               >
                 Cancel
               </button>
               <button
-                onClick={addMember}
+                onClick={() => addMember(clientModel)}
                 disabled={!selectedUser}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg"
               >
                 Add Member
               </button>

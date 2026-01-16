@@ -5,27 +5,34 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
   try {
     const { projectId } = await ctx.params;
 
-    const project = await db.project.findUnique({
-      where: { id: projectId },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true
-              }
-            }
+const project = await db.project.findUnique({
+  where: { id: projectId },
+  include: {
+    members: {
+      select: {
+        isLeader: true,
+        role: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true,
+            isLogin: true,
           }
-        },
-        projectInfo: true,
-        latestUpdates: {
-          orderBy: { createdAt: "desc" },
-          take: 3
         }
       }
-    });
+    },
+    // repository: true,
+    projectInfo: true,
+    latestUpdates: {
+      orderBy: { createdAt: "desc" },
+      take: 3
+    }
+  }
+});
+
 
     if (!project) {
       return Response.json(
@@ -65,19 +72,23 @@ export async function GET(req: Request, ctx: { params: Promise<{ projectId: stri
       project: {
         id: project.id,
         name: project.name,
+        isLeader: project.isLeader,
+        role: project.role,
         summary: project.summary,
         priority: project.priority,
+        repository: project.repository,
         status: project.status,
         progress: project.progress,
         createdAt: project.createdAt,
         basicDetails: project.basicDetails,
         membersCount: project.members.length,
-        members: project.members.map((m) => m.user),
+        members: project.members,
         projectInfo: project.projectInfo
       },
       dashboardData
     });
   } catch (err) {
+    // console.log(err);
     return Response.json(
       { success: false, message: "Failed to fetch project overview", err },
       { status: 500 }

@@ -12,20 +12,39 @@ cloudinary.config({
 
 export async function GET(req: NextRequest) {
   try {
-    const token = (await cookies()).get("token")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { searchParams } = new URL(req.url);
+    const userOnly = searchParams.get('userOnly');
+    
+    if (userOnly === 'true') {
+      // Get projects for current user
+      const { getUserId } = await import('@/lib/auth');
+      const userId = await getUserId(req);
+      
+      const documents = await db.docs.findMany({
+        where: { userId },
+        include: {
+          User: {
+            select: {
+              name: true
+            }
+          },
+          Projects: true
+        }
+      });
 
-    const payload: any = verifyToken(token);
-    const userId = payload.userId || payload.id;
-
+      return Response.json({ success: true, documents });
+    }
+    
     const documents = await db.docs.findMany({
-      where: { userId },
+      include: {Projects: {
+        select: { id: true, name: true}
+      }, User: {select: {id: true, name: true}}},
       orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json({ success: true, documents });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch documents" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch documents", err: error }, { status: 500 });
   }
 }
 
@@ -40,6 +59,7 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const title = formData.get('title') as string;
     const file = formData.get('file') as File;
+    const projectId = formData.get('projectId') as string;
 
     if (!title || !file) {
       return NextResponse.json({ error: "Title and file are required" }, { status: 400 });
@@ -53,18 +73,27 @@ export async function POST(req: NextRequest) {
 
     // Upload to Cloudinary
     const uploadResult = await cloudinary.uploader.upload(dataURI, {
+      
       folder: 'documents',
       resource_type: 'auto',
       public_id: `${userId}_${Date.now()}`
     });
 
-    const document = await db.docs.create({
-      data: {
-        title,
-        fileUrl: uploadResult.secure_url,
-        userId
-      }
-    });
+const document = await db.docs.create({
+  data: {
+    title,
+    fileUrl: uploadResult.secure_url,
+    User: {
+      connect: { id: userId },
+    },
+    Projects: {
+      connect: { id: projectId },
+    },
+  },
+});
+
+
+
 
     return NextResponse.json({ success: true, document });
   } catch (error) {

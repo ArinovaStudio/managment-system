@@ -1,33 +1,91 @@
 "use client";
-import React, { useState } from "react";
-import { clientDemoData } from "../demodata";
+import React, { useEffect, useState } from "react";
 import { PlusCircle } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function FeatureRequestPage() {
     const [title, setTitle] = useState("");
     const [desc, setDesc] = useState("");
-    const [features, setFeatures] = useState(clientDemoData.featureRequests);
+    const [features, setFeatures] = useState<any[]>([]);
+    const [user, setUser] = useState<any>(null);
+    const [projects, setProjects] = useState<any[]>([]);
+    const [selectedProject, setSelectedProject] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
+        setLoading(true);
+        
+        try {
+            const response = await fetch('/api/feature-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    clientId: user?.id,
+                    title: title,
+                    description: desc,
+                    projectId: selectedProject,
+                })
+            });
+            if (response.ok) {
+                toast.success('Feedback submitted successfully!');
+                setDesc('');
+                setTitle('');
+                await fetchfeature();
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Failed to submit feedback');
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            toast.error('Error submitting feedback');
+        } finally {
+            setLoading(false);
+        }
 
-        if (!title.trim() || !desc.trim()) return;
-
-        const newFeature = {
-            id: features.length + 1,
-            title: title,
-            description: desc,
-            date: new Date().toISOString().split("T")[0],
-            status:"pending"
-        };
-
-        setFeatures([newFeature, ...features]);
-        setTitle("");
-        setDesc("");
     };
+
+    const fetchUser = async () => {
+        const res = await fetch("/api/user");
+        const data = await res.json();
+
+
+
+        if (data.user) {
+            setUser(data.user);
+        }
+    };
+
+    const fetchProject = async () => {
+        const res = await fetch(`/api/feedbacks/clientprojectfetch?userId=${user?.id}`);
+        const data = await res.json();
+
+        setProjects(data.projects || []);
+    };
+
+    const fetchfeature = async () => {
+        const res = await fetch(`/api/feature-request?userId=${user?.id}`);
+        const data = await res.json();
+        setFeatures(Array.isArray(data.features) ? data.features : []);
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchProject();
+            fetchfeature();
+
+        }
+    }, [user]);
+
 
     return (
         <div className="space-y-8">
+            <Toaster position="top-right" />
             {/* Heading */}
             <div>
                 <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
@@ -58,6 +116,48 @@ export default function FeatureRequestPage() {
                         />
                     </div>
 
+                    {/* project */}
+                    <div className="flex flex-col">
+                        <label className="text-sm text-gray-700 dark:text-gray-300 mb-1.5">
+                            Project
+                        </label>
+
+                        <div className="relative">
+                            <select
+                                value={selectedProject}
+                                onChange={(e) => setSelectedProject(e.target.value)}
+                                className="
+          w-full appearance-none rounded-xl px-4 py-2.5
+          bg-white dark:bg-gray-900
+          border border-gray-300 dark:border-gray-700
+          text-gray-900 dark:text-gray-100
+          transition-all duration-200
+          shadow-sm
+        "
+                            >
+                                <option value="">Select Project</option>
+
+                                {projects.map((proj) => (
+                                    <option key={proj.project.id} value={proj.project.id}>
+                                        {proj.project.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                                <svg
+                                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path d="M6 9l6 6 6-6" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+
                     {/* Description */}
                     <div>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -75,10 +175,11 @@ export default function FeatureRequestPage() {
                     {/* Submit Button */}
                     <button
                         type="submit"
+                        disabled={loading}
                         className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition-all"
                     >
                         <PlusCircle strokeWidth={1.5} />
-                        Submit Feature Request
+                        {loading ? 'Subbmitting Feature Request...' : 'Submit Feature Request'}
                     </button>
                 </div>
             </form>
@@ -96,11 +197,18 @@ export default function FeatureRequestPage() {
                         {features.map((f) => (
                             <div
                                 key={f.id}
-                                className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all"
+                                className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md transition-all"
                             >
+                                {/* Project name */}
+                                {f.projectname && (
+                                    <p className="mt-2 text-gray-400 font-light dark:font-normal dark:text-gray-500 text-sm leading-relaxed">
+                                        {f.project.name}
+                                    </p>
+                                )}
+
                                 {/* Title */}
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                                    <h3 className="text-xl font-medium text-gray-800 dark:text-white">
                                         {f.title}
                                     </h3>
 
@@ -110,14 +218,14 @@ export default function FeatureRequestPage() {
 
                                 {/* Description */}
                                 {f.description && (
-                                    <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                                    <p className="mt-2 text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
                                         {f.description}
                                     </p>
                                 )}
 
                                 {/* Date */}
                                 <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                    Requested on {f.date}
+                                    Requested on {f.createdAt.split("T")[0]}
                                 </p>
                             </div>
                         ))}
@@ -129,7 +237,7 @@ export default function FeatureRequestPage() {
     );
 }
 
-const StatusBadge = ({ status}) => {
+const StatusBadge = ({ status }) => {
     const colors = {
         pending:
             "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300",

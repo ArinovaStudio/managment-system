@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       }
 
       // Send OTP
-      await generateAndSendOtp(user.email, "FORGOT_PASSWORD");
+      await generateAndSendOtp(user.email, "LOGIN");
       return NextResponse.json({ message: "OTP sent to your email" });
     }
 
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       }
 
       // Verify OTP
-      const isOtpValid = await verifyOtp(user.email, otp, "FORGOT_PASSWORD");
+      const isOtpValid = await verifyOtp(user.email, otp, "LOGIN");
       if (!isOtpValid) {
         return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 400 });
       }
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("SIGNIN ERROR:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: err },
       { status: 500 }
     );
   }

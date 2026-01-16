@@ -7,13 +7,9 @@ import toast from "react-hot-toast";
 export default function AdminDocuments() {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
-
+  const [projects, setProjects] = useState([]);
     const [addModal, setAddModal] = useState(false);
-    const [newDoc, setNewDoc] = useState({ title: "", file: null });
-
-    useEffect(() => {
-        fetchDocuments();
-    }, []);
+    const [newDoc, setNewDoc] = useState({ title: "", file: null, projectId: "" });
 
     const fetchDocuments = async () => {
         try {
@@ -38,8 +34,10 @@ export default function AdminDocuments() {
         const formData = new FormData();
         formData.append('title', newDoc.title);
         formData.append('file', newDoc.file);
-
+        formData.append('projectId', newDoc.projectId);
+        
         try {
+            setLoading(true);
             const res = await fetch('/api/client/documents', {
                 method: 'POST',
                 body: formData
@@ -47,11 +45,14 @@ export default function AdminDocuments() {
             if (res.ok) {
                 toast.success('Document uploaded successfully');
                 setAddModal(false);
-                setNewDoc({ title: "", file: null });
+                setNewDoc({ title: "", file: null, projectId: "" });
                 fetchDocuments();
             }
         } catch (error) {
             toast.error('Failed to upload document');
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -72,6 +73,30 @@ export default function AdminDocuments() {
             toast.error('Failed to delete document');
         }
     };
+
+    const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/project');
+      const data = await res.json();
+      if (data.success) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects');
+    }
+    finally {
+        setLoading(false);
+    }
+  };
+
+      useEffect(() => {
+        fetchDocuments();
+        if (addModal) {
+            fetchProjects();
+        }
+    }, [addModal]);
+
 
     return (
         <div className="space-y-10">
@@ -114,7 +139,8 @@ export default function AdminDocuments() {
                                     <div className="flex items-center gap-3">
                                         <FileText className="text-blue-600" size={20} />
                                         <div>
-                                            <p className="font-medium text-gray-900 dark:text-white">{doc.title}</p>
+                                            <p className="font-normal text-xs text-gray-500">{doc?.Projects?.name} - {doc?.User?.name}</p>
+                                            <p className="font-medium text-gray-900 dark:text-white mb-1">{doc.title}</p>
                                             <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                                         </div>
                                     </div>
@@ -141,8 +167,7 @@ export default function AdminDocuments() {
                 </section>
             )}
 
-            {/* Add Document Modal */}
-            {/* Add Document Modal */}
+
             {addModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-[9999]">
                     <div className="bg-white dark:bg-gray-900 p-6 rounded-xl max-w-md w-full border border-gray-200 dark:border-gray-700 shadow-lg">
@@ -161,6 +186,20 @@ export default function AdminDocuments() {
                                     className="w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="Enter document title"
                                 />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Select Project</label>
+                            <select
+                                value={newDoc.projectId}
+                                onChange={(e) => setNewDoc({ ...newDoc, projectId: e.target.value })}
+                                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <option value="" disabled={loading}>{loading ? "Loading..." : "Select project"}</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
                             </div>
                             <div>
                                 <label className="text-sm text-gray-600 dark:text-gray-400">Upload File</label>
@@ -184,15 +223,15 @@ export default function AdminDocuments() {
                             </button>
 
                             <button
-                                onClick={addDocument}
-                                disabled={!newDoc.title || !newDoc.file}
+                                onClick={loading ? () => {} : addDocument}
+                                disabled={!newDoc.title || !newDoc.file || !newDoc.projectId || loading}
                                 className={`px-4 py-2 rounded-lg text-sm text-white ${
                                     !newDoc.title || !newDoc.file
                                         ? "bg-blue-600/40 cursor-not-allowed"
                                         : "bg-blue-600 hover:bg-blue-700"
                                 }`}
                             >
-                                Add Document
+                                {loading ? "Uploading..." : "Add Document"}
                             </button>
                         </div>
                     </div>

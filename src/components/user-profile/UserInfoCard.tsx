@@ -6,12 +6,14 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { LucideLoader2, RotateCcwKey } from "lucide-react";
 
 interface User {
   id?: string;
   name?: string;
   email?: string;
   phone?: string;
+  projectMembers?: number;
   bio?: string;
   workingAs?: string;
   department?: string;
@@ -28,6 +30,13 @@ interface UserInfoCardProps {
 
 export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
+  const [changePasswordOpen, setChangePassword] = useState(false)
+  const [oldPassword, setOldPassword] = useState("")
+  const [newPass, setNewPass] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [step, setStep] = useState(0)
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   if (!user) return null;
 
@@ -58,6 +67,51 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
     closeModal();
   };
 
+  const verifyPassword = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+      const req = await fetch(`/api/change-pass?oldPass=${oldPassword.trim()}`)
+      const data = await req.json()
+      if (req.status === 200) {
+        setStep(1)
+        setError("")
+        setLoading(false)
+      }
+      setError(data.error)
+      setLoading(false)
+  }
+
+
+  const changePass = async (e) => {
+    e.preventDefault()
+    if (newPass !== confirmPassword) {
+      return setError("Password & Confirm password didn't match.")
+    }
+    if (newPass === oldPassword) {
+      return setError("Ops! You have entered your same old password.")
+    }
+    if (newPass.length < 6) {
+      return setError("Password must be atleast of 6 characters")
+    }
+
+    setLoading(true)
+      const req = await fetch(`/api/change-pass`, {
+        method: "PUT",
+        body: JSON.stringify({newPass: newPass})
+      })
+      const data = await req.json()
+      if (req.status === 200) {
+        setStep(0)
+        setError("")
+        setNewPass("")
+        setOldPassword("")
+        setConfirmPassword("")
+        setLoading(false)
+      }
+      setError(data.error)
+      setLoading(false)
+  };
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -74,20 +128,15 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                 {user.name || "Not provided"}
               </p>
             </div>
-
+          { user.role !== "CLIENT" ? 
             <div>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Employee ID</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user.employeeId || "Not provided"}
               </p>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email</p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {user.email || "Not provided"}
-              </p>
-            </div>
+            </div> 
+            : null
+            }
 
             <div>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Phone</p>
@@ -95,24 +144,41 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                 {user.phone || "Not provided"}
               </p>
             </div>
-
+          { user.role !== "CLIENT" ? 
             <div>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Department</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {user.department || "Not assigned"}
+                {user.department || "Not provided"}
+              </p>
+            </div> 
+            : null
+            }
+
+
+
+          <div>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email</p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {user.email || "Not provided"}
               </p>
             </div>
 
+
+
+          { user.role !== "CLIENT" ? 
             <div>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Position</p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {user.workingAs || "Not specified"}
+                {user.workingAs || "Not provided"}
               </p>
-            </div>
+            </div> 
+            : null
+            }
           </div>
         </div>
 
         {/* EDIT BUTTON */}
+        <div className="flex justify-center items-center gap-3">
         <button
           onClick={openModal}
           className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 lg:inline-flex lg:w-auto"
@@ -132,10 +198,19 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
           </svg>
           Edit
         </button>
+      
+      <button
+          onClick={() => setChangePassword(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 lg:inline-flex lg:w-auto"
+        >
+          <RotateCcwKey size={18} />
+          Change Password
+        </button>
+        </div>
       </div>
 
       {/* EDIT MODAL */}
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal isOpen={isOpen} onClose={closeModal}  className="max-w-[700px] m-4">
         <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -147,33 +222,8 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
           </div>
 
           <form className="flex flex-col">
-            <div className="h-[450px] overflow-y-auto px-2 pb-3">
+            <div className="h-auto overflow-y-auto px-2 pb-3">
               
-              {/* SOCIAL LINKS */}
-              {/* <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
-                Social Links
-              </h5>
-
-              <div className="grid grid-cols-1 gap-y-5 lg:grid-cols-2 gap-x-6">
-                {[
-                  { label: "Facebook", key: "facebook" },
-                  { label: "X.com", key: "x" },
-                  { label: "LinkedIn", key: "linkedin" },
-                  { label: "Instagram", key: "instagram" },
-                ].map(({ label, key }) => (
-                  <div key={key}>
-                    <Label>{label}</Label>
-                    <Input
-                      type="text"
-                      value={formData[key as keyof User]}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [key]: e.target.value })
-                      }
-                    />
-                  </div>
-                ))}
-              </div> */}
-
               {/* PERSONAL INFO */}
               <h5 className="mt-7 mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
                 Personal Information
@@ -201,39 +251,6 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
                     }
                   />
                 </div>
-
-                {/* <div>
-                  <Label>Department</Label>
-                  <Input
-                    type="text"
-                    value={formData.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
-                  />
-                </div> */}
-
-                {/* <div>
-                  <Label>Position</Label>
-                  <Input
-                    type="text"
-                    value={formData.workingAs}
-                    onChange={(e) =>
-                      setFormData({ ...formData, workingAs: e.target.value })
-                    }
-                  />
-                </div> */}
-
-                {/* <div>
-                  <Label>Date of Birth</Label>
-                  <Input
-                    type="date"
-                    value={formData.dob}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dob: e.target.value })
-                    }
-                  />
-                </div> */}
 
                 <div className="lg:col-span-2">
   <Label>Bio</Label>
@@ -266,6 +283,88 @@ export default function UserInfoCard({ user, onUpdate }: UserInfoCardProps) {
               <Button size="sm" onClick={handleSave}>
                 Save Changes
               </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* PASSWORD CHANGE */}
+      <Modal isOpen={changePasswordOpen} onClose={() => {setChangePassword(false), setOldPassword(""), setNewPass(""), setConfirmPassword(""), setStep(0)}} className="max-w-[600px] m-4">
+        <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-4">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Change your password
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+              Wanna change your password? Go for it!
+            </p>
+          </div>
+
+          <form className="flex flex-col">
+            <div className="h-auto overflow-y-auto px-2 pb-3">
+
+                <div className="">
+                  <Label>Current Password</Label>
+                  <Input
+                    className={`${step === 1 ? "opacity-50" : "opacity-100"}`}
+                    type="text"
+                    disabled={step === 1 ? true : false}
+                    value={oldPassword}
+                    placeholder="Enter your old password"
+                    onChange={(e) =>{
+                      setOldPassword(e.target.value)
+                      setError("")
+                    }
+                    }
+                  />
+                </div>
+                {
+                  step === 1 && (
+<>
+                <div className="mt-2">
+                  <Label>New Password</Label>
+                  <Input
+                    type="text"
+                    value={newPass}
+                    placeholder="Enter your new password"
+                    onChange={(e) =>{
+                      setNewPass(e.target.value)
+                      setError("")
+                    }
+                    }
+                  />
+              </div>
+              <div className="mt-2">
+                  <Label>Confirm Password</Label>
+                  <Input
+                    type="text"
+                    value={confirmPassword}
+                    placeholder="Re-enter your new password"
+                    onChange={(e) =>{
+                      setConfirmPassword(e.target.value)
+                      setError("")
+                    }
+                    }
+                  />
+              </div>
+</>
+                  )
+                }
+                {error && <p className="text-red-400 text-sm py-2">{error}</p>}
+            </div>
+
+            {/* FOOTER BUTTONS */}
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button size="sm" variant="outline" onClick={() => {setChangePassword(false), setOldPassword(""), setNewPass(""), setConfirmPassword(""), setStep(0)}}>
+                Close
+              </Button>
+              <button 
+              disabled={loading || !oldPassword}
+              className={`text-center bg-blue-600 px-4 py-2.5 text-white rounded-lg hover:bg-blue-900 ${(loading || !oldPassword) ? "opacity-50 cursor-not-allowed" : "opacity-100 cursor-pointer"}`}
+              onClick={loading ? () => {} : step === 0 ? (e) => verifyPassword(e) : (e) => changePass(e)}
+              >
+                    {!loading ? step === 0 ? "Verify" : "Change Password" : <div className="animate-spin"><LucideLoader2 /></div>}
+              </button>
             </div>
           </form>
         </div>

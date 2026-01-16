@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Users, Calendar, AlertCircle, Plus, Search, Filter, X, ArrowLeft } from 'lucide-react';
+import { Users, Calendar, AlertCircle, Plus, Search, Filter, X, ArrowLeft, LucideEye, LucideEdit2, LucideTrash } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,10 @@ interface Project {
   basicDetails: string;
   membersCount: number;
   progress: number;
+  budget: number;
+  projectType: string;
+  startDate: string;
+  deadline: string;
   createdAt: string;
 }
 
@@ -23,6 +27,7 @@ export default function ProjectsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
+  const [isClientSelected, setClientSelected] = useState<boolean>(false);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -33,7 +38,9 @@ export default function ProjectsPage() {
     projectType: '',
     startDate: '',
     deadline: '',
-    supervisorAdmin: ''
+    supervisorAdmin: '',
+    repository: '',
+    client: '',
   });
   const [createLoading, setCreateLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -44,6 +51,9 @@ export default function ProjectsPage() {
     fetchUserProjects();
     fetchUsers();
   }, []);
+
+
+
 
   const fetchUserProjects = async () => {
     try {
@@ -57,6 +67,7 @@ export default function ProjectsPage() {
       const data = await response.json();
       if (data.success) {
         setProjects(data.projects);
+        
       }
     } catch (error) {
       console.error('Failed to fetch projects:', error);
@@ -103,7 +114,7 @@ export default function ProjectsPage() {
       if (data.success) {
         toast.success('Project created successfully');
         setShowCreateModal(false);
-        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '' });
+        setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '', client: '', repository: '' });
         setSelectedMembers([]);
         fetchUserProjects();
       } else {
@@ -116,7 +127,10 @@ export default function ProjectsPage() {
     }
   };
 
-  const toggleMember = (userId: string) => {
+  const toggleMember = (userId: string, isClientSelected: boolean) => {
+    if (isClientSelected) {
+      setClientSelected(true)
+    }
     setSelectedMembers(prev =>
       prev.includes(userId)
         ? prev.filter(id => id !== userId)
@@ -152,6 +166,7 @@ export default function ProjectsPage() {
     user.name.toLowerCase().includes(searchUser.toLowerCase())
   );
 
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -181,7 +196,7 @@ export default function ProjectsPage() {
           {isAdmin && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-[50%] inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-auto inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />
               New Project
@@ -228,7 +243,7 @@ export default function ProjectsPage() {
               href={`/project/${project.id}`}
               className="group block"
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-600">
+              <div className="relative bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-600">
                 {/* Project Header */}
                 <div className="flex items-start justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
@@ -268,7 +283,30 @@ export default function ProjectsPage() {
                     />
                   </div>
                 </div>
-
+                      {/* {project.members.length > 0 && (
+                        <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+                          <div className="flex -space-x-2">
+                            {project.members.slice(0, 5).map((member: any) => {
+                              member.user?.image ? 
+                              <Image
+                                key={member.user.id}
+                                src={member.user.image || "/default-avatar.png"}
+                                alt={member.user.name}
+                                width={32}
+                                height={32}
+                                className="rounded-full h-8 w-8 border-2 border-white dark:border-gray-800 object-cover"
+                                title={member.user.name}
+                              /> :
+                  <div className="rounded-full h-30 w-30 object-cover text-white border-4 border-white shadow-xl grid place-items-center text-4xl bg-white/20">{user.name.charAt(0)}</div>
+              })}
+                          </div>
+                          {project.members.length > 5 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                              +{project.members.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      )} */}
                 {/* Basic Details Preview */}
                 {project.basicDetails && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
@@ -323,11 +361,13 @@ export default function ProjectsPage() {
                       required
                     >
                       <option value="">Select project type</option>
-                      <option value="e-commerce">E-commerce</option>
+                      <option value="saas">Ai</option>
+                      <option value="e-commerce">Cyber Security</option>
                       <option value="saas">SaaS</option>
                       <option value="static">Static Website</option>
-                      <option value="mobile-app">Mobile App</option>
+                      <option value="e-commerce">E-commerce</option>
                       <option value="web-app">Web Application</option>
+                      <option value="mobile-app">Mobile App</option>
                       <option value="web-app">Other</option>
                     </select>
                   </div>
@@ -368,6 +408,7 @@ export default function ProjectsPage() {
                     <input
                       type="date"
                       value={formData.startDate}
+                      min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required
@@ -381,6 +422,7 @@ export default function ProjectsPage() {
                     <input
                       type="date"
                       value={formData.deadline}
+                      min={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required
@@ -404,6 +446,19 @@ export default function ProjectsPage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                                    <div>
+                    <label className="block text-sm font-medium mb-2 dark:text-white">
+                      Repository
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.repository}
+                      onChange={(e) => setFormData({ ...formData, repository: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      placeholder="Make sure URL contains .git"
+                      // required
+                    />
                   </div>
                 </div>
 
@@ -471,8 +526,8 @@ export default function ProjectsPage() {
                         filteredUsers.map((user) => (
                           <div
                             key={user.id}
-                            onClick={() => toggleMember(user.id)}
-                            className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition-all mb-1
+                            onClick={isClientSelected && user.role === "CLIENT" ? () => {} : () => toggleMember(user.id, user.role === "CLIENT" ? true : false)}
+                            className={`${isClientSelected && user.role === "CLIENT" ? "opacity-40 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent" : "cursor-pointer"} flex items-center justify-between px-3 py-2 rounded-lg transition-all mb-1
               ${selectedMembers.includes(user.id)
                                 ? "bg-blue-100 dark:bg-blue-900/30"
                                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -484,7 +539,8 @@ export default function ProjectsPage() {
                                 {user.name}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {user.workingAs || "Employee"}
+                                {/* {|| "Employee"} */}
+                                {user.role === "CLIENT" ? `Client - ${user.email}` : `${user.workingAs} - ${user.department}` || "Employee"}
                               </p>
                             </div>
                             {selectedMembers.includes(user.id) && (

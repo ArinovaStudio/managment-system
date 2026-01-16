@@ -40,6 +40,7 @@ export async function GET(req: Request) {
             const { getUserId } = await import('@/lib/auth');
             const userId = await getUserId(req);
             
+            
             const feedbacks = await db.feedback.findMany({
                 where: { employeeId: userId },
                 orderBy: { id: 'desc' }
@@ -60,12 +61,14 @@ export async function GET(req: Request) {
 }
 
 export async function DELETE(req: Request, res: Response) {
-    const { id } = await req.json()
-
+    // const { id } = await req.json()
+    const url = new URL(req.url)
+    const searchParams = url.searchParams
+    const id = searchParams.get("id")
     if (!id) {
         return NextResponse.json({ "error": "Please provide the id" }, { status: 404 })
     }
-    const del = await db.feedback.delete({ where: { id: id } })
+    const del = await db.feedback.deleteMany({ where: { id: id } })
     if (del) return NextResponse.json({ "message": "success" }, { status: 200 })
 }
 

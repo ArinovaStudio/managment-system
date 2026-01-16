@@ -5,7 +5,7 @@ import db from "@/lib/client";
 
 const timezones = [
   { code: "IND", name: "India Standard Time", hours: "10AM-5PM", offset: "+05:30", startTime: "10:00", endTime: "17:00" },
-  { code: "USA", name: "Eastern Standard Time", hours: "2AM-8PM", offset: "-05:00", startTime: "02:00", endTime: "20:00" },
+  { code: "USA", name: "Eastern Standard Time", hours: "2PM-8PM", offset: "-05:00", startTime: "14:00", endTime: "20:00" },
   { code: "UK",  name: "Greenwich Mean Time", hours: "6PM-1AM", offset: "+00:00", startTime: "18:00", endTime: "01:00" },
 ];
 

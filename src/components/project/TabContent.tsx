@@ -10,6 +10,7 @@ import StatusTab from "./StatusTab";
 import TicketsTab from "./TicketsTab";
 import ReportIssueTab from "./ReportIssueTab";
 import UsefulTipsTab from "./TipsTab";
+import ClientUpdate from "./ClientUpdate";
 
 export default function TabContent({ activeTab, project }: any) {
 
@@ -44,6 +45,8 @@ export default function TabContent({ activeTab, project }: any) {
     case "Tips":
       return <UsefulTipsTab projectId={project.id} />;
 
+    case "Client Update":
+      return <ClientUpdate projectId={project.id} />
     // default:
     //   return <OverviewTab project={project} />;
   }

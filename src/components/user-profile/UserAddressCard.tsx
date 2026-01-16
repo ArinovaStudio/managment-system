@@ -20,6 +20,7 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
   const [formData, setFormData] = useState({
     dob: "",
     bio: "",
+    github: "",
   });
 
   useEffect(() => {
@@ -27,12 +28,14 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
       setFormData({
         dob: user.dob || "",
         bio: user.bio || "",
+        github: user.githubProfile || "",
       });
     }
   }, [user]);
 
-  const handleSave = () => {
-    onUpdate?.(formData);
+  const handleSave = (e) => {
+    e.preventDefault()
+    onUpdate(formData);
     closeModal();
   };
 
@@ -46,7 +49,7 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
               Additional Information
             </h4>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-7 2xl:gap-x-32">
 
               <div>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
@@ -66,6 +69,19 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
                 </p>
               </div>
 
+      {
+        user?.isDev && (
+          <div>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                  Github Profile
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {user?.githubProfile ? `@${user.githubProfile}` : "Not provided"}
+                </p>
+          </div>
+        )
+      }
+
               <div>
                 <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                   Joined us on
@@ -83,6 +99,9 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
                   {user?.bio || "No bio added"}
                 </p>
               </div>
+
+
+
 
             </div>
           </div>
@@ -150,15 +169,29 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
                 />
               </div>
 
+                            <div>
+                <Label>Github Profile</Label>
+                <Input
+                  type="text"
+                  placeholder="Paste Your Github Username Without '@', i.e, ArinovaStudio"
+                  value={formData.github}
+                  onChange={(e) =>
+                    setFormData({ ...formData, github: e.target.value })
+                  }
+                />
+              </div>
+
             </div>
 
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <button
+              className={`text-center bg-blue-600 px-4 py-2.5 text-white rounded-lg hover:bg-blue-900`}
+              onClick={(e) =>  handleSave(e)}>
                 Save Changes
-              </Button>
+              </button>
             </div>
 
           </form>

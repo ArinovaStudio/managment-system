@@ -1,7 +1,23 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+
 export default function ProjectTabs({ activeTab, setActiveTab }: any) {
+    const [isAdmin, setIsAdmin] = useState(false)
+
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        if (data.user && data.user.role === 'ADMIN') {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error('Failed to check user role:', error);
+      }
+    };
+
   const tabs = [
     "Overview",
     "Work Done",
@@ -12,8 +28,12 @@ export default function ProjectTabs({ activeTab, setActiveTab }: any) {
     "Tickets",
     "Report Issue",
     "Tips",
+    "Client Update"
   ];
 
+  useEffect(() => {
+    checkUserRole()
+  }, [])
   return (
     <div className="flex items-center gap-6 border-b border-gray-200 dark:border-gray-700">
       {/* Back Arrow */}
@@ -29,6 +49,11 @@ export default function ProjectTabs({ activeTab, setActiveTab }: any) {
       <div className="flex gap-8 overflow-x-auto">
         {tabs.map((tab) => {
           const isActive = activeTab === tab;
+          
+          if (tab === "Client Update" && !isAdmin) {
+            return null;
+          }
+
           return (
             <button
               key={tab}

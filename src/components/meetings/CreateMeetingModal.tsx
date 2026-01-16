@@ -23,13 +23,26 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
 
     useEffect(() => {
         if (open) {
-            fetch('/api/user?all=true')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
+            // fetch('/api/admin/userNorClient')
+            //     .then(res => res.json())
+            //     .then(data => {
+            //         if (data.success) {
+            //             setUsers(data);
+            //         }
+            //     })
+            const fetchUsers = async () => {
+                try {
+                    const res = await fetch("/api/admin/userNorClient")
+                    const data = await res.json();
+                    if (data) {
                         setUsers(data.users);
                     }
-                })
+                }
+                catch (e) {
+                    toast.error(e)
+                }
+            }
+            fetchUsers();
         }
     }, [open]);
 
@@ -131,7 +144,7 @@ export default function CreateMeetingModal({ open, onClose, onCreated }: { open:
                             <input
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                                 type="url"
-                                placeholder="https://meet.google.com/xxx or https://zoom.us/j/xxx"
+                                placeholder="https://meet.google.com/xxx"
                                 value={meetingLink}
                                 onChange={e => setMeetingLink(e.target.value)}
                             />

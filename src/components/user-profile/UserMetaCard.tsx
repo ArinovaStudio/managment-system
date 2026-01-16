@@ -6,7 +6,7 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Image from "next/image";
-import { Camera } from "lucide-react";
+import { Camera, LucideSwitchCamera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -62,7 +62,7 @@ export default function UserMetaCard({ user, onUpdate }: UserMetaCardProps) {
     };
 
     try {
-      const res = await fetch("/api/auth/user", {
+      const res = await fetch("/api/admin/user", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -190,7 +190,7 @@ export default function UserMetaCard({ user, onUpdate }: UserMetaCardProps) {
           </div>
 
           <div className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+            <div className="custom-scrollbar h-auto overflow-y-auto px-2 pb-3">
 
               {/* Social Links */}
               {/* <div>
@@ -238,29 +238,20 @@ export default function UserMetaCard({ user, onUpdate }: UserMetaCardProps) {
                   </div>
 
                   <div className="col-span-2 flex items-center gap-6">
-                    <label className="relative w-24 h-24 rounded-full overflow-hidden cursor-pointer group border border-gray-300 dark:border-gray-700">
+                    <label className="relative group w-24 h-24 rounded-full overflow-hidden cursor-pointer group border border-gray-300 dark:border-gray-700 grid place-items-center ">
 
                       {/* Avatar */}
+                      {user?.image ? (
                       <Image
                         src={formData.image || user?.image || "/default-avatar.png"}
                         alt="Profile"
                         width={96}
                         height={96}
                         className="object-cover"
-                      />
-
-                      {/* Hover Overlay */}
-                      <div
-                        className="
-        absolute inset-0
-        bg-gradient-to-t from-black/60 via-black/30 to-transparent
-        opacity-0 group-hover:opacity-100
-        transition-opacity
-        flex items-center justify-center
-      "
-                      >
-                        <Camera className="w-6 h-6 text-white" />
-                      </div>
+                        />
+                      ) : (
+                        <LucideSwitchCamera className="group-hover:scale-125 transition-all" />
+                      )}
 
                       {/* Hidden File Input */}
                       <input

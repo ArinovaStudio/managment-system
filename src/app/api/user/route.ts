@@ -7,13 +7,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const getAll = searchParams.get('all');
-
     if (getAll === 'true') {
       const users = await db.user.findMany({
         select: {
+          isDev: true,
           id: true,
           name: true,
           email: true,
+          githubProfile: true,
           workingAs: true,
           department: true,
           role: true,
@@ -45,8 +46,10 @@ export async function GET(req: Request) {
       where: { id: payload.userId || payload.id },
       select: {
         id: true,
+        isDev: true,
         name: true,
         email: true,
+        githubProfile: true,
         role: true,
         employeeId: true,
         department: true,
@@ -89,13 +92,15 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { name, phone, bio, department, workingAs, dob } = await req.json();
+    const { name, phone, bio, department, workingAs, dob, github } = await req.json();
 
     const updatedUser = await db.user.update({
       where: { id: payload.userId || payload.id },
-      data: { name, phone, bio, department, workingAs, dob },
+      data: { name, phone, bio, department, workingAs, dob, githubProfile: github },
       select: {
         id: true,
+        isDev: true,
+        githubProfile: true,
         name: true,
         email: true,
         role: true,

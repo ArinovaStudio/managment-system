@@ -5,7 +5,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, summary, priority, basicDetails, memberIds, budget, projectType, startDate, deadline, supervisorAdmin, clientName } = body;
+    const { name, summary, priority, basicDetails, memberIds, budget, projectType, startDate, deadline, supervisorAdmin, clientName, repository } = body;
 
     if (!name || !priority) {
       return Response.json(
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
         name,
         summary,
         priority,
+        repository: repository || null,
         basicDetails,
         projectInfo: {
           create: {
@@ -55,7 +56,6 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.log(error)
     return Response.json(
       { success: false, message: "Failed to create project",error },
       { status: 500 }
@@ -131,3 +131,67 @@ export async function GET(req: Request) {
   }
 }
 
+
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const projectId = searchParams.get('projectId');
+
+  if (!projectId) {
+    return Response.json(
+      { success: false, message: "Project ID is required" },
+      { status: 400 }
+    );
+  }
+
+  const del = await db.project.deleteMany({
+    where: { id: projectId }
+  })
+  return Response.json({ success: true, message: "Project deleted successfully" }, { status: 200 });
+}
+
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { projectId, name, summary, priority, basicDetails, budget, projectType, startDate, deadline, supervisorAdmin, repository } = body;
+
+    if (!projectId) {
+      return Response.json({
+        success: false,
+        message: "Project ID is required"
+      }, { status: 400 });
+    }
+
+    const updateProject = await db.project.update({
+      where: { id: projectId },
+      data: {
+        name,
+        summary,
+        priority,
+        repository: repository || null,
+        basicDetails,
+        projectInfo: {
+          update: {
+            budget,
+            projectType,
+            startDate: new Date(startDate),
+            deadline: new Date(deadline),
+            supervisorAdmin,
+          }
+        }
+      }
+    })
+
+    return Response.json({
+      success: true,
+      message: "Project updated successfully",
+      project: updateProject
+    });
+  }
+  catch (error) {
+    return Response.json({
+      success: false,
+      message: "Failed",
+      error: error
+    })
+  }
+}

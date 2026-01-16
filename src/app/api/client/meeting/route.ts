@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/jwt";
 import db from "@/lib/client";
+import { sendMailToClient } from "@/lib/mailer";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,9 +15,12 @@ export async function GET(req: NextRequest) {
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const requests = await db.meetingRequest.findMany({
+    const meetings = await db.meetingRequest.findMany({
       where: user.role === "ADMIN" ? {} : { clientId: userId },
       include: {
+        project: {
+          select: {id: true, name: true}
+        },
         client: {
           select: { id: true, name: true, email: true }
         }
@@ -24,26 +28,6 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" }
     });
 
-    // 🔥 Attach meetLink manually
-    const meetings = await Promise.all(
-      requests.map(async (req) => {
-        if (req.status !== "approved") {
-          return { ...req, meetLink: null };
-        }
-
-        const meeting = await db.meeting.findFirst({
-          where: {
-            title: req.reason
-          },
-          select: { meetingLink: true }
-        });
-
-        return {
-          ...req,
-          meetLink: meeting?.meetingLink || null
-        };
-      })
-    );
 
     return NextResponse.json({ success: true, meetings });
   } catch (error) {
@@ -60,68 +44,69 @@ export async function POST(req: NextRequest) {
     const payload: any = verifyToken(token);
     const userId = payload.userId || payload.id;
 
-    const { reason, meetDate, meetTime, duration } = await req.json();
-
+    const { reason, meetDate, meetTime, duration, projectId, clientId, meetLink, adminName } = await req.json();
+    
     if (!reason || !meetDate || !meetTime || !duration) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
+  function toAmPm(time24: string): string {
+  if (!time24) return ""
+
+  const [hourStr, minute] = time24.split(":")
+  let hour = Number(hourStr)
+
+  if (isNaN(hour)) return time24
+
+  const period = hour >= 12 ? "PM" : "AM"
+  hour = hour % 12 || 12
+
+  return `${hour}:${minute} ${period}`
+}
+
     const meeting = await db.meetingRequest.create({
       data: {
-        clientId: userId,
+        clientId: clientId ? clientId : userId,
+        createdBy: adminName ?? null,
+        meetingLink: meetLink ? meetLink : null,
         reason,
         meetDate: new Date(meetDate),
         meetTime,
-        duration
+        duration,
+        projectId
+      },
+      include: {
+        project: {
+          select: {name: true, id: true}
+        },
+        client: {
+          select: {
+            name: true, id: true, email: true}
+          }
       }
     });
 
+    await sendMailToClient(meeting.client.email, meeting.project.name, new Date(meetDate).toDateString(), toAmPm(meetTime),  duration, meeting.client.name, "to-client");
     return NextResponse.json({ success: true, meeting });
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error: "Failed to create meeting" }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const token = (await cookies()).get("token")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const payload: any = verifyToken(token);
-    const userId = payload.userId || payload.id;
-
-    const user = await db.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
-    }
-
     const { id, status, meetLink } = await req.json();
 
     if (!id || !status) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
-
+    console.log(meetLink);
+    
     const meetingRequest = await db.meetingRequest.update({
       where: { id },
-      data: { status }
+      data: { status, meetingLink: meetLink }
     });
-
-    if (status === "approved" && meetLink) {
-      // combine date + time into ONE Date object
-      const scheduledAt = new Date(
-        `${meetingRequest.meetDate.toISOString().split("T")[0]}T${meetingRequest.meetTime}`
-      );
-
-      await db.meeting.create({
-        data: {
-          title: meetingRequest.reason,
-          description: "Client meeting request approved",
-          scheduledAt,
-          meetingLink: meetLink,
-          createdById: userId // ADMIN who approved it
-        }
-      });
-    }
 
     return NextResponse.json({ success: true, meeting: meetingRequest });
   } catch (error) {

@@ -18,7 +18,7 @@ export default function LatestUpdates({ projectId }: { projectId: string }) {
     
     try {
       setLoading(true);
-      const res = await fetch(`/api/kanban/task?projectId=${projectId}`, {
+      const res = await fetch(`/api/project/work-done?projectId=${projectId}`, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache'

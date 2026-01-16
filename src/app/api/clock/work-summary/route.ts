@@ -4,9 +4,6 @@ import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    const userId = await getUserId(req);
-    
-    // Get work summaries from the last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
@@ -25,7 +22,8 @@ export async function GET(req: Request) {
             name: true,
             workingAs: true,
             image: true,
-            department: true
+            department: true,
+            breaks: true,
           }
         }
       },
@@ -114,5 +112,23 @@ export async function POST(req: Request) {
       { error: error.message || "Failed to save work summary" },
       { status: error.message === "Unauthorized" ? 401 : 500 }
     );
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const danger = await db.workHours.deleteMany({
+    where: {
+        summary: {
+          not: null
+        }
+  }})
+    console.log(danger);
+    
+  return NextResponse.json({ success: true, deletedCount: danger.count }, {status: 200});
+  }
+  catch (error) {
+    console.log(error);
+    return NextResponse.json({ error: 'Failed to delete summaries' }, { status: 500 });
   }
 }

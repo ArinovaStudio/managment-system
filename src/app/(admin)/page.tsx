@@ -8,11 +8,13 @@ import SkillsDevelopment from "@/components/analytics/SkillsDevelopment";
 import StatusCard from "@/components/analytics/StatusCard";
 import ToDoTask from "@/components/analytics/ToDoTask";
 import UpcomingMeetings from "@/components/analytics/UpcomingMeetings";
+import Loader from "@/components/common/Loading";
 import React, { useEffect, useState } from "react";
 
 export default function EmployeeDashboard() {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [performanceData, setPerformanceData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchData = async () => {
     try {
@@ -38,39 +40,43 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     fetchData();
+    setTimeout(() => {
+      setLoading(false);
+    }, 5000);
   }, []);
 
   return (
-    <div>
-      <div className="grid grid-cols-12 gap-4 md:gap-6">
-        <div className="col-span-12 md:col-span-5">
-          <EmployeeProfile />
-        </div>
-        <div className="col-span-12 md:col-span-7">
-          <QuoteOfTheDay />
-        </div>
-        <div className="col-span-12 md:col-span-7">
-          <ProjectStats analyticsData={analyticsData} />
-        </div>
-        <div className="col-span-12 md:col-span-5">
-          <StatusCard />
-        </div>
-        <div className="col-span-12 md:col-span-7">
-          <SkillsDevelopment performanceData={performanceData} />
-        </div>
-        <div className="col-span-12 md:col-span-5">
-          <PerformanceRadial performanceData={performanceData} />
-        </div>
-        <div className="col-span-12 md:col-span-4">
-          <Feedback />
-        </div>
-        <div className="col-span-12 md:col-span-4">
-          <UpcomingMeetings />
-        </div>
-        <div className="col-span-12 md:col-span-4">
-          <ToDoTask />
-        </div>
-      </div>
+    <div className={`w-full h-full relative`}>
+          {loading && <div className="w-full sm:h-full h-1/2 flex justify-center items-center absolute inset-0 -top-4 z-50 bg-white dark:bg-gray-900"><Loader /></div>}
+          <div className="grid grid-cols-12 gap-4 md:gap-6">
+            <div className="col-span-12 md:col-span-5">
+              <EmployeeProfile />
+            </div>
+            <div className="col-span-12 md:col-span-7">
+              <QuoteOfTheDay />
+            </div>
+            <div className="col-span-12 md:col-span-7">
+              <ProjectStats analyticsData={analyticsData} />
+            </div>
+            <div className="col-span-12 md:col-span-5">
+              <StatusCard />
+            </div>
+            <div className="col-span-12 md:col-span-7">
+              <SkillsDevelopment performanceData={performanceData} />
+            </div>
+            <div className="col-span-12 md:col-span-5">
+              <PerformanceRadial performanceData={performanceData} />
+            </div>
+            <div className="col-span-12 md:col-span-4">
+              <Feedback />
+            </div>
+            <div className="col-span-12 md:col-span-4">
+              <UpcomingMeetings />
+            </div>
+            <div className="col-span-12 md:col-span-4">
+              <ToDoTask />
+            </div>
+          </div>
     </div>
   );
 }

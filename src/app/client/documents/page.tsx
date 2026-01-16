@@ -1,35 +1,65 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Loader from '@/components/common/Loading';
 
-interface Certificate {
-  id: string;
-  title: string;
-  description?: string;
-  imageUrl: string;
-  assignedTo?: string;
-  createdAt: string;
-}
 
 export default function ClientDocumentsPage() {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [isLoadingPro, setLoadingPro] = useState(false);
+    const [projects, setProjects] = useState([]);
+    const [addModal, setAddModal] = useState(false);
+    const [newDoc, setNewDoc] = useState({ title: "", file: null, projectId: "all" });
 
-  const fetchCertificates = async () => {
-    try {
-      const response = await fetch('/api/certificates');
-      if (response.ok) {
-        const data = await response.json();
-        setCertificates(data);
-      }
-    } catch (error) {
-      toast.error('Failed to fetch certificates');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  const fetchDocuments = async () => {
+        try {
+            setLoading(true)
+            const res = await fetch('/api/client/documents?userOnly=true');
+            const data = await res.json();
+            if (data.success) {
+                setDocuments(data.documents);
+            }
+        } catch (error) {
+            toast.error('Failed to fetch documents');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const addDocument = async () => {
+        if (!newDoc.title || !newDoc.file) {
+            toast.error('Please fill all fields');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('title', newDoc.title);
+        formData.append('file', newDoc.file);
+        formData.append('projectId', newDoc.projectId);
+        
+        try {
+            setLoadingPro(true);
+            const res = await fetch('/api/client/documents', {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                toast.success('Document uploaded successfully');
+                setAddModal(false);
+                setNewDoc({ title: "", file: null, projectId: "" });
+                fetchDocuments();
+            }
+        } catch (error) {
+            toast.error('Failed to upload document');
+        }
+        finally {
+            setLoadingPro(false);
+        }
+    };
 
   const handleDownload = (imageUrl: string, title: string) => {
     const link = document.createElement('a');
@@ -42,33 +72,142 @@ export default function ClientDocumentsPage() {
     toast.success('Certificate downloaded successfully');
   };
 
-  useEffect(() => {
-    fetchCertificates();
-  }, []);
+      const fetchProjects = async () => {
+      try {
+        setLoadingPro(true);
+        const res = await fetch('/api/project?userOnly=true');
+        const data = await res.json();
+        if (data.success) {
+          setProjects(data.projects);
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects');
+      }
+      finally {
+          setLoadingPro(false);
+      }
+    };
+  
 
+        useEffect(() => {
+          fetchDocuments();
+          fetchProjects();
+      }, []);
+
+
+      const filterDocument = documents.filter(v => v.Projects.id === newDoc.projectId)
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="flex justify-center items-center h-64">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="h-[80vh] flex justify-center items-center bg-gray-50 dark:bg-gray-900 w-full">
+        <Loader />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 relative">
+                  {addModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-[9999]">
+                    <div className="bg-white dark:bg-gray-900 p-6 rounded-xl max-w-md w-full border border-gray-200 dark:border-gray-700 shadow-lg">
+                    
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Add New Document
+                        </h2>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Document Title</label>
+                                <input
+                                    type="text"
+                                    value={newDoc.title}
+                                    onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
+                                    className="w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="Enter document title"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Select Project</label>
+                            <select
+                                value={newDoc.projectId}
+                                onChange={(e) => setNewDoc({ ...newDoc, projectId: e.target.value })}
+                                className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                <option value="" disabled={loading}>{loading ? "Loading..." : "Select project"}</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+                            </div>
+                            <div>
+                                <label className="text-sm text-gray-600 dark:text-gray-400">Upload File</label>
+                                <input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                                    onChange={(e) => setNewDoc({ ...newDoc, file: e.target.files?.[0] || null })}
+                                    className="w-full p-3 mt-1 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Supported: PDF, DOC, DOCX, JPG, PNG, TXT</p>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => setAddModal(false)}
+                                className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={isLoadingPro ? () => {} : addDocument}
+                                disabled={!newDoc.title || !newDoc.file || !newDoc.projectId || isLoadingPro}
+                                className={`px-4 py-2 rounded-lg text-sm text-white ${
+                                    !newDoc.title || !newDoc.file
+                                        ? "bg-blue-600/40 cursor-not-allowed"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                }`}
+                            >
+                                {isLoadingPro ? "Uploading..." : "Add Document"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
+          <div className="w-full items-center flex justify-between">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Documents & Certificates
+            My Documents 
           </h1>
+          <div className="flex justify-between items-center gap-4">
+          <select
+            value={newDoc.projectId}
+            onChange={(e) => setNewDoc({ ...newDoc, projectId: e.target.value })}
+            className="w-full py-2 px-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+          <option value="all" disabled={loading}>{loading ? "Loading..." : "Select project"}</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+          <button
+            onClick={() => setAddModal(true)}
+            className="px-4 w-fit py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm flex items-center gap-2"
+            >
+            <Plus size={18} /> <p>Add</p>
+          </button>
+          </div>
+          </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Download and view your certificates and documents
+            Download and View Your Documents Regarding Ptojects.
           </p>
         </div>
 
-        {certificates.length === 0 ? (
+        {documents.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -79,50 +218,39 @@ export default function ClientDocumentsPage() {
               No documents available
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              Documents and certificates will appear here when they are available
+              Documents will appear here when they are available
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {certificates.map((cert) => (
-              <div key={cert.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                <div className="relative h-48 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600">
-                  <img
-                    src={cert.imageUrl}
-                    alt={cert.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200" />
-                </div>
-                
+            {(newDoc.projectId !== "all" ? filterDocument : documents).map((cert) => (
+              <div key={cert.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">                
                 <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 dark:text-white line-clamp-1">
-                    {cert.title}
-                  </h3>
-                  {cert.description && (
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
-                      {cert.description}
+                  {cert.Projects && (
+                    <div className="flex justify-between items-center">
+                    <p className="text-blue-400 dark:text-blue-400 text-sm line-clamp-2">
+                      {cert.Projects.name} 
                     </p>
-                  )}
-                  
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(cert.createdAt).toLocaleDateString('en-US', {
+                    
+                    <p className="text-gray-600 dark:text-gray-400 text-xs line-clamp-2">
+                    {new Date(cert.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric'
                       })}
+                    </p>
+                    
+                    </div>
+                  )}
+                  <h3 className="font-semibold text-lg dark:text-white line-clamp-1">
+                    {cert.title}
+                  </h3>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Uploaded By: {cert.User.name}
                     </span>
-                    {cert.assignedTo && (
-                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-2 py-1 rounded-full">
-                        Personal
-                      </span>
-                    )}
-                  </div>
-                  
                   <button
-                    onClick={() => handleDownload(cert.imageUrl, cert.title)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    onClick={() => handleDownload(cert.fileUrl, cert.title)}
+                    className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                   >
                     <Download size={16} />
                     Download

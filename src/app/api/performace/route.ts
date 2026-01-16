@@ -4,29 +4,13 @@ import { getUserId } from "@/lib/auth";
 
 export async function GET(req: Request) {
     try {
-        const userId = await getUserId(req);
-        const user = await db.user.findUnique({
-            where: { id: userId },
-            select: { role: true }
-        });
-        
-        // If admin, return employees list
-        if (user?.role === 'ADMIN') {
-            const employees = await db.user.findMany({
-                where: { role: { not: 'ADMIN' } },
-                select: {
-                    id: true,
-                    name: true,
-                    employeeId: true,
-                    email: true
-                }
-            });
-            return NextResponse.json({ employees }, { status: 200 });
-        }
-        
+        const { searchParams } = new URL(req.url);
+        const userId = searchParams.get('userId');
+        const myId = await getUserId(req);
+
         // For non-admin users, return their ratings
         const ratings = await db.performanceRating.findMany({
-            where: { employeeId: userId },
+            where: { userId: userId ? userId : myId },
             orderBy: { createdAt: 'desc' }
         });
         
@@ -47,7 +31,7 @@ export async function POST(req: Request) {
 
         const rating = await db.performanceRating.create({
             data: {
-                employeeId,
+                userId: employeeId,
                 newLearnings: parseInt(newLearnings) || 5,
                 speed: parseInt(speed) || 5,
                 workQuality: parseInt(workQuality) || 5,
