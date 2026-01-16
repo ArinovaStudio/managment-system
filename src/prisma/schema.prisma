@@ -255,6 +255,7 @@ model Project {
   latestUpdates   LatestUpdate[]
   meetingRequest  MeetingRequest[]
   docs            Docs[]
+  designSystem    DesignSystem[]
 }
 
 model LatestUpdate {
@@ -542,4 +543,23 @@ enum MILESTONE_STATUS {
   COMPLETED
   CANCELLED
   DELAYED
+}
+
+model DesignSystem {
+  id               String   @id @default(uuid())
+  projectId        String   @unique
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  brandName        String 
+  colors           String[]
+  fonts            Json
+  designType       String[]
+  layoutStyle      Json
+  contentTone      String[]
+  visualGuidelines Json
+  theme            String[]
+  brandFeel        String
+  keyPages         String[]
+  uniqueness       Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
