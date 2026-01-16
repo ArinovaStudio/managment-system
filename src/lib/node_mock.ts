@@ -1,3 +1,53 @@
+export const mailToAdmin = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meeting {{Action}}</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      body, table, td { background-color: #0b1220 !important; color: #e5e7eb !important; }
+      .card { background-color: #111827 !important; border-color: #1f2937 !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, Helvetica, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="620" cellpadding="0" cellspacing="0" style="border-radius:10px; overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a,#1e293b); padding:28px;">
+              <img src="https://management.arinova.studio/images/logo/logo.jpg" height="48" />
+              <h1 style="margin:0; font-size:20px; color:#ffffff;">Meeting {{Action}}</h1>
+              <p style="margin:6px 0 0; font-size:13px; color:#cbd5f5;">Arinova Studio Management</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#ffffff; padding:28px; border:1px solid #e5e7eb;">
+              <p style="margin:0 0 16px; font-size:14px;">Hi <strong>{{Admin_Name}}</strong>,</p>
+              <p style="margin:0 0 20px; font-size:14px;">Client <strong>{{Client_Name}}</strong> has <strong>{{Action}}</strong> the meeting.</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                <tr><td style="padding:10px 0; font-weight:600;">Project</td><td style="padding:10px 0;">{{Project_Name}}</td></tr>
+                <tr><td style="padding:10px 0; font-weight:600;">Date</td><td style="padding:10px 0;">{{Meeting_Date}}</td></tr>
+                <tr><td style="padding:10px 0; font-weight:600;">Time</td><td style="padding:10px 0;">{{Meeting_Time}}</td></tr>
+                <tr><td style="padding:10px 0; font-weight:600;">Duration</td><td style="padding:10px 0;">{{Duration_Minutes}} minutes</td></tr>
+              </table>
+              <p style="margin:24px 0 0; font-size:14px;">Kind regards,<br><strong>Arinova Studio</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:18px; text-align:center; font-size:12px; color:#9ca3af;">© Arinova Studio. All rights reserved.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+
 export const mailToClient = `
 <!DOCTYPE html>
 

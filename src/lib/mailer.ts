@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import { forgetTemplate, loginTemplate, mailToClient, signupTemplate } from './node_mock'
+import { forgetTemplate, loginTemplate, mailToClient, mailToAdmin, signupTemplate } from './node_mock'
 
 const email = process.env.EMAIL
 const pass = process.env.EMAIL_PASS
@@ -76,6 +76,33 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
   }
 }
 
+
+export async function sendMailToAdmin(adminEmail: string, adminName: string, clientName: string, projectName: string, meetDate: string, meetTime: string, duration: string, action: 'approved' | 'rescheduled'): Promise<boolean> {
+  try {
+    const actionText = action === 'approved' ? 'Approved' : 'Rescheduled'
+    const htmlTemplate = mailToAdmin
+      .replace(/{{Admin_Name}}/g, adminName)
+      .replace(/{{Client_Name}}/g, clientName)
+      .replace(/{{Action}}/g, actionText)
+      .replace(/{{Project_Name}}/g, projectName)
+      .replace(/{{Meeting_Date}}/g, meetDate)
+      .replace(/{{Meeting_Time}}/g, meetTime)
+      .replace(/{{Duration_Minutes}}/g, duration)
+
+    const mailOptions = {
+      from: email,
+      to: adminEmail,
+      subject: `Meeting ${actionText} by ${clientName}`,
+      html: htmlTemplate,
+    }
+    
+    await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Failed to send admin email:', error)
+    return false
+  }
+}
 
 export async function sendMailToClient(useremail: string, Project_Name: string, Meeting_Date: string, Meeting_Time: string,  Duration_Minutes: string, Client_Name?: string, type: 'to-client' | 'from-client' = 'to-client'): Promise<boolean> {
 
