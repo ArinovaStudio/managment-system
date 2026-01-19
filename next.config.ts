@@ -1,12 +1,18 @@
 /** @type {import('next').NextConfig} */
+const imageDomains = process.env.NEXT_IMAGE_DOMAINS?.split(",").map((d) => d.trim()) ?? [];
+
 const nextConfig = {
+  images: {
+    domains: imageDomains,
+  },
+
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-    turbopack: {},
+  turbopack: {},
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

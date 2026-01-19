@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { forgetTemplate, loginTemplate, mailToClient, mailToAdmin, signupTemplate } from './node_mock'
+import { appConfig } from '@/config/appConfig'
 
 const email = process.env.EMAIL
 const pass = process.env.EMAIL_PASS
@@ -28,8 +29,8 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
   // Use fallback in development if email not configured
 
   try {
-    const subject = type === 'signup' ? 'Management@Arinova.Studio - Verify your email' : type === "login" ? "Management@Arinova.Studio - Get to your account" : 'Management@Arinova.Studio - Retrieve your password'
-    const title = type === 'signup' ? 'Management@Arinova.studio - Account Verification' : type === "login" ? "Management@Arinova.studio - Login" : 'Management@Arinova.Studio - Password Reset'
+    const subject = type === 'signup' ? `${appConfig.managementEmail} - Verify your email` : type === "login" ? `${appConfig.managementEmail} - Get to your account` : `${appConfig.managementEmail} - Retrieve your password`
+    const title = type === 'signup' ? `${appConfig.managementEmail} - Account Verification` : type === "login" ? `${appConfig.managementEmail} - Login` : `${appConfig.managementEmail} - Password Reset`
     const message = type === 'signup' 
       ? 'Please use this code to complete your account registration.'
       : type === "login" ? 'Please use this code to login to your account.' : 'Please use this code to reset your password.'
@@ -62,7 +63,7 @@ export async function sendOtp(useremail: string, otp: number, type: 'signup' | '
       // attachments: [
       // {
       // filename: "logo.jpg",
-      // path: "https://management.arinova.studio/images/logo/logo.jpg",
+      // path: `https://${appConfig.managementEmail}/images/logo/logo.jpg`,
       // cid: "logo",
       // },
       // ]
@@ -107,7 +108,7 @@ export async function sendMailToAdmin(adminEmail: string, adminName: string, cli
 export async function sendMailToClient(useremail: string, Project_Name: string, Meeting_Date: string, Meeting_Time: string,  Duration_Minutes: string, Client_Name?: string, type: 'to-client' | 'from-client' = 'to-client'): Promise<boolean> {
 
   try {
-    const subject = type === 'to-client' ? "Management@Arinova.Studio - You've got Meeting request." : type === "from-client" ? `Management@Arinova.Studio - ${Client_Name} has Requested for meet` : 'Management@Arinova.Studio - Welcome To Arinova Studio'
+    const subject = type === 'to-client' ? `"${appConfig.managementEmail} - You've got Meeting request.` : type === "from-client" ? `${appConfig.managementEmail} - ${Client_Name} has Requested for meet` : `${appConfig.managementEmail} - Welcome To ${appConfig.name}`
 
 
     let htmlTemplate: string

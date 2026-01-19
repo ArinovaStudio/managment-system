@@ -5,6 +5,7 @@ import Button from "@/components/ui/button/Button";
 import React, { useState } from "react";
 import Link from "next/link";
 import { EyeClosedIcon, EyeIcon } from "lucide-react";
+import { appConfig } from "@/config/appConfig";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -85,11 +86,12 @@ export default function SignInForm() {
                 <div>
                   <Label>Email or Employee ID <span className="text-error-500">*</span></Label>
                   <Input
-                    placeholder="adarsh@arinova.studio or emp-001"
+                    placeholder={`your-email@${appConfig.firstName}.${appConfig.lastName} or emp-001`}
                     type="text"
                     defaultValue={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
+
                 </div>
 
                 <div>
@@ -137,7 +139,7 @@ export default function SignInForm() {
                     type="number"
                     placeholder="Enter 6-digit OTP sent to your email"
                     value={otp}
-                    onChange={(e) => {setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true)}}
+                    onChange={(e) => { setOtp(e.target.value), setEnabled(e.target.value.length === 6 && true) }}
                     autoComplete="off"
                     name="otp"
                   />

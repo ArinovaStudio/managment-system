@@ -1,3 +1,5 @@
+import { appConfig } from "@/config/appConfig";
+
 export const mailToAdmin = `
 <!DOCTYPE html>
 <html lang="en">
@@ -19,9 +21,9 @@ export const mailToAdmin = `
         <table width="620" cellpadding="0" cellspacing="0" style="border-radius:10px; overflow:hidden;">
           <tr>
             <td style="background:linear-gradient(135deg,#0f172a,#1e293b); padding:28px;">
-              <img src="https://management.arinova.studio/images/logo/logo.jpg" height="48" />
+              <img src="${appConfig.logo}" alt="${appConfig.name}" height="48" />
               <h1 style="margin:0; font-size:20px; color:#ffffff;">Meeting {{Action}}</h1>
-              <p style="margin:6px 0 0; font-size:13px; color:#cbd5f5;">Arinova Studio Management</p>
+              <p style="margin:6px 0 0; font-size:13px; color:#cbd5f5;">${appConfig.name} Management</p>
             </td>
           </tr>
           <tr>
@@ -34,11 +36,11 @@ export const mailToAdmin = `
                 <tr><td style="padding:10px 0; font-weight:600;">Time</td><td style="padding:10px 0;">{{Meeting_Time}}</td></tr>
                 <tr><td style="padding:10px 0; font-weight:600;">Duration</td><td style="padding:10px 0;">{{Duration_Minutes}} minutes</td></tr>
               </table>
-              <p style="margin:24px 0 0; font-size:14px;">Kind regards,<br><strong>Arinova Studio</strong></p>
+              <p style="margin:24px 0 0; font-size:14px;">Kind regards,<br><strong>${appConfig.name}</strong></p>
             </td>
           </tr>
           <tr>
-            <td style="padding:18px; text-align:center; font-size:12px; color:#9ca3af;">© Arinova Studio. All rights reserved.</td>
+            <td style="padding:18px; text-align:center; font-size:12px; color:#9ca3af;">© ${appConfig.name}. All rights reserved.</td>
           </tr>
         </table>
       </td>
@@ -100,13 +102,13 @@ export const mailToClient = `
         <td class="header" style="background:linear-gradient(135deg,#0f172a,#1e293b); padding:28px; text-align:left;">
           
           <!-- LOGO AREA -->
-          <img src="https://management.arinova.studio/images/logo/logo.jpg" height="48" />
+          <img src="${appConfig.logo}" alt="${appConfig.name}" height="48" />
 
           <h1 style="margin:0; font-size:20px; font-weight:600; color:#ffffff;">
             Meeting Request
           </h1>
           <p style="margin:6px 0 0; font-size:13px; color:#cbd5f5;">
-            Arinova Studio Management
+            ${appConfig.name} Management
           </p>
         </td>
       </tr>
@@ -120,7 +122,7 @@ export const mailToClient = `
           </p>
 
           <p style="margin:0 0 20px; font-size:14px; line-height:1.6;">
-            We hope you are doing well. Arinova Studio has proposed a meeting to discuss the following engagement details:
+            We hope you are doing well. ${appConfig.name} has proposed a meeting to discuss the following engagement details:
           </p>
 
           <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
@@ -145,13 +147,13 @@ export const mailToClient = `
           <hr class="divider" style="border:none; border-top:1px solid #e5e7eb; margin:24px 0;">
 
           <p style="margin:0 0 20px; font-size:18px; line-height:1.6;">
-            Please review this request in the Arinova Management. You may <strong>approve</strong> the meeting or <strong>reschedule</strong> it as per your availability.
+            Please review this request in the ${appConfig.firstName} Management. You may <strong>approve</strong> the meeting or <strong>reschedule</strong> it as per your availability.
           </p>
 
           <table cellpadding="0" cellspacing="0" style="margin:28px 0;">
             <tr>
               <td>
-                <a href="https://management.arinova.studio"
+                <a href="${appConfig.webUrl}"
                    class="button"
                    style="display:inline-block; padding:14px 26px; background-color:#2E1065; color:#ffffff; text-decoration:none; border-radius:8px; font-size:14px; font-weight:600;">
                   Open Management Portal
@@ -166,7 +168,7 @@ export const mailToClient = `
 
           <p style="margin:24px 0 0; font-size:14px;">
             Kind regards,<br>
-            <strong>Arinova Studio</strong><br>
+            <strong>${appConfig.name}</strong><br>
             Management Team
           </p>
         </td>
@@ -174,7 +176,7 @@ export const mailToClient = `
 
       <tr>
         <td style="padding:18px; text-align:center; font-size:12px; color:#9ca3af;">
-          © Arinova Studio. All rights reserved.<br>
+          © ${appConfig.name}. All rights reserved.<br>
           This is an automated notification. Please do not reply.
         </td>
       </tr>
@@ -200,7 +202,7 @@ export const signupTemplate = `<!DOCTYPE html>
 
       <tr>
         <td align="center" style="padding:32px;">
-          <img src="https://management.arinova.studio/images/logo/logo.jpg" alt="Company Logo" style="max-height:56px;" />
+          <img src="${appConfig.logo}" alt="${appConfig.name}" style="max-height:56px;" />
         </td>
       </tr>
 
@@ -215,7 +217,7 @@ export const signupTemplate = `<!DOCTYPE html>
           </p>
 
           <p style="color:#C4B5FD; font-size:14px;">
-            Please confirm your email address to activate your <b>Arinova Studio</b> Management System.
+            Please confirm your email address to activate your <b>${appConfig.name}</b> Management System.
             Use the verification code below:
           </p>
 
@@ -240,14 +242,14 @@ export const signupTemplate = `<!DOCTYPE html>
           </p>
 
           <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Support: support@arinova.studio
+            Support: ${appConfig.supportEmail}
           </p>
         </td>
       </tr>
     </table>
 
     <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
+      © ${appConfig.name}. All rights reserved.
     </p>
   </td>
 </tr>
@@ -270,7 +272,7 @@ export const loginTemplate = `<!DOCTYPE html>
 
       <tr>
         <td align="center" style="padding:32px;">
-          <img src="https://management.arinova.studio/images/logo/logo.jpg" alt="Company Logo" style="max-height:56px;" />
+          <img src="${appConfig.logo}" alt="${appConfig.name}" style="max-height:56px;" />
         </td>
       </tr>
 
@@ -310,14 +312,14 @@ export const loginTemplate = `<!DOCTYPE html>
           </p>
 
           <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Support: support@arinova.studio
+            Support: ${appConfig.supportEmail}
           </p>
         </td>
       </tr>
     </table>
 
     <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
+      © ${appConfig.name}. All rights reserved.
     </p>
   </td>
 </tr>
@@ -338,7 +340,7 @@ export const forgetTemplate = `<!DOCTYPE html>
 
       <tr>
         <td align="center" style="padding:32px;">
-          <img src="https://management.arinova.studio/images/logo/logo.jpg" alt="Company Logo" style="max-height:56px;" />
+          <img src="${appConfig.logo}" alt="${appConfig.name}" style="max-height:56px;" />
         </td>
       </tr>
 
@@ -378,14 +380,14 @@ export const forgetTemplate = `<!DOCTYPE html>
           </p>
 
           <p style="color:#9F8CFB; font-size:12px; margin-top:24px;">
-            Need help? support@arinova.studio
+            Need help? ${appConfig.supportEmail}
           </p>
         </td>
       </tr>
     </table>
 
     <p style="font-size:11px; color:#6D5BD0; margin-top:24px;">
-      © Arinova Studio. All rights reserved.
+      © ${appConfig.name}. All rights reserved.
     </p>
   </td>
 </tr>

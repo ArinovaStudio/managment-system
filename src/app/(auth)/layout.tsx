@@ -1,5 +1,6 @@
 import GridShape from "@/components/common/GridShape";
 import ThemeTogglerTwo from "@/components/common/ThemeTogglerTwo";
+import { appConfig } from "@/config/appConfig";
 
 import { ThemeProvider } from "@/context/ThemeContext";
 import Image from "next/image";
@@ -25,12 +26,12 @@ export default function AuthLayout({
                   <Image
                     width={100}
                     height={48}
-                    src="/images/logo/logo.jpg"
-                    alt="Logo"
+                    src={appConfig.logo}
+                    alt={appConfig.name}
                     className="rounded-xl"
                   />
                 </Link>
-                <h1 className="text-4xl text-white mb-2">Arinova Studio</h1>
+                <h1 className="text-4xl text-white mb-2">{appConfig.name}</h1>
                 <p className="text-center text-gray-400 dark:text-white/60">
                   Empowering Innovation Through Technology and Creativity.
                 </p>

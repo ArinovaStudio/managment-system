@@ -6,6 +6,7 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { appConfig } from "@/config/appConfig";
 
 interface UserAddressCardProps {
   user: any;
@@ -173,7 +174,7 @@ export default function UserAddressCard({ user, onUpdate }: UserAddressCardProps
                 <Label>Github Profile</Label>
                 <Input
                   type="text"
-                  placeholder="Paste Your Github Username Without '@', i.e, ArinovaStudio"
+                  placeholder={`Paste Your Github Username Without '@', i.e, ${appConfig.name}`}
                   value={formData.github}
                   onChange={(e) =>
                     setFormData({ ...formData, github: e.target.value })
