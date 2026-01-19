@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import RichTextEditor from "@/components/common/editor/Editor";
+import { appConfig } from "@/config/appConfig";
 
 type Props = {
   time: number;
@@ -43,7 +44,7 @@ export default function ClientMemo({ time, meetingId }: Props) {
   const [meeting, setMeeting] = useState<Meeting | null>(null);
 
   // 👇 this replaces `html`
-  const [data, setData] = useState("<b>Arinova</b>");
+  const [data, setData] = useState(`<b>${appConfig.name}</b>`);
 
   const [isRunning, setIsRunning] = useState(true);
 
@@ -101,7 +102,7 @@ export default function ClientMemo({ time, meetingId }: Props) {
 
   const saveMemoToLocal = () => localStorage.setItem("memo", data);
   const loadMemoFromLocal = () => setData(localStorage.getItem("memo") || "");
-  const clearMemoFromLocal = () => setData("Arinova");
+  const clearMemoFromLocal = () => setData(`${appConfig.firstName}`);
 
   const priority = meeting?.project?.priority?.toUpperCase();
 

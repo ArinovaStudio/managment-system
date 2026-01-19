@@ -3,9 +3,10 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { appConfig } from "@/config/appConfig";
 
 export const metadata: Metadata = {
-  title: "Arinova Studio - 404 Not Found",
+  title: `${appConfig.name} - 404 Not Found`,
 };
 
 export default function Error404() {
@@ -45,7 +46,7 @@ export default function Error404() {
       </div>
       {/* <!-- Footer --> */}
       <p className="absolute text-sm text-center text-gray-500 -translate-x-1/2 bottom-6 left-1/2 dark:text-gray-400">
-        &copy; {new Date().getFullYear()} - Arinova Studio
+        &copy; {new Date().getFullYear()} - {appConfig.name}
       </p>
     </div>
   );

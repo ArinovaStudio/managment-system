@@ -2,6 +2,7 @@
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
+import { appConfig } from "@/config/appConfig";
 import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -88,10 +89,10 @@ const AppHeader: React.FC = () => {
               width={40}
               height={32}
               className="rounded-xl"
-              src="/images/logo/logo.jpg"
-              alt="Logo"
+              src={appConfig.logo}
+              alt={appConfig.name}
             />
-            <h1 className="text-xl text-black dark:text-white">Arinova Studio</h1>
+            <h1 className="text-xl text-black dark:text-white">{appConfig.name}</h1>
           </Link>
 
           <button

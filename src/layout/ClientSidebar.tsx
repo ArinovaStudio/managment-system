@@ -13,6 +13,7 @@ import {
   Sparkles,
   FileText 
 } from "lucide-react";
+import { appConfig } from "@/config/appConfig";
 
 type NavItem = {
   name: string;
@@ -78,21 +79,21 @@ const ClientSidebar = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex items-center gap-2.5">
               <Image
-                src="/images/logo/logo.jpg"
+                src={appConfig.logo}
                 className="rounded-lg"
-                alt="Logo"
+                alt={appConfig.name}
                 width={40}
                 height={40}
               />
               <h1 className="text-xl text-black dark:text-white font-semibold">
-                Arinova Studio
+                {appConfig.name}
               </h1>
             </div>
           ) : (
             <Image
-              src="/images/logo/logo.jpg"
+              src={appConfig.logo}
               className="rounded-lg"
-              alt="Logo"
+              alt={appConfig.name}
               width={40}
               height={40}
             />

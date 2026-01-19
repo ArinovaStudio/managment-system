@@ -25,6 +25,7 @@ import {
   LucideClipboardPenLine
 } from "lucide-react"
 import { HorizontaLDots } from "@/icons";
+import { appConfig } from "@/config/appConfig";
 
 type NavItem = {
   name: string;
@@ -377,19 +378,19 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex justify-center items-center gap-2.5">
               <Image
-                src="/images/logo/logo.jpg"
+                src={appConfig.logo}
                 className="rounded-lg"
-                alt="Logo"
+                alt={appConfig.name}
                 width={40}
                 height={40}
               />
-              <h1 className="text-2xl text-black dark:text-white">Arinova Studio</h1>
+              <h1 className="text-2xl text-black dark:text-white">{appConfig.name}</h1>
             </div>
           ) : (
             <Image
-              src="/images/logo/logo.jpg"
+              src={appConfig.logo}
               className="rounded-lg"
-              alt="Logo"
+              alt={appConfig.name}
               width={40}
               height={40}
             />

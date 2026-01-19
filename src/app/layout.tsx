@@ -4,9 +4,10 @@ import './globals.css';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { Toaster } from "react-hot-toast";
+import { appConfig } from '@/config/appConfig';
 
 export const metadata = {
-  title: "Arinova Dashboard",     // ← TEXT SHOWN IN TAB
+  title: `${appConfig.firstName} Dashboard`,     // ← TEXT SHOWN IN TAB
   description: "Management System",
   icons: {
     icon: "/favicon.ico",
