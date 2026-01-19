@@ -45,6 +45,11 @@ const clientNavItems: NavItem[] = [
     name: "Project Documents",
     icon: <FileText strokeWidth={1.5} />,
     path: "/client/documents",
+  },
+  {
+    name: "Analytics",
+    icon: <LayoutDashboard strokeWidth={1.5} />,
+    path: "/client/analytics",
   }
 ];
 
