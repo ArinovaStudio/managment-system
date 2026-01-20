@@ -1,18 +1,34 @@
 /** @type {import('next').NextConfig} */
-const imageDomains = process.env.NEXT_IMAGE_DOMAINS?.split(",").map((d) => d.trim()) ?? [];
-
 const nextConfig = {
   images: {
-    domains: imageDomains,
+    domains: [
+      "management.arinova.studio",
+      "res.cloudinary.com"
+    ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "management.arinova.studio",
+        pathname: "/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
   },
 
   typescript: {
     ignoreBuildErrors: true,
   },
+
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   turbopack: {},
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
