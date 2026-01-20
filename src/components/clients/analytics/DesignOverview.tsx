@@ -1,64 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Palette, Type, Heart, MessageCircle, ArrowRight } from 'lucide-react';
-import Loader from '@/components/common/Loading';
 
-interface DesignSystemData {
-    colors: string[];
-    designType: string[];
-    brandFeel: string;
-    contentTone: string[];
-    fonts: any;
-    projectPhase: {
-        current: string;
-        daysRemaining: number;
-        phases: Array<{
-            name: string;
-            icon: string;
-            completed: boolean;
-        }>;
-    };
-    technology: {
-        design: string;
-        frontend: string;
-        backend: string;
-        database: string;
-        server: string;
-        hosting: string;
-    };
-}
-
-const DesignOverview = ({ clientId }: { clientId: string }) => {
-    const [data, setData] = useState<DesignSystemData | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchDesignData = async () => {
-            try {
-                const response = await fetch(`/api/client/analytics/design?clientId=${clientId}`);
-                const result = await response.json();
-                if (result.success) {
-                    setData(result.data);
-                }
-            } catch (error) {
-                console.error('Error fetching design data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDesignData();
-    }, [clientId]);
-
-    // if (loading) {
-    //     return (
-    //         <div className="p-6 flex items-center justify-center">
-    //             <Loader />
-    //         </div>
-    //     );
-    // }
-
+const DesignOverview = ({ data }: { data: any; designPreview: any }) => {
     if (!data) {
         return (
             <div className="p-6 flex items-center justify-center">
@@ -68,13 +12,13 @@ const DesignOverview = ({ clientId }: { clientId: string }) => {
     }
 
     return (
-        <div className="pt-5 dark:bg-gray-900">
+        <div className="dark:bg-gray-900">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Design System Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border-2 border-blue-200 dark:border-blue-800 relative">
-                    <div className="absolute -top-3 left-6">
-                        <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    <div className="absolute -top-3 left-45">
+                        <span className="bg-blue-500 text-white px-4 py-1 rounded-sm text-sm font-medium">
                             Design System
                         </span>
                     </div>
@@ -82,14 +26,21 @@ const DesignOverview = ({ clientId }: { clientId: string }) => {
                     <div className="mt-4 space-y-6">
                         {/* Colors */}
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Colors</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                Colors
+                            </h3>
                             <div className="flex gap-2">
-                                {data.colors.map((color, index) => (
+                                {data.colors.map((color: string, index: number) => (
                                     <div
                                         key={index}
-                                        className="w-8 h-8 rounded-full border-2 border-gray-200 dark:border-gray-600"
+                                        className="  group  flex items-center  h-8  w-8 hover:w-24  px-2  rounded-full  border-2 border-gray-200 dark:border-gray-600  transition-all duration-300 ease-out  cursor-pointer  overflow-hidden"
                                         style={{ backgroundColor: color }}
-                                    />
+                                        >
+                                        {/* Hex Code */}
+                                        <span className="  ml-2  text-xs font-semibold text-white  opacity-0 group-hover:opacity-100  translate-x-[-6px] group-hover:translate-x-0  transition-all duration-300  whitespace-nowrap">
+                                            {color.toUpperCase()}
+                                        </span>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -143,8 +94,8 @@ const DesignOverview = ({ clientId }: { clientId: string }) => {
 
                     {/* Days Remaining */}
                     <div className="flex-1 p-6 flex flex-col justify-center">
-                        <div className="mb-4">
-                            <span className="   inline-flex items-center gap-2    bg-green-100 dark:bg-green-900    text-green-700 dark:text-green-300    px-3 py-1 rounded-full    text-xs font-medium ">
+                        <div className="mb-4 items-start justify-start">
+                            <span className="inline-flex justify-start items-center gap-2    bg-green-100 dark:bg-green-900    text-green-700 dark:text-green-300    px-3 py-2 rounded-full    text-xs font-medium ">
                                 <span className="w-2 h-2 bg-green-500 rounded-full" />
                                 On Time
                             </span>
@@ -200,7 +151,7 @@ const DesignOverview = ({ clientId }: { clientId: string }) => {
                             Technology Used
                         </h3>
 
-                        <div className="space-y-3 text-sm">
+                        <div className="space-y-3 py-3  text-sm">
                             {[
                                 ["Design", data.technology.design],
                                 ["Frontend", data.technology.frontend],
