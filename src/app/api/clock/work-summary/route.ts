@@ -123,7 +123,6 @@ export async function DELETE(req: Request) {
           not: null
         }
   }})
-    console.log(danger);
     
   return NextResponse.json({ success: true, deletedCount: danger.count }, {status: 200});
   }

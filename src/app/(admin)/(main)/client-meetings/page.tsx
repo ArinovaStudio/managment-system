@@ -59,8 +59,6 @@ export default function AdminMeetRequests() {
       const res = await fetch('/api/client/meeting');
       const data = await res.json();
       if (data.success) {
-        console.log(data.meetings);
-
         setMeetRequests(data.meetings);
       }
     } catch (error) {
@@ -122,8 +120,6 @@ export default function AdminMeetRequests() {
     // Start meeting
     setActiveMeetingId(meeting.id);
     setElapsedSeconds(0);
-
-    console.log("Opening:", meeting.meetingLink);
 
     window.open(meeting.meetingLink, "_blank", "noopener,noreferrer");
   };

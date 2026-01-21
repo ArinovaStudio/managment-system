@@ -22,19 +22,13 @@ const BudgetAndDocs = ({
   progress: number; // percent remaining
 }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+    <div className="grid grid-cols-1 lg:grid-cols-3 h-full gap-6 mt-10">
 
       {/* LEFT CARDS */}
-      <div className="col-span-1 space-y-4">
+      <div className="col-span-1 h-full flex flex-col gap-4">
 
         {/* Scope of Work */}
-        <div
-          className="
-            bg-purple-100 dark:bg-purple-900 
-            border border-gray-200 dark:border-gray-700 
-            rounded-2xl p-5 flex justify-between items-center
-          "
-        >
+        <div className=" bg-gray-100 dark:bg-gray-800  border border-gray-200 dark:border-gray-700  rounded-2xl p-5  flex justify-between items-center flex-1">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-purple-200 dark:bg-purple-800 rounded-xl flex items-center justify-center">
               <FileText className="w-6 h-6 text-purple-700 dark:text-purple-300" />
@@ -54,13 +48,8 @@ const BudgetAndDocs = ({
         </div>
 
         {/* Payment History */}
-        <div
-          className="
-            bg-blue-100 dark:bg-blue-900 
-            border border-gray-200 dark:border-gray-700 
-            rounded-2xl p-5 flex justify-between items-center
-          "
-        >
+        <div className=" bg-gray-100 dark:bg-gray-800  border border-gray-200 dark:border-gray-700  rounded-2xl p-5  flex justify-between items-center flex-1">
+
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-blue-200 dark:bg-blue-800 rounded-xl flex items-center justify-center">
               <Receipt className="w-6 h-6 text-blue-700 dark:text-blue-300" />
@@ -80,13 +69,8 @@ const BudgetAndDocs = ({
         </div>
 
         {/* Latest Invoice */}
-        <div
-          className="
-            bg-green-100 dark:bg-green-900 
-            border border-gray-200 dark:border-gray-700 
-            rounded-2xl p-5 flex justify-between items-center
-          "
-        >
+        <div className=" bg-gray-100 dark:bg-gray-800  border border-gray-200 dark:border-gray-700  rounded-2xl p-5  flex justify-between items-center flex-1">
+
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-green-200 dark:bg-green-800 rounded-xl flex items-center justify-center">
               <Wallet className="w-6 h-6 text-green-700 dark:text-green-300" />
@@ -129,7 +113,9 @@ const BudgetAndDocs = ({
                 <p className="text-sm">Paid amount</p>
                 <h3 className="text-2xl font-bold">{paidAmount}</h3>
               </div>
-              <Receipt className="w-8 h-8 opacity-80" />
+              <span className='bg-white rounded-full bg-opacity-80 p-1'>
+                <Receipt className="w-6 h-6 text-purple-600" />
+              </span>
             </div>
 
             <div className="bg-orange-500 text-white p-4 rounded-xl flex items-center justify-between">
@@ -137,15 +123,19 @@ const BudgetAndDocs = ({
                 <p className="text-sm">Remaining amount</p>
                 <h3 className="text-2xl font-bold">{remainingAmount}</h3>
               </div>
-              <Wallet className="w-8 h-8 opacity-80" />
+              <span className='bg-white rounded-full bg-opacity-80 p-1'>
+                <Wallet className="w-6 h-6 text-orange-500" />
+              </span>
             </div>
 
-            <div className="bg-black text-white p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-black/90 text-white p-4 rounded-xl flex items-center justify-between">
               <div>
                 <p className="text-sm">Total Budget</p>
                 <h3 className="text-2xl font-bold">{totalBudget}</h3>
               </div>
-              <FileText className="w-8 h-8 opacity-80" />
+              <span className='bg-white rounded-full bg-opacity-80 p-1'>
+                <FileText className="w-6 h-6 text-black/90" />
+              </span>
             </div>
 
           </div>
@@ -153,7 +143,7 @@ const BudgetAndDocs = ({
 
         {/* Donut Chart */}
         <div className="w-1/2 flex items-center justify-center">
-          <div className="relative w-44 h-44">
+          <div className="relative w-75 h-75">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
               <circle
                 cx="100"

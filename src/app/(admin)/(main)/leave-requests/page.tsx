@@ -29,7 +29,6 @@ export default function LeaveRequestModule() {
       const response = await fetch(`/api/leaves?empId=${empId}&id=${id}`, { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setRequests(data.leaveRequests)
         const allowedKeys = ["sick", "total", "remaining", "emergency"];
         const statsData = data.leaveStats[0]
@@ -40,7 +39,6 @@ export default function LeaveRequestModule() {
     key,
     value
   }));
-  console.log(stats);
   
   setStats(stats)
       }
@@ -137,7 +135,6 @@ export default function LeaveRequestModule() {
       color: '',
       Icon: LucideSprout
     })
-    console.log(Type);
     
     const getColorAndIcon = () => {
       if (Type === "total") {

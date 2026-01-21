@@ -23,6 +23,7 @@ const ClientAnalyticsDashboard = () => {
       try {
         const response = await fetch('/api/auth/me');
         const result = await response.json();
+        
 
         if (result.success && result.user) {
           setClientId(result.user.id);
@@ -40,6 +41,8 @@ const ClientAnalyticsDashboard = () => {
 
     const fetchAllData = async () => {
       try {
+        ('Fetching data for clientId:', clientId);
+        
         const [updatesRes, risksRes, milestonesRes, budgetRes, designRes, overviewRes, designOverviewRes] = await Promise.all([
           fetch(`/api/client/analytics/updates?clientId=${clientId}`),
           fetch(`/api/client/analytics/risk-blockage?clientId=${clientId}`),
@@ -62,7 +65,7 @@ const ClientAnalyticsDashboard = () => {
 
         setAllData({
           updates: updates.success ? updates.data : [],
-          risks: risks.success ? risks.data.map(r => r.reason) : [],
+          risks: risks.success ? risks.data.map(r => r.riskTitle) : [],
           milestones: milestones.success ? milestones.data : [],
           budget: budget.success ? budget.data : null,
           design: design.success ? design.data : null,
@@ -101,7 +104,7 @@ const ClientAnalyticsDashboard = () => {
     <div className="space-y-10">
       <ClientOverview data={allData.overview} />
       <DesignOverview data={allData.designOverview} designPreview={allData.design} />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <LatestUpdates updates={allData.updates} />
@@ -111,7 +114,7 @@ const ClientAnalyticsDashboard = () => {
           <Milestones milestones={allData.milestones} />
         </div>
       </div>
-      
+
       {allData.budget && (
         <BudgetAndDocs
           scopeTitle={allData.budget.scopeTitle}
@@ -124,7 +127,7 @@ const ClientAnalyticsDashboard = () => {
           progress={allData.budget.progress}
         />
       )}
-      
+
       <DesignPreviewSection data={allData.design} />
     </div>
   );

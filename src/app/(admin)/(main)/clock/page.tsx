@@ -51,7 +51,6 @@ function Clock() {
       const res = await fetch("/api/clock/stats");
       const data = await res.json();
       if (data.success) {
-        console.log(data.stats,"this is status");
         
         setStats(data.stats);
         // If there's an active session, force user status to logged in

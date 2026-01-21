@@ -72,7 +72,7 @@ const ClientOverview = ({ data }: { data: any }) => {
 
                 <div className="flex gap-4 w-full h-30">
                   {/* Start Date Card */}
-                  <div className="bg-white dark:bg-gray-800 max-h-50 w-full rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gray-100 dark:bg-gray-800 max-h-50 w-full rounded-2xl p-5 shadow-sm border border-gray-400/50 dark:border-gray-700">
                     <div className="flex items-end justify-end gap-2 mb-3">
                       <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
                         <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -86,7 +86,7 @@ const ClientOverview = ({ data }: { data: any }) => {
                   </div>
 
                   {/* Deadline Card */}
-                  <div className="bg-white dark:bg-gray-800 justify-end max-h-40 w-full rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gray-100 dark:bg-gray-800 justify-end max-h-40 w-full rounded-2xl p-5 shadow-sm border border-gray-400/50 dark:border-gray-700">
                     <div className="flex justify-end items-end gap-2 mb-3">
                       <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
                         <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -103,7 +103,7 @@ const ClientOverview = ({ data }: { data: any }) => {
 
                 <div className="flex gap-4 w-full h-20">
                   {/* Project Manager Card */}
-                  <div className="bg-white dark:bg-gray-800 items-end w-80 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gray-100 dark:bg-gray-800 items-end w-80 rounded-2xl p-5 shadow-sm border border-gray-400/50 dark:border-gray-700">
                     <div className="flex flex-col items-start justify-start gap-2">
                       <span className="text-xs text-gray-600 dark:text-gray-400">Project Manager</span>
                       <p className="text-xl font-bold text-gray-900 dark:text-white">{data.team.projectManager}</p>
@@ -111,7 +111,7 @@ const ClientOverview = ({ data }: { data: any }) => {
                   </div>
 
                   {/* Total Duration Card */}
-                  <div className="bg-white items-end justify-end  dark:bg-gray-800 w-40 rounded-2xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gray-100 items-end justify-end  dark:bg-gray-800 w-40 rounded-2xl p-5 shadow-sm border border-gray-400/50 dark:border-gray-700">
                     <div className="flex flex-col items-start justify-start gap-2">
                       <span className="text-xs text-gray-600 dark:text-gray-400">Total Duration</span>
                       <p className="text-xl font-bold text-gray-900 justify-center dark:text-white">{data.timeline.totalDuration} {data.timeline.durationUnit}</p>
@@ -126,7 +126,7 @@ const ClientOverview = ({ data }: { data: any }) => {
 
           {/* Right Section - Overall Progress */}
           <div className="lg:col-span-4">
-            <div className="bg-white dark:bg-gray-800 h-full rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
+            <div className="bg-gray-100 dark:bg-gray-800 h-full rounded-2xl p-6 shadow-sm border dark:border-gray-700 flex flex-col items-center justify-center">
               <h3 className="block text-left  font-bold text-gray-900 dark:text-white mb-8">overall progress</h3>
 
               {/* Donut Chart */}

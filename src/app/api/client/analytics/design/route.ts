@@ -70,11 +70,22 @@ export async function GET(request: NextRequest) {
         ];
 
         const designData = {
+            // All DesignSystem fields
+            id: designSystem?.id || null,
+            projectId: designSystem?.projectId || null,
+            brandName: designSystem?.brandName || 'Not set',
             colors: designSystem?.colors || ['null'],
-            designType: designSystem?.designType || ['null'],
-            brandFeel: designSystem?.brandFeel || 'null',
-            contentTone: designSystem?.contentTone || ['null'],
             fonts: designSystem?.fonts || {},
+            designType: designSystem?.designType || ['null'],
+            layoutStyle: designSystem?.layoutStyle || {},
+            contentTone: designSystem?.contentTone || ['null'],
+            visualGuidelines: designSystem?.visualGuidelines || {},
+            theme: designSystem?.theme || ['null'],
+            brandFeel: designSystem?.brandFeel || 'null',
+            keyPages: designSystem?.keyPages || ['null'],
+            uniqueness: designSystem?.uniqueness || {},
+            createdAt: designSystem?.createdAt || null,
+            updatedAt: designSystem?.updatedAt || null,
             projectPhase: {
                 current: currentPhase,
                 daysRemaining,

@@ -101,7 +101,6 @@ export async function PATCH(req: NextRequest) {
     if (!id || !status) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
-    console.log(meetLink);
     
     const meetingRequest = await db.meetingRequest.update({
       where: { id },
