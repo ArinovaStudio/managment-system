@@ -40,9 +40,7 @@ const ClientAnalyticsDashboard = () => {
     if (!clientId) return;
 
     const fetchAllData = async () => {
-      try {
-        ('Fetching data for clientId:', clientId);
-        
+      try {        
         const [updatesRes, risksRes, milestonesRes, budgetRes, designRes, overviewRes, designOverviewRes] = await Promise.all([
           fetch(`/api/client/analytics/updates?clientId=${clientId}`),
           fetch(`/api/client/analytics/risk-blockage?clientId=${clientId}`),
