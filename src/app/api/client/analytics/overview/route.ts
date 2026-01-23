@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Get the first project (assuming client has one main project)
     const project = clientProjects[0].project;
     const projectInfo = project.projectInfo;
-    
+
     // Get project manager from supervisorAdmin or fallback to team leader
     let projectManager = 'Not Assigned';
     if (projectInfo?.supervisorAdmin) {
@@ -72,13 +72,13 @@ export async function GET(request: NextRequest) {
     const milestones = project.milestones;
     const totalMilestones = milestones.length;
     const completedMilestones = milestones.filter(m => m.status === 'COMPLETED').length;
-    
+
     // Define phase structure
     const phases = [
-      { name: "Planning", color: "#ef4444" },
-      { name: "Development", color: "#f97316" },
-      { name: "Testing", color: "#06b6d4" },
-      { name: "Deployment", color: "#eab308" },
+      { name: "Planning", color: "#3b82f6" },
+      { name: "Development", color: "#3b82f6" },
+      { name: "Testing", color: "#3b82f6" },
+      { name: "Deployment", color: "#3b82f6" },
       { name: "Maintenance", color: "#3b82f6" }
     ];
 
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       const basePercentage = 100 / phases.length;
       let percentage = basePercentage;
       let completed = false;
-      
+
       // Adjust based on overall progress
       if (overallProgress >= (index + 1) * 20) {
         completed = true;
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
       } else {
         percentage = 0;
       }
-      
+
       return {
         ...phase,
         percentage: Math.round(percentage * 10) / 10,
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     const deadline = projectInfo?.deadline;
     let totalDuration = 0;
     let durationUnit = 'Days';
-    
+
     if (startDate && deadline) {
       const diffTime = Math.abs(new Date(deadline).getTime() - new Date(startDate).getTime());
       totalDuration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

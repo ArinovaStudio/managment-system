@@ -237,25 +237,26 @@ model Comment {
 }
 
 model Project {
-  id              String           @id @default(cuid())
-  name            String
-  summary         String?
-  priority        String?
-  basicDetails    String?
-  repository      String?
-  status          Int              @default(0) // Progress percentage 0-100
-  createdAt       DateTime         @default(now())
-  progress        Int              @default(0)
-  assets          Asset[]
-  milestones      Milestone[]
-  members         ProjectMember[]
-  tasks           Task[]
-  featureRequests FeatureRequest[]
-  projectInfo     ProjectInfo?
-  latestUpdates   LatestUpdate[]
-  meetingRequest  MeetingRequest[]
-  docs            Docs[]
-  designSystem    DesignSystem?
+  id                String             @id @default(cuid())
+  name              String
+  summary           String?
+  priority          String?
+  basicDetails      String?
+  repository        String?
+  status            Int                @default(0) // Progress percentage 0-100
+  createdAt         DateTime           @default(now())
+  progress          Int                @default(0)
+  currentPhase      String?            @default("Design")
+  assets            Asset[]
+  milestones        Milestone[]
+  members           ProjectMember[]
+  tasks             Task[]
+  featureRequests   FeatureRequest[]
+  projectInfo       ProjectInfo?
+  latestUpdates     LatestUpdate[]
+  meetingRequest    MeetingRequest[]
+  docs              Docs[]
+  designSystem      DesignSystem?
   projectTechnology ProjectTechnology?
 }
 
@@ -302,7 +303,7 @@ model Asset {
   createdAt  DateTime @default(now())
   projectId  String
   publicId   String?
-  liveUrl    String?  // For live preview links
+  liveUrl    String? // For live preview links
   project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
@@ -370,6 +371,7 @@ model ProjectInfo {
   id              String   @id @default(cuid())
   projectId       String   @unique
   budget          Float
+  paidAmount      Float?   @default(0)
   clientName      String?
   projectType     String
   startDate       DateTime
@@ -519,17 +521,17 @@ model PlanDocs {
 }
 
 model workDone {
-  id        String   @id @default(nanoid())
-  projectId String
-  taskId   String    @unique
-  title          String
-  description    String
-  priority       String
-  dueDate        DateTime
-  tags           String[]
-  userId         String
-  completedBy    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id          String   @id @default(nanoid())
+  projectId   String
+  taskId      String   @unique
+  title       String
+  description String
+  priority    String
+  dueDate     DateTime
+  tags        String[]
+  userId      String
+  completedBy User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
@@ -551,7 +553,7 @@ model DesignSystem {
   id               String   @id @default(uuid())
   projectId        String   @unique
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  brandName        String 
+  brandName        String
   colors           String[]
   fonts            Json
   designType       String[]
@@ -570,12 +572,7 @@ model ProjectTechnology {
   id        String   @id @default(cuid())
   projectId String   @unique
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  design    String   @default("Figma")
-  frontend  String   @default("Next.js")
-  backend   String   @default("Next.js")
-  database  String   @default("Postgres")
-  server    String   @default("KVM2 -VPS")
-  hosting   String   @default("Local")
+  tech      Json[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

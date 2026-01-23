@@ -7,18 +7,18 @@ const RiskBlockage = ({ risks }: { risks: string[] }) => {
         bg-white dark:bg-gray-800 
         rounded-2xl p-5 
         border-2 border-red-400 
-        shadow-sm
+        shadow-sm relative
       "
     >
       {/* Header Pill */}
-      <div className="flex justify-end -mt-6 mb-4">
-        <span className="bg-red-400 text-white px-4 py-1 rounded-full text-sm font-medium">
+      <div className="flex justify-end absolute top-1 right-10 -mt-6 mb-4">
+        <span className="bg-red-400 text-white px-4 py-1 rounded-sm text-sm font-medium">
           Risk Blockage
         </span>
       </div>
 
-      {/* Alerts */}
-      <div className="space-y-4">
+      {/* Alerts container with scroll */}
+      <div className="space-y-4 max-h-40 overflow-y-auto pr-2 no-scrollbar scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600">
         {risks.map((risk, index) => (
           <div
             key={index}

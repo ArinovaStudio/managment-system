@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowUp, CheckCheck, LucideCheckCheck, LucideCopy, LucideEdit3, LucideTrash, User, X } from "lucide-react";
+import { ArrowUp, CheckCheck, LucideCheckCheck, LucideCopy, LucideEdit3, LucideTrash, User, X, DollarSign } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
 import LatestUpdates from "./LatestUpdates";
 import { useRouter } from "next/navigation";
+import BudgetModal from "./BudgetModal";
 
 
 type Member = {
@@ -46,61 +47,139 @@ interface OverviewTabProps {
 }
 
 
-const EditModal = ({showModel, projectData}) => {
-    const [loading, setLoading] = useState(false);
-    const [admins, setAdmins] = useState([]);
+const EditModal = ({ showModel, projectData }) => {
+  const [loading, setLoading] = useState(false);
+  const [admins, setAdmins] = useState([]);
+  const [techStack, setTechStack] = useState([]);
+  const [newTech, setNewTech] = useState({ key: '', value: '' });
+  const [customCategory, setCustomCategory] = useState("");
+  const [currentPhase, setCurrentPhase] = useState('');
 
-    const [formData, setFormData] = useState({
-      name: projectData.name,
-      summary: projectData.summary,
-      priority: projectData.priority,
-      repository: projectData.repository,
-      basicDetails: projectData.basicDetails,
-      budget: projectData.projectInfo.budget,
-      projectType: projectData.projectInfo.projectType,
-      startDate: projectData.projectInfo.startDate,
-      deadline: projectData.projectInfo.deadline,
-      supervisorAdmin: projectData.projectInfo.supervisorAdmin
-    });
+  const [formData, setFormData] = useState({
+    name: projectData.name,
+    summary: projectData.summary,
+    priority: projectData.priority,
+    repository: projectData.repository,
+    basicDetails: projectData.basicDetails,
+    budget: projectData.projectInfo.budget,
+    projectType: projectData.projectInfo.projectType,
+    startDate: projectData.projectInfo.startDate,
+    deadline: projectData.projectInfo.deadline,
+    supervisorAdmin: projectData.projectInfo.supervisorAdmin
+  });
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setLoading(true);
-      try {
-        const response = await fetch('/api/project', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId: projectData.id,
-            name: formData.name,
-            summary: formData.summary,
-            priority: formData.priority,
-            basicDetails: formData.basicDetails,
-            budget: formData.budget,
-            repository: formData.repository,
-            projectType: formData.projectType,
-            startDate: formData.startDate,
-            deadline: formData.deadline,
-            supervisorAdmin: formData.supervisorAdmin
-          })
-        });
+  const predefinedTech = [
+    { key: 'Design', options: ['Figma', 'Adobe XD', 'Sketch', 'Canva'] },
+    { key: 'Frontend', options: ['React', 'Next.js', 'Vue.js', 'Angular'] },
+    { key: 'Backend', options: ['Node.js', 'Python', 'Java', 'PHP'] },
+    { key: 'Database', options: ['PostgreSQL', 'MongoDB', 'MySQL', 'Redis'] },
+    { key: 'Hosting', options: ['Vercel', 'AWS', 'Netlify', 'Heroku'] }
+  ];
 
-        const result = await response.json();
-        if (result.success) {
-          toast.success("Project updated successfully");
-          showModel(false)
-        } else {
-          toast.error("Failed to update project");
+  const fetchTechnology = async () => {
+    try {
+      // First try to get client ID from project members
+      const clientMember = projectData.members?.find(member => member.user.role === 'CLIENT');
+      const clientId = clientMember?.user.id;
+
+      if (clientId) {
+        const response = await fetch(`/api/client/analytics/design?clientId=${clientId}`);
+        const data = await response.json();
+        if (data.success && data.data.technology && Array.isArray(data.data.technology)) {
+          setTechStack(data.data.technology);
         }
-      } catch (err) {
-        console.error("Failed to create project:", err);
-        toast.error("Failed to create project");
+        // Set current phase from the same API
+        if (data.success && data.data.projectPhase && data.data.projectPhase.current) {
+          setCurrentPhase(data.data.projectPhase.current);
+        }
+      } else {
+        // Fallback to project technology API
+        const response = await fetch(`/api/project/technology?projectId=${projectData.id}`);
+        const data = await response.json();
+        if (data.success && data.data && data.data.tech) {
+          setTechStack(data.data.tech);
+        }
       }
-      finally {
-        setLoading(false);
-        window.location.reload()
-      }
+    } catch (error) {
+      console.error('Failed to fetch technology:', error);
     }
+  };
+
+  const addTech = () => {
+    if (newTech.key && newTech.value) {
+      setTechStack([...techStack, newTech]);
+      setNewTech({ key: '', value: '' });
+    }
+  };
+
+  const removeTech = (index) => {
+    setTechStack(techStack.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch('/api/project', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: projectData.id,
+          name: formData.name,
+          summary: formData.summary,
+          priority: formData.priority,
+          basicDetails: formData.basicDetails,
+          budget: formData.budget,
+          repository: formData.repository,
+          projectType: formData.projectType,
+          startDate: formData.startDate,
+          deadline: formData.deadline,
+          supervisorAdmin: formData.supervisorAdmin
+        })
+      });
+
+      // Update technology stack
+      await fetch('/api/project/technology', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: projectData.id, tech: techStack })
+      });
+
+      // Update project phase
+      if (currentPhase) {
+        // Update via the same analytics API by sending the phase data
+        const clientMember = projectData.members?.find(member => member.user.role === 'CLIENT');
+        const clientId = clientMember?.user.id;
+
+        if (clientId) {
+          await fetch('/api/client/analytics/design', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientId,
+              projectId: projectData.id,
+              currentPhase
+            })
+          });
+        }
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Project updated successfully");
+        showModel(false)
+      } else {
+        toast.error("Failed to update project");
+      }
+    } catch (err) {
+      console.error("Failed to create project:", err);
+      toast.error("Failed to create project");
+    }
+    finally {
+      setLoading(false);
+      window.location.reload()
+    }
+  }
 
   const fetchAdmins = async () => {
     try {
@@ -120,209 +199,336 @@ const EditModal = ({showModel, projectData}) => {
 
   useEffect(() => {
     fetchAdmins();
-  }, [])
+    if (projectData.id) {
+      fetchTechnology();
+    }
+  }, [projectData.id])
 
   return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 ">
-          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto   [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold dark:text-white">Create New Project</h2>
-                <button
-                  onClick={() => showModel(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                >
-                  <X size={20} className="text-gray-600 dark:text-gray-400" />
-                </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 ">
+      <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto   [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold dark:text-white">Create New Project</h2>
+            <button
+              onClick={() => showModel(false)}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <X size={20} className="text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Project Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Enter project name"
+                  required
+                />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Project Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      placeholder="Enter project name"
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Project Type *
+                </label>
+                <select
+                  value={formData.projectType}
+                  onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                >
+                  <option value="">Select project type</option>
+                  <option value="saas">Ai</option>
+                  <option value="e-commerce">Cyber Security</option>
+                  <option value="saas">SaaS</option>
+                  <option value="static">Static Website</option>
+                  <option value="e-commerce">E-commerce</option>
+                  <option value="web-app">Web Application</option>
+                  <option value="mobile-app">Mobile App</option>
+                  <option value="web-app">Other</option>
+                </select>
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Project Type *
-                    </label>
-                    <select
-                      value={formData.projectType}
-                      onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      required
-                    >
-                      <option value="">Select project type</option>
-                      <option value="saas">Ai</option>
-                      <option value="e-commerce">Cyber Security</option>
-                      <option value="saas">SaaS</option>
-                      <option value="static">Static Website</option>
-                      <option value="e-commerce">E-commerce</option>
-                      <option value="web-app">Web Application</option>
-                      <option value="mobile-app">Mobile App</option>
-                      <option value="web-app">Other</option>
-                    </select>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Priority
+                </label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                </select>
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Priority
-                    </label>
-                    <select
-                      value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    >
-                      <option value="LOW">Low</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="HIGH">High</option>
-                    </select>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Budget *
+                </label>
+                <input
+                  type="number"
+                  value={formData.budget}
+                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Enter budget amount"
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Budget *
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.budget}
-                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      placeholder="Enter budget amount"
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Start Date *
+                </label>
+                <input
+                  type="date"
+                  value={formData.startDate.split("T")[0]}
+                  min={new Date().toISOString().split("T")[0]}
+                  disabled
+                  // onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Start Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.startDate.split("T")[0]}
-                      min={new Date().toISOString().split("T")[0]}
-                      disabled
-                      // onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Deadline *
+                </label>
+                <input
+                  type="date"
+                  value={formData.deadline.split("T")[0]}
+                  min={formData.startDate.split("T")[0]}
+                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Deadline *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.deadline.split("T")[0]}
-                      min={formData.startDate.split("T")[0]}
-                      onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Supervisor Admin *
+                </label>
+                <select
+                  value={formData.supervisorAdmin}
+                  onChange={(e) => setFormData({ ...formData, supervisorAdmin: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  required
+                >
+                  <option value="" disabled={loading}>{loading ? "Loading..." : "Select supervisor"}</option>
+                  {admins.length > 0 ? admins.map((admin) => (
+                    <option key={admin.id} value={admin.id}>
+                      {admin.name} - {admin.workingAs || 'Admin'}
+                    </option>
+                  )) : (<option value="" disabled>No admins available</option>)}
+                </select>
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Supervisor Admin *
-                    </label>
-                    <select
-                      value={formData.supervisorAdmin}
-                      onChange={(e) => setFormData({ ...formData, supervisorAdmin: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      required
-                    >
-                      <option value="" disabled={loading}>{loading ? "Loading..." : "Select supervisor"}</option>
-                      {admins.length > 0 ? admins.map((admin) => (
-                        <option key={admin.id} value={admin.id}>
-                          {admin.name} - {admin.workingAs || 'Admin'}
-                        </option>
-                      )): (<option value="" disabled>No admins available</option>)}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2 dark:text-white">
-                      Repository
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.repository || ""}
-                      onChange={(e) => setFormData({ ...formData, repository: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                      placeholder="Make sure URL contains .git"
-                      // required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-white">
-                    Summary
-                  </label>
-                  <textarea
-                    value={formData.summary}
-                    onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Brief project summary"
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-white">
-                    Basic Details
-                  </label>
-                  <textarea
-                    value={formData.basicDetails}
-                    onChange={(e) => setFormData({ ...formData, basicDetails: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Detailed project description"
-                    rows={4}
-                  />
-                </div>
-
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => showModel(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCheck size={16} />
-                        Update Project
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+              <div>
+                <label className="block text-sm font-medium mb-2 dark:text-white">
+                  Repository
+                </label>
+                <input
+                  type="text"
+                  value={formData.repository || ""}
+                  onChange={(e) => setFormData({ ...formData, repository: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  placeholder="Make sure URL contains .git"
+                // required
+                />
+              </div>
             </div>
-          </div>
-        </div >
+
+            {/* Technology Stack Section */}
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-white">
+                Technology Stack
+              </label>
+
+              {/* Current Tech Stack */}
+              <div className="mb-4">
+                {techStack.length > 0 ? (
+                  <div className="space-y-2 mb-4">
+                    {techStack.map((tech, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                        <span className="text-sm dark:text-white">
+                          <strong>{tech.key}:</strong> {tech.value}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeTech(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    No technology stack configured yet
+                  </div>
+                )}
+              </div>
+
+              {/* Add New Tech */}
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  value={newTech.key}
+                  onChange={(e) => setNewTech({ ...newTech, key: e.target.value, value: '' })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                >
+                  <option value="">Select category</option>
+                  {predefinedTech.map((cat) => (
+                    <option key={cat.key} value={cat.key}>{cat.key}</option>
+                  ))}
+                  <option value="custom">Custom</option>
+                </select>
+
+                {newTech.key === 'custom' ? (
+                  <input
+                    type="text"
+                    placeholder="Enter custom category"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  />
+                ) : newTech.key && predefinedTech.find(cat => cat.key === newTech.key) ? (
+                  <select
+                    value={newTech.value}
+                    onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  >
+                    <option value="">Select technology</option>
+                    {predefinedTech.find(cat => cat.key === newTech.key)?.options.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                    <option value="other">Other</option>
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Enter technology"
+                    value={newTech.value}
+                    onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  />
+                )}
+
+                {newTech.key === 'custom' && (
+                  <input
+                    type="text"
+                    placeholder="Enter technology"
+                    value={newTech.value}
+                    onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                  />
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newTech.key === 'custom' && customCategory && newTech.value) {
+                      setTechStack([...techStack, { key: customCategory, value: newTech.value }]);
+                      setNewTech({ key: '', value: '' });
+                      setCustomCategory('');
+                    } else if (newTech.key && newTech.value) {
+                      setTechStack([...techStack, newTech]);
+                      setNewTech({ key: '', value: '' });
+                    }
+                  }}
+                  disabled={newTech.key === 'custom' ? (!customCategory || !newTech.value) : (!newTech.key || !newTech.value)}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Project Phase Section */}
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-white">
+                Current Project Phase
+              </label>
+              <select
+                value={currentPhase}
+                onChange={(e) => setCurrentPhase(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value="">Select current phase</option>
+                <option value="Design">Design</option>
+                <option value="Code">Code</option>
+                <option value="Testing">Testing</option>
+                <option value="Deployment">Deployment</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-white">
+                Summary
+              </label>
+              <textarea
+                value={formData.summary}
+                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="Brief project summary"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 dark:text-white">
+                Basic Details
+              </label>
+              <textarea
+                value={formData.basicDetails}
+                onChange={(e) => setFormData({ ...formData, basicDetails: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                placeholder="Detailed project description"
+                rows={4}
+              />
+            </div>
+
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => showModel(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCheck size={16} />
+                    Update Project
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div >
   )
 }
 
@@ -368,13 +574,13 @@ const TeamMemberCard = ({ member }: { member: Member }) => (
       <div className="w-14 h-14 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center">
         {member.user.image ? (
           <div className="w-14 h-14 relative">
-          <div className={`absolute w-3 h-3 rounded-full ${member.user.isLogin ? "bg-green-400" : "bg-gray-400"} right-0 bottom-1 z-50`}></div>
-          <img src={member.user.image} alt={member.user.name} className="w-full h-full rounded-full object-cover" />
+            <div className={`absolute w-3 h-3 rounded-full ${member.user.isLogin ? "bg-green-400" : "bg-gray-400"} right-0 bottom-1 z-50`}></div>
+            <img src={member.user.image} alt={member.user.name} className="w-full h-full rounded-full object-cover" />
           </div>
         ) : (
           <div className="w-14 h-14 relative flex items-center justify-center">
             <div className={`absolute w-3 h-3 rounded-full ${member.user.isLogin ? "bg-green-400" : "bg-gray-400"} right-0 bottom-1 z-50`}></div>
-          <User size={28} className="text-gray-500 dark:text-gray-400" />
+            <User size={28} className="text-gray-500 dark:text-gray-400" />
           </div>
         )}
       </div>
@@ -397,6 +603,15 @@ export default function OverviewTab({ project }: OverviewTabProps) {
   const [isLeader, setIsLeader] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isEmployee, setEmployee] = useState(false)
+  const [customCategory, setCustomCategory] = useState('');
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budgetData, setBudgetData] = useState({
+    scopeTitle: '',
+    paidAmount: 0,
+    totalBudget: project?.projectInfo?.budget || 0,
+    docs: []
+  });
+  const [clientId, setClientId] = useState<string | null>(null);
 
   const copyTextToClipboard = async (link: string) => {
     try {
@@ -418,19 +633,41 @@ export default function OverviewTab({ project }: OverviewTabProps) {
     const checkUserRole = async () => {
       try {
         const response = await fetch('/api/user');
-        
+
         const data = await response.json();
 
         project.members.filter((v: any) => v.user.id === data.user.id).map((e) => {
           setIsLeader(e.isLeader)
         })
-        
+
         if (data.user && data.user.role === "EMPLOYEE") {
-        setEmployee(true);
+          setEmployee(true);
         }
-         
+
         if (data.user && data.user.role === 'ADMIN') {
           setIsAdmin(true);
+        }
+
+        // Find client member to get clientId and fetch budget data
+        const clientMember = project.members?.find(member => member.user.role === 'CLIENT');
+        if (clientMember) {
+          setClientId(clientMember.user.id);
+          
+          // Fetch budget data to get current values and docs
+          try {
+            const budgetResponse = await fetch(`/api/client/analytics/budget?clientId=${clientMember.user.id}`);
+            const budgetResult = await budgetResponse.json();
+            if (budgetResult.success) {
+              setBudgetData({
+                scopeTitle: budgetResult.data.scopeTitle || '',
+                paidAmount: budgetResult.data.paidAmount || 0,
+                totalBudget: budgetResult.data.totalBudget || 0,
+                docs: budgetResult.data.docs || []
+              });
+            }
+          } catch (error) {
+            console.error('Failed to fetch budget data:', error);
+          }
         }
       } catch (error) {
         console.error('Failed to check user role:', error);
@@ -443,7 +680,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         const data = await res.json();
         if (data.success && data.milestones) {
           const total = data.milestones.length;
-          const ongoing = data.milestones.filter((milestone: any) => 
+          const ongoing = data.milestones.filter((milestone: any) =>
             milestone.status === 'PENDING' || milestone.status === 'IN_PROGRESS'
           ).length;
 
@@ -553,21 +790,21 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         </div>
         {
           project?.repository && (
-        <div className="">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Repository</h2>
-          <div className="w-full h-28 bg-blue-400/10 border border-blue-500 rounded-lg px-4 py-4">
-            <p className="text-xs text-gray-400">{project.repository?.split("/")[4]?.split(".git")[0]}</p>
-            <div className="my-1 w-full h-11 rounded-lg relative px-1 border border-blue-600/80 bg-blue-400/20 flex items-center justify-between">
-              <p className="font-mono px-2 font-medium">{project.repository}</p>
-              <div onClick={() => {isCopied ? () => {} :  copyTextToClipboard(project.repository)}} className={`w-8 h-8 cursor-pointer bg-blue-500 rounded-sm grid place-items-center transition-all`}>
-                {
-                  isCopied ? <LucideCheckCheck className={`${isCopied ? "opacity-100" : "opacity-0"} transition-all`} size={16} /> : <LucideCopy className={`${isCopied ? "opacity-0" : "opacity-100"} transition-all`} size={16}/>
-                }
+            <div className="">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Repository</h2>
+              <div className="w-full h-28 bg-blue-400/10 border border-blue-500 rounded-lg px-4 py-4">
+                <p className="text-xs text-gray-400">{project.repository?.split("/")[4]?.split(".git")[0]}</p>
+                <div className="my-1 w-full h-11 rounded-lg relative px-1 border border-blue-600/80 bg-blue-400/20 flex items-center justify-between">
+                  <p className="font-mono px-2 font-medium">{project.repository}</p>
+                  <div onClick={() => { isCopied ? () => { } : copyTextToClipboard(project.repository) }} className={`w-8 h-8 cursor-pointer bg-blue-500 rounded-sm grid place-items-center transition-all`}>
+                    {
+                      isCopied ? <LucideCheckCheck className={`${isCopied ? "opacity-100" : "opacity-0"} transition-all`} size={16} /> : <LucideCopy className={`${isCopied ? "opacity-0" : "opacity-100"} transition-all`} size={16} />
+                    }
+                  </div>
+                </div>
+                <p className="text-xs text-gray-200 text-right w-full">Clone the Repository</p>
               </div>
             </div>
-            <p className="text-xs text-gray-200 text-right w-full">Clone the Repository</p>
-          </div>
-        </div>
           )
         }
 
@@ -576,9 +813,9 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Team Members</h2>
           {project.members && project.members.length > 0 ? (
             project.members.map((member) => {
-          if (isEmployee && member.user.role === "CLIENT") {
-            return null;
-          }
+              if (isEmployee && member.user.role === "CLIENT") {
+                return null;
+              }
               return (
                 <TeamMemberCard key={member.user.id} member={member} />
               )
@@ -596,21 +833,24 @@ export default function OverviewTab({ project }: OverviewTabProps) {
         {/* Project Information */}
         <div className="bg-white border border-gray-300 dark:bg-gray-900 dark:border-gray-600 rounded-2xl p-6">
           <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Project Information
-          </h2>
-          {
-            isAdmin && (
-          <div className="flex gap-2 justify-center items-center">
-            <div onClick={() => {setEditModel(true)}} className="text-gray-500 hover:text-blue-400  cursor-pointer ">
-            <LucideEdit3 size={18} />
-            </div>
-            <div 
-            onClick={() => deleteProject(project.id)}
-             className="w-8 h-8 text-gray-500 hover:text-red-400 transition-all cursor-pointer rounded-full grid place-items-center"><LucideTrash size={18} /></div>
-          </div>
-            )
-          }
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              Project Information
+            </h2>
+            {
+              isAdmin && (
+                <div className="flex gap-2 justify-center items-center">
+                  <div onClick={() => { setShowBudgetModal(true) }} className="text-gray-500 hover:text-green-400 cursor-pointer" title="Edit Budget">
+                    <DollarSign size={18} />
+                  </div>
+                  <div onClick={() => { setEditModel(true) }} className="text-gray-500 hover:text-blue-400  cursor-pointer ">
+                    <LucideEdit3 size={18} />
+                  </div>
+                  <div
+                    onClick={() => deleteProject(project.id)}
+                    className="w-8 h-8 text-gray-500 hover:text-red-400 transition-all cursor-pointer rounded-full grid place-items-center"><LucideTrash size={18} /></div>
+                </div>
+              )
+            }
           </div>
           <div className="space-y-4">
             <div>
@@ -693,6 +933,20 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <LatestUpdates projectId={project.id} />
         </div>
       </div>
+
+      {/* Budget Modal */}
+      {showBudgetModal && clientId && (
+        <BudgetModal
+          isOpen={showBudgetModal}
+          onClose={() => setShowBudgetModal(false)}
+          clientId={clientId}
+          currentData={budgetData}
+          onUpdate={() => {
+            // Refresh project data or handle update
+            window.location.reload();
+          }}
+        />
+      )}
 
       {/* Progress Update Modal with Slider */}
       {showProgressModal && isAdmin && (

@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
         }
         // Get client's project with design system data
         const clientProjects = await db.projectMember.findMany({
-            where: {
-                userId: clientId
-            },
+            where: { userId: clientId },
             include: {
                 project: {
                     include: {
@@ -23,9 +21,7 @@ export async function GET(request: NextRequest) {
                         projectTechnology: true,
                         projectInfo: true,
                         milestones: {
-                            orderBy: {
-                                createdAt: 'asc'
-                            }
+                            orderBy: { createdAt: "asc" }
                         }
                     }
                 }
@@ -54,19 +50,15 @@ export async function GET(request: NextRequest) {
             daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
         }
 
-        // Determine current phase based on project progress
-        const progress = project.progress || 0;
-        let currentPhase = 'Design';
-        if (progress >= 75) currentPhase = 'Deployment';
-        else if (progress >= 50) currentPhase = 'Testing';
-        else if (progress >= 25) currentPhase = 'Code';
+        // Get current phase from project
+        const currentPhase = project?.currentPhase ?? "Design";
 
-        // Calculate phase completion
+        // Calculate phase completion (for UI display only)
         const phases = [
-            { name: 'Design', icon: 'palette', completed: progress >= 25 },
-            { name: 'Code', icon: 'code', completed: progress >= 50 },
-            { name: 'Testing', icon: 'test', completed: progress >= 75 },
-            { name: 'Deployment', icon: 'deploy', completed: progress >= 100 }
+            { name: 'Design', icon: 'palette', completed: currentPhase === 'Design' || ['Code', 'Testing', 'Deployment'].includes(currentPhase) },
+            { name: 'Code', icon: 'code', completed: currentPhase === 'Code' || ['Testing', 'Deployment'].includes(currentPhase) },
+            { name: 'Testing', icon: 'test', completed: currentPhase === 'Testing' || currentPhase === 'Deployment' },
+            { name: 'Deployment', icon: 'deploy', completed: currentPhase === 'Deployment' }
         ];
 
         const designData = {
@@ -91,14 +83,7 @@ export async function GET(request: NextRequest) {
                 daysRemaining,
                 phases
             },
-            technology: {
-                design: projectTechnology?.design || 'null',
-                frontend: projectTechnology?.frontend || 'null',
-                backend: projectTechnology?.backend || 'null',
-                database: projectTechnology?.database || 'null',
-                server: projectTechnology?.server || 'null',
-                hosting: projectTechnology?.hosting || 'null'
-            }
+            technology: projectTechnology?.tech || []
         };
 
         return NextResponse.json({
@@ -110,6 +95,39 @@ export async function GET(request: NextRequest) {
         console.error('Error fetching design data:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
+            { status: 500 }
+        );
+    } finally {
+        await db.$disconnect();
+    }
+}
+
+export async function PUT(request: NextRequest) {
+    try {
+        const { clientId, projectId, currentPhase } = await request.json();
+
+        if (!clientId || !projectId || !currentPhase) {
+            return NextResponse.json(
+                { error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // Update only the current phase
+        await db.project.update({
+            where: { id: projectId },
+            data: { currentPhase }
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: 'Project phase updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Error updating project phase:', error);
+        return NextResponse.json(
+            { error: 'Failed to update project phase' },
             { status: 500 }
         );
     } finally {

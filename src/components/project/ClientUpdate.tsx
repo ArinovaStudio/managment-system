@@ -66,30 +66,30 @@ export function MinimalCard({
 
 
 
-function ClientUpdate({projectId}: {projectId: string}) {
-    const [showAddUpdate, setShowAddUpdate] = useState(false);
-    const [update, setUpdate] = useState("");
-    const [data, setData] = useState([])
-    const [loading, setLoading] = useState(false);
-    const [updating, setUpdating] = useState(false);
+function ClientUpdate({ projectId }: { projectId: string }) {
+  const [showAddUpdate, setShowAddUpdate] = useState(false);
+  const [update, setUpdate] = useState("");
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
-  
+
   const fetchUpdates = async () => {
-        setLoading(true)
-        const req = await fetch(`/api/latest-updates?projectId=${projectId}`)
-        if (req.status === 200) {
-            const data = await req.json()   
-            setData(data.updates)
-        }
-        setLoading(false)
+    setLoading(true)
+    const req = await fetch(`/api/latest-updates?projectId=${projectId}`)
+    if (req.status === 200) {
+      const data = await req.json()
+      setData(data.updates)
     }
+    setLoading(false)
+  }
 
   const handleAddUpdate = async () => {
     if (!update.trim()) return;
 
     try {
-        setUpdating(true)
-        const userRes = await fetch("/api/auth/me");
+      setUpdating(true)
+      const userRes = await fetch("/api/auth/me");
       const userData = await userRes.json();
 
       const res = await fetch("/api/latest-updates", {
@@ -113,22 +113,34 @@ function ClientUpdate({projectId}: {projectId: string}) {
       console.error("Failed to add update:", err);
     }
     finally {
-        setUpdating(false)
+      setUpdating(false)
     }
   };
 
   const deleteProject = async (id: string) => {
     if (!confirm("This action is irreversable are you sure want to delete this?")) {
-      return null;  
+      return null;
     }
 
-    const req = await fetch(`/api/latest-updates?id=${id}`)
-    if (req.status === 200) {
-      fetchUpdates()
-      return true;
-    }
-  }
+    try {
+      const req = await fetch(`/api/latest-updates?id=${id}`, {
+        method: "DELETE",
+      });
 
+      const res = await req.json();
+
+      if (req.ok) {
+        fetchUpdates();
+        return true;
+      } else {
+        console.error(res);
+        alert("Failed to delete");
+      }
+
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
 
   useEffect(() => {
     fetchUpdates();
@@ -136,68 +148,64 @@ function ClientUpdate({projectId}: {projectId: string}) {
 
   if (loading) {
     return (
-        <div className='w-full h-[80vh] flex justify-center items-center'>
-            <Loader />
-        </div>
+      <div className='w-full h-[80vh] flex justify-center items-center'>
+        <Loader />
+      </div>
     )
   }
   return (
     <div className='relative'>
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-end gap-2">
-                  Client Update
-                </h2>
-        
-                <button
-                  onClick={() => setShowAddUpdate(true)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-800 text-white rounded-lg flex items-center gap-2 transition-colors"
-                >
-                  <PlusCircle size={16} />
-                  Update
-                </button>
-              </div>
-        
-              <p className="text-gray-600 dark:text-gray-400">
-                Report to client for the latest updates.
-              </p>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-end gap-2">
+          Client Update
+        </h2>
 
-    {showAddUpdate && (
-    <div className="absolute inset-0 w-full min-h-[70vh] h-auto flex justify-center items-center dark:bg-black/20 bg-white/40">
-        <div className="w-[45%] h-96 bg-gray-100 dark:bg-gray-dark p-6 py-5 rounded-xl">
-            <h1 className='text-2xl font-semibold mb-4'>Update to Client</h1>
-            <TextArea value={update} onChange={(e) => {setUpdate(e)}} className='min-h-60 bg-white text-black dark:text-white resize-none'></TextArea>
-            <div className="w-full flex justify-end items-center gap-3 mt-4">
-            
-            <button
-            onClick={handleAddUpdate}
-            disabled={updating}
-            className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700`}>
-            Save
-          </button>
-          
-          <button
-            onClick={() => { setShowAddUpdate(false); setUpdate(""); }}
-            className="px-4 py-2 bg-gray-400 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-            Cancel
-          </button>
-            </div>
-        </div>
-    </div>
-    )}
-
-    {
-        data.length > 0 ? (
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
-        {data.map((card, index) => (
-          <MinimalCard key={index} id={card.id} date={card.date} createdBy={card.createdBy} description={card.title} onDelete={deleteProject} />
-        ))}
+        <button
+          onClick={() => setShowAddUpdate(true)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-800 text-white rounded-lg flex items-center gap-2 transition-colors"
+        >
+          <PlusCircle size={16} />
+          Update
+        </button>
       </div>
+
+      <p className="text-gray-600 dark:text-gray-400">
+        Report to client for the latest updates.
+      </p>
+
+      {showAddUpdate && (
+        <div className="fixed inset-0 flex items-center justify-center mt-20 p-4 z-100">
+          <div className="w-[30%] h-96 bg-gray-100 dark:bg-gray-dark p-6 py-5 rounded-xl">
+            <h1 className='text-2xl font-semibold mb-4'>Update to Client</h1>
+            <TextArea value={update} onChange={(e) => { setUpdate(e) }} className='min-h-60 bg-white text-black dark:text-white resize-none'></TextArea>
+            <div className="w-full flex justify-end items-center gap-3 mt-4">
+
+              <button
+                onClick={handleAddUpdate}
+                disabled={updating}
+                className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700`}>
+                Save
+              </button>
+
+              <button
+                onClick={() => { setShowAddUpdate(false); setUpdate(""); }}
+                className="px-4 py-2 bg-gray-400 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {
+        data.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+            {data.map((card, index) => (
+              <MinimalCard key={index} id={card.id} date={card.date} createdBy={card.createdBy} description={card.title} onDelete={deleteProject} />
+            ))}
+          </div>
         ) : (<p className='text-center text-gray-300 dark:text-gray-600 py-16 font-normal'>No Updates has been added</p>)
-    }
-
-
-
-
+      }
     </div>
   )
 }

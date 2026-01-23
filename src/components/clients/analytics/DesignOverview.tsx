@@ -161,12 +161,12 @@ const DesignOverview = ({ data }: { data: any; designPreview: any }) => {
                         </div>
 
                         <div className="space-y-3 pb-8">
-                            {["Design", "Code", "Testing", "Deployment"].map((phase) => {
-                                const isActive = phase === data.projectPhase.current;
+                            {data.projectPhase.phases.map((phase) => {
+                                const isActive = phase.name === data.projectPhase.current;
 
                                 return (
                                     <div
-                                        key={phase}
+                                        key={phase.name}
                                         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-lg font-medium transition-all
                         ${isActive ? "bg-purple-500 text-white" : "text-gray-600 dark:text-gray-400"}`}>
 
@@ -174,7 +174,7 @@ const DesignOverview = ({ data }: { data: any; designPreview: any }) => {
                                             {phaseIcons[phase]}
                                         </span>
 
-                                        {phase}
+                                        {phase.name}
                                     </div>
                                 );
                             })}
@@ -191,28 +191,24 @@ const DesignOverview = ({ data }: { data: any; designPreview: any }) => {
                     {/* Technology Used */}
                     <div className="flex-1 p-6 relative overflow-hidden">
                         <div className="relative flex flex-col mb-5 items-start">
-                            <h3 className="text-xl text-gray-700/60 dark:text-gray-300 mb-4">
+                            <h3 className="text-xl text-gray-700/60 dark:text-gray-300 mb-6">
                                 Technology Used
                             </h3>
                             <div className="h-1 w-[230px] absolute -left-10 top-8 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
 
                         {/* Scrollable area */}
-                        <div className="space-y-5 absolute left-0 px-3 text-sm overflow-y-scroll max-h-65 no-scrollbar">
-                            {[
-                                ["Design", data.technology.design],
-                                ["Frontend", data.technology.frontend],
-                                ["Backend", data.technology.backend],
-                                ["Database", data.technology.database],
-                                ["Server", data.technology.server],
-                                ["Database Hosted", data.technology.hosting]
-                            ].map(([label, value]) => (
-                                <div key={label} className="flex justify-between items-center">
-                                    <span className="text-gray-500 dark:text-gray-400">{label}</span>
-                                    <span className="font-medium mx-6 text-gray-900 dark:text-white">{value}</span>
+                        <div className="space-y-5 text-sm overflow-y-scroll max-h-65 no-scrollbar">
+                            {data.technology.map((item) => (
+                                <div key={item.key} className="flex justify-between items-center">
+                                    <span className="text-gray-500 dark:text-gray-400">{item.key}</span>
+                                    <span className="font-medium ml-10 text-gray-900 dark:text-white">
+                                        {item.value}
+                                    </span>
                                 </div>
                             ))}
                         </div>
+
 
                         {/* Bottom Inner Shadow */}
                         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-30 bg-gradient-to-t from-gray-300/60 dark:from-gray-700/40 to-transparent"></div>

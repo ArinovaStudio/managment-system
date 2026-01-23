@@ -40,8 +40,7 @@ const ClientAnalyticsDashboard = () => {
     if (!clientId) return;
 
     const fetchAllData = async () => {
-      try {
-        ('Fetching data for clientId:', clientId);
+      try {        
         
         const [updatesRes, risksRes, milestonesRes, budgetRes, designRes, overviewRes, designOverviewRes] = await Promise.all([
           fetch(`/api/client/analytics/updates?clientId=${clientId}`),
@@ -124,7 +123,8 @@ const ClientAnalyticsDashboard = () => {
           paidAmount={allData.budget.paidAmount}
           remainingAmount={allData.budget.remainingAmount}
           totalBudget={allData.budget.totalBudget}
-          progress={allData.budget.progress}
+          remainingProgress={allData.budget.remainingProgress}
+          docs={allData.budget.docs || []}
         />
       )}
 

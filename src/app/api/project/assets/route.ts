@@ -4,15 +4,16 @@ import cloudinary from "@/lib/cloudinary";
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();
-        const file = formData.get("file") as File;
+        const file = formData.get("file") as File | null;
         const projectId = formData.get("projectId") as string;
         const type = formData.get("type") as string;
         const title = formData.get("title") as string | null;
         const uploadedBy = formData.get("uploadedBy") as string;
         const userImage = formData.get("userImage") as string;
-        const url = formData.get("url") as string;
+        const url = formData.get("url") as string | null;
 
-        let uploadResult: any
+        let uploadResult: any;
+        
         if (!projectId || !type) {
             return Response.json(
                 { success: false, message: "projectId, type are required" },
@@ -20,7 +21,18 @@ export async function POST(req: Request) {
             );
         }
 
-        if (file) {            
+        // Check if we have a valid file (not empty) or a valid URL
+        const hasFile = file && file.size > 0 && file.name !== "";
+        const hasUrl = url && url.trim().length > 0;
+
+        if (!hasFile && !hasUrl) {
+            return Response.json(
+                { success: false, message: "Either file or url must be provided" },
+                { status: 400 }
+            );
+        }
+
+        if (hasFile) {            
             const allowedTypes = ["image", "zip", "document"];
     
             if (!allowedTypes.includes(type)) {
@@ -50,20 +62,19 @@ export async function POST(req: Request) {
             data: {
                 projectId,
                 type,
-                url: url ? url : (uploadResult as any).secure_url,
-                publicId: url ? `LINK for ${title}` : (uploadResult as any).public_id,
-                title: title || file.name,
+                url: hasUrl ? url : uploadResult.secure_url,
+                publicId: hasUrl ? `LINK_${Date.now()}` : uploadResult.public_id,
+                title: title || (hasFile ? file!.name : "Untitled Link"),
                 uploadedBy,
                 userImage
-
             },
         });
 
         return Response.json({ success: true, asset });
     } catch (err) {
-        console.error(err);
+        console.error("Upload error:", err);
         return Response.json(
-            { success: false, message: "Upload failed", err },
+            { success: false, message: "Upload failed", error: String(err) },
             { status: 500 }
         );
     }
@@ -119,11 +130,14 @@ export async function DELETE(req: Request) {
             );
         }
 
-        await cloudinary.uploader.destroy(asset.publicId);
+        // Only delete from Cloudinary if it's an actual uploaded file (not a link)
+        if (!asset.publicId.startsWith("LINK_")) {
+            await cloudinary.uploader.destroy(asset.publicId);
+        }
 
         await db.asset.delete({ where: { id: assetId } });
 
-        return Response.json({ success: true, message: "Asset deleted",asset });
+        return Response.json({ success: true, message: "Asset deleted", asset });
 
     } catch (error) {
         console.error(error);

@@ -173,22 +173,6 @@ const ClientOverview = ({ data }: { data: any }) => {
                   <span className="text-5xl font-bold text-gray-900 dark:text-white">{data.progress.overall}%</span>
                 </div>
               </div>
-
-              {/* Legend */}
-              {/* <div className="mt-8 space-y-3 w-full">
-                {data.progress.phases.map((phase) => (
-                  <div key={phase.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: phase.color }}
-                      ></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">{phase.name}</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{phase.percentage}%</span>
-                  </div>
-                ))}
-              </div> */}
             </div>
           </div>
 

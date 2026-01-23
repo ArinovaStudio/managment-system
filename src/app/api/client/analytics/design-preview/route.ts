@@ -83,10 +83,11 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const projectId = formData.get("projectId") as string;
     const type = formData.get("type") as string; // "design" or "preview"
+    const previewType = formData.get("previewType") as string; // "image", "figma", or "link"
     const title = formData.get("title") as string;
     const uploadedBy = formData.get("uploadedBy") as string;
     const file = formData.get("file") as File;
-    const liveUrl = formData.get("liveUrl") as string; // For preview type
+    const liveUrl = formData.get("liveUrl") as string;
 
     if (!projectId || !type || !title) {
       return NextResponse.json(
@@ -98,8 +99,8 @@ export async function POST(req: NextRequest) {
     let cloudinaryUrl = null;
     let publicId = null;
 
-    // Upload image to Cloudinary if file provided
-    if (file) {
+    // Upload file to Cloudinary if file provided (not for link type)
+    if (file && previewType !== "link") {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
@@ -124,12 +125,12 @@ export async function POST(req: NextRequest) {
     const asset = await db.asset.create({
       data: {
         type,
-        url: cloudinaryUrl || "",
+        url: previewType === "link" ? liveUrl : (cloudinaryUrl || ""),
         title,
         uploadedBy,
         projectId,
         publicId,
-        liveUrl: type === "preview" ? liveUrl : null,
+        liveUrl: previewType === "link" ? liveUrl : null,
       },
     });
 

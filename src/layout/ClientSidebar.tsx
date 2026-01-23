@@ -3,15 +3,15 @@
 import { useSidebar } from "@/context/SidebarContext";
 import Link from "next/link";
 import Image from "next/image";
-import React, {  useCallback } from "react";
+import React, { useCallback } from "react";
 import { usePathname } from "next/navigation";
 
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  CalendarClock, 
+import {
+  LayoutDashboard,
+  MessageSquare,
+  CalendarClock,
   Sparkles,
-  FileText 
+  FileText
 } from "lucide-react";
 import { appConfig } from "@/config/appConfig";
 
@@ -46,11 +46,6 @@ const clientNavItems: NavItem[] = [
     name: "Project Documents",
     icon: <FileText strokeWidth={1.5} />,
     path: "/client/documents",
-  },
-  {
-    name: "Analytics",
-    icon: <LayoutDashboard strokeWidth={1.5} />,
-    path: "/client/analytics",
   }
 ];
 
@@ -76,9 +71,8 @@ const ClientSidebar = () => {
     >
       {/* Logo */}
       <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
       >
         <Link href="/client">
           {isExpanded || isHovered || isMobileOpen ? (
@@ -109,9 +103,8 @@ const ClientSidebar = () => {
       {/* Main Navigation */}
       <nav className="flex flex-col gap-6 overflow-y-auto no-scrollbar">
         <h2
-          className={`mb-3 text-xs uppercase text-gray-400 ${
-            !isExpanded && !isHovered ? "lg:text-center" : ""
-          }`}
+          className={`mb-3 text-xs uppercase text-gray-400 ${!isExpanded && !isHovered ? "lg:text-center" : ""
+            }`}
         >
           Menu
         </h2>
@@ -121,18 +114,16 @@ const ClientSidebar = () => {
             <li key={item.name}>
               <Link
                 href={item.path}
-                className={`menu-item group ${
-                  isActive(item.path)
+                className={`menu-item group ${isActive(item.path)
                     ? "menu-item-active"
                     : "menu-item-inactive"
-                }`}
+                  }`}
               >
                 <span
-                  className={`${
-                    isActive(item.path)
+                  className={`${isActive(item.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  }`}
+                    }`}
                 >
                   {item.icon}
                 </span>
