@@ -57,6 +57,7 @@ export async function GET(req: Request) {
         bio: true,
         image: true,
         dob: true,
+        joiningDate: true,
         workingAs: true,
         createdAt: true,
         updatedAt: true,
@@ -92,11 +93,11 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { name, phone, bio, department, workingAs, dob, github } = await req.json();
+    const { name, phone, bio, department, workingAs, dob, joiningDate, github } = await req.json();
 
     const updatedUser = await db.user.update({
       where: { id: payload.userId || payload.id },
-      data: { name, phone, bio, department, workingAs, dob, githubProfile: github },
+      data: { name, phone, bio, department, workingAs, dob, joiningDate: joiningDate ? new Date(joiningDate) : undefined, githubProfile: github },
       select: {
         id: true,
         isDev: true,
@@ -110,6 +111,7 @@ export async function PUT(req: Request) {
         bio: true,
         image: true,
         dob: true,
+        joiningDate: true,
         workingAs: true,
         createdAt: true,
         updatedAt: true,

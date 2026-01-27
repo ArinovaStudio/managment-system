@@ -9,6 +9,7 @@ interface User {
     name: string;
     email: string;
     dob: string;
+    joiningDate?: string;
     phone?: string;
     department?: string;
     workingAs?: string;
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
       password,
       role,
       dob,
+      joiningDate,
       department,
       workingAs,
       phone,
@@ -96,6 +98,7 @@ export async function POST(req: Request) {
         workingAs,
         phone,
         dob,
+        joiningDate: joiningDate ? new Date(joiningDate) : null,
         isDev,
         isLogin: false, // IMPORTANT
         employeeId: role !== "CLIENT" ? employeeId : null,
@@ -137,6 +140,7 @@ export async function PATCH(req: Request) {
       workingAs,
       image,
       dob,
+      joiningDate,
       isDev,
       employeeId,
     } = body as User;
@@ -180,6 +184,7 @@ export async function PATCH(req: Request) {
         image: image || null,
         employeeId: employeeId || null,
         dob: dob || null,
+        joiningDate: joiningDate ? new Date(joiningDate) : undefined,
         isDev: isDev
       },
     });

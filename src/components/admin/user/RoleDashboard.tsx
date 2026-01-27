@@ -19,6 +19,7 @@ type User = {
   department?: string | null;
   phone?: string | null;
   createdAt?: string;
+  joiningDate?: string;
   image?: string;
   isLogin: boolean;
   bio?: string;
@@ -161,6 +162,15 @@ export function UserModel({ rect = false, editUser, setEditUser, setAddUser, lea
               type="date"
               value={editUser?.dob?.split("T")[0] || ""}
               onChange={(e) => setEditUser({ ...editUser, dob: e.target.value })}
+              className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Joining Date</label>
+            <input
+              type="date"
+              value={editUser?.joiningDate?.split("T")[0] || ""}
+              onChange={(e) => setEditUser({ ...editUser, joiningDate: e.target.value })}
               className="w-full border dark:border-gray-600 dark:bg-gray-700 bg-white px-3 py-2 rounded"
             />
           </div>
@@ -401,7 +411,7 @@ export function RoleCard({ rect = true, setEditUser, setSelectedTimezone, setDel
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
                   <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
+                  <span>Joined: {u.joiningDate ? new Date(u.joiningDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
                   <Phone className="w-3.5 h-3.5 flex-shrink-0" />
@@ -836,7 +846,7 @@ export default function RoleDashboard() {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 mt-2">
                           <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
+                          <span>Joined: {u.joiningDate ? new Date(u.joiningDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "N/A"}</span>
                         </div>
                       </div>
                     </div>
