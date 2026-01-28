@@ -98,6 +98,7 @@ export async function PUT(req: Request) {
   try {
     const formData = await req.formData();
     const clientId = formData.get("clientId") as string;
+    const projectId = formData.get("projectId") as string;
     const paidAmount = Number(formData.get("paidAmount"));
     const totalBudget = Number(formData.get("totalBudget"));
 
@@ -111,89 +112,76 @@ export async function PUT(req: Request) {
       i++;
     }
 
-    // Get all client projects
-    const projects = await db.project.findMany({
-      where: {
-        members: {
-          some: { userId: clientId, user: { role: "CLIENT" } }
-        }
-      },
-      select: { id: true }
-    });
-
-    const projectIds = projects.map(p => p.id);
-
+    // Update specific project budget
     await db.projectInfo.updateMany({
-      where: { projectId: { in: projectIds } },
+      where: { projectId },
       data: { budget: totalBudget, paidAmount }
     });
 
-    for (const project of projectIds) {
-      const docsToSave = [];
+    const docsToSave = [];
 
-      if (latestInvoice) {
-        const buffer = Buffer.from(await latestInvoice.arrayBuffer());
-        const uploadResult = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            { resource_type: "auto" },
-            (err, result) => {
-              if (err) reject(err);
-              else resolve(result);
-            }
-          ).end(buffer);
-        });
+    if (latestInvoice) {
+      const buffer = Buffer.from(await latestInvoice.arrayBuffer());
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { resource_type: "auto" },
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          }
+        ).end(buffer);
+      });
 
-        docsToSave.push({
-          title: `Invoice - ${latestInvoice.name}`,
-          fileUrl: (uploadResult as any).secure_url,
-          projectId: project,
-          userId: clientId,
-        });
-      }
+      docsToSave.push({
+        title: `Invoice - ${latestInvoice.name}`,
+        fileUrl: (uploadResult as any).secure_url,
+        projectId,
+        userId: clientId,
+      });
+    }
 
-      if (scopeTitle) {
-        const buffer = Buffer.from(await scopeTitle.arrayBuffer());
-        const uploadResult = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            { resource_type: "auto" },
-            (err, result) => {
-              if (err) reject(err);
-              else resolve(result);
-            }
-          ).end(buffer);
-        });
+    if (scopeTitle) {
+      const buffer = Buffer.from(await scopeTitle.arrayBuffer());
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { resource_type: "auto" },
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          }
+        ).end(buffer);
+      });
 
-        docsToSave.push({
-          title: `Scope - ${scopeTitle.name}`,
-          fileUrl: (uploadResult as any).secure_url,
-          projectId: project,
-          userId: clientId,
-        });
-      }
+      docsToSave.push({
+        title: `Scope - ${scopeTitle.name}`,
+        fileUrl: (uploadResult as any).secure_url,
+        projectId,
+        userId: clientId,
+      });
+    }
 
-      for (const f of paymentHistoryFiles) {
-        const buffer = Buffer.from(await f.arrayBuffer());
-        const uploadResult = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            { resource_type: "auto" },
-            (err, result) => {
-              if (err) reject(err);
-              else resolve(result);
-            }
-          ).end(buffer);
-        });
+    for (const f of paymentHistoryFiles) {
+      const buffer = Buffer.from(await f.arrayBuffer());
+      const uploadResult = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { resource_type: "auto" },
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          }
+        ).end(buffer);
+      });
 
-        docsToSave.push({
-          title: `Payment History - ${f.name}`,
-          fileUrl: (uploadResult as any).secure_url,
-          projectId: project,
-          userId: clientId,
-        });
-      }
+      docsToSave.push({
+        title: `Payment History - ${f.name}`,
+        fileUrl: (uploadResult as any).secure_url,
+        projectId,
+        userId: clientId,
+      });
+    }
 
-      if (docsToSave.length > 0) {
-        await db.docs.createMany({ data: docsToSave });
-      }
+    if (docsToSave.length > 0) {
+      await db.docs.createMany({ data: docsToSave });
     }
 
     return NextResponse.json({ success: true, message: "Updated successfully" });

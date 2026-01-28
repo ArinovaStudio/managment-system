@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect , useCallback} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ArrowUp, CheckCheck, LucideCheckCheck, LucideCopy, LucideEdit3, LucideTrash, User, X, DollarSign, Palette, ArrowRight } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
@@ -55,10 +55,10 @@ const ArrayInput = ({ label, value = [], onChange, placeholder }) => {
     if (val.endsWith(', ') || !val.includes(',')) {
       onChange(val.split(',').map(s => s.trim()).filter(Boolean));
     } else {
-       // Just pass the raw split for immediate updates, 
-       // but strictly this logic relies on the parent handling the array.
-       // For a perfect UX, we'd use local state, but mimicking original logic:
-       onChange(val.split(',').map(s => s.trim())); 
+      // Just pass the raw split for immediate updates, 
+      // but strictly this logic relies on the parent handling the array.
+      // For a perfect UX, we'd use local state, but mimicking original logic:
+      onChange(val.split(',').map(s => s.trim()));
     }
   };
 
@@ -92,7 +92,7 @@ const JsonInput = ({ label, value, onChange, placeholder }) => {
   const handleChange = (e) => {
     const newVal = e.target.value;
     setLocalString(newVal); // Always update UI immediately
-    
+
     try {
       const parsed = JSON.parse(newVal);
       onChange(parsed); // Only update parent state if valid JSON
@@ -119,25 +119,11 @@ const JsonInput = ({ label, value, onChange, placeholder }) => {
 
 const DesignerModal = ({ showModal, projectData, currentUser }) => {
   const [loading, setLoading] = useState(false);
-  const [techStack, setTechStack] = useState([]);
-  
-  // Combined state for adding new tech to reduce clutter
-  const [techInput, setTechInput] = useState({ key: '', value: '', customCategory: '' });
-  
-  const [currentPhase, setCurrentPhase] = useState('');
   const [designSystemData, setDesignSystemData] = useState({
     brandName: '', brandFeel: '', colors: [], fonts: {},
     designType: [], layoutStyle: {}, contentTone: [],
     visualGuidelines: {}, theme: [], keyPages: [], uniqueness: {}
   });
-
-  const predefinedTech = [
-    { key: 'Design', options: ['Figma', 'Adobe XD', 'Sketch', 'Canva'] },
-    { key: 'Frontend', options: ['React', 'Next.js', 'Vue.js', 'Angular'] },
-    { key: 'Backend', options: ['Node.js', 'Python', 'Java', 'PHP'] },
-    { key: 'Database', options: ['PostgreSQL', 'MongoDB', 'MySQL', 'Redis'] },
-    { key: 'Hosting', options: ['Vercel', 'AWS', 'Netlify', 'Heroku'] }
-  ];
 
   // Helper to safely parse API response
   const parseDesignData = (data) => {
@@ -167,19 +153,11 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
       const clientId = clientMember?.user.id;
 
       if (clientId) {
-        const response = await fetch(`/api/client/analytics/design?clientId=${clientId}`);
+        const response = await fetch(`/api/client/analytics/design?clientId=${clientId}&projectId=${projectData.id}`);
         const result = await response.json();
 
         if (result.success && result.data) {
-          if (Array.isArray(result.data.technology)) setTechStack(result.data.technology);
-          if (result.data.projectPhase?.current) setCurrentPhase(result.data.projectPhase.current);
           setDesignSystemData(parseDesignData(result.data));
-        }
-      } else {
-        const response = await fetch(`/api/project/technology?projectId=${projectData.id}`);
-        const result = await response.json();
-        if (result.success && result.data?.tech) {
-          setTechStack(result.data.tech);
         }
       }
     } catch (error) {
@@ -192,19 +170,6 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
     fetchDesignData();
   }, [fetchDesignData]);
 
-  const handleAddTech = () => {
-    const key = techInput.key === 'custom' ? techInput.customCategory : techInput.key;
-    const value = techInput.value;
-
-    if (key && value) {
-      setTechStack([...techStack, { key, value }]);
-      setTechInput({ ...techInput, value: '', customCategory: '' }); // Keep key selected, clear value
-    }
-  };
-
-  const handleRemoveTech = (index) => {
-    setTechStack(techStack.filter((_, i) => i !== index));
-  };
 
   // Generic handler for design system updates
   const updateDesignSystem = (field, value) => {
@@ -223,18 +188,7 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
 
       const headers = { 'Content-Type': 'application/json' };
 
-      // Parallel requests for better performance
       await Promise.all([
-        fetch('/api/project/technology', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ projectId: projectData.id, tech: techStack })
-        }),
-        currentPhase && fetch('/api/client/analytics/design', {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify({ clientId, projectId: projectData.id, currentPhase })
-        }),
         fetch('/api/design-system', {
           method: 'POST',
           headers,
@@ -252,11 +206,6 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
     }
   };
 
-  // Tech Select UI Logic
-  const isCustom = techInput.key === 'custom';
-  const currentOptions = predefinedTech.find(c => c.key === techInput.key)?.options || [];
-  const isAddDisabled = isCustom ? (!techInput.customCategory || !techInput.value) : (!techInput.key || !techInput.value);
-
   return (
     <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-100 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto no-scrollbar">
@@ -269,87 +218,6 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* --- Technology Stack Section --- */}
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-white">Technology Used</label>
-              
-              <div className="mb-4 space-y-2">
-                {techStack.length > 0 ? techStack.map((tech, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                    <span className="text-sm dark:text-white"><strong>{tech.key}:</strong> {tech.value}</span>
-                    <button type="button" onClick={() => handleRemoveTech(index)} className="text-red-500 hover:text-red-700">
-                      <X size={16} />
-                    </button>
-                  </div>
-                )) : (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">No technology stack configured yet</div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <select
-                  value={techInput.key}
-                  onChange={(e) => setTechInput({ ...techInput, key: e.target.value, value: '' })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                >
-                  <option value="">Select category</option>
-                  {predefinedTech.map(cat => <option key={cat.key} value={cat.key}>{cat.key}</option>)}
-                  <option value="custom">Custom</option>
-                </select>
-
-                {isCustom ? (
-                  <input
-                    type="text" placeholder="Category"
-                    value={techInput.customCategory}
-                    onChange={(e) => setTechInput({ ...techInput, customCategory: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  />
-                ) : techInput.key ? (
-                  <select
-                    value={techInput.value}
-                    onChange={(e) => setTechInput({ ...techInput, value: e.target.value })}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  >
-                    <option value="">Select technology</option>
-                    {currentOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    <option value="other">Other</option>
-                  </select>
-                ) : (
-                   <input disabled placeholder="Select category first" className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-800 dark:border-gray-600 text-sm" />
-                )}
-
-                {(isCustom || techInput.value === 'other') && (
-                  <input
-                    type="text" placeholder="Enter technology"
-                    value={techInput.value === 'other' ? '' : techInput.value} // Handle 'other' logic if needed
-                    // For simplicity in this refactor, relying on the 'other' selection or text input:
-                    onChange={(e) => setTechInput({...techInput, value: e.target.value})}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
-                  />
-                )}
-
-                <button
-                  type="button" onClick={handleAddTech} disabled={isAddDisabled}
-                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-
-            {/* --- Current Phase --- */}
-            <div>
-              <label className="block text-sm font-medium mb-2 dark:text-white">Current Phase</label>
-              <select
-                value={currentPhase}
-                onChange={(e) => setCurrentPhase(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option value="">Select current phase</option>
-                {['Design', 'Code', 'Testing', 'Deployment'].map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-
             {/* --- Design System Section --- */}
             <div className="space-y-4 border-t pt-4">
               <h3 className="text-lg font-semibold dark:text-white">Design System</h3>
@@ -376,57 +244,57 @@ const DesignerModal = ({ showModal, projectData, currentUser }) => {
               </div>
 
               {/* Refactored Array Inputs */}
-              <ArrayInput 
-                label="Colors (comma-separated hex codes)" 
-                value={designSystemData.colors} 
+              <ArrayInput
+                label="Colors (comma-separated hex codes)"
+                value={designSystemData.colors}
                 onChange={(val) => updateDesignSystem('colors', val)}
                 placeholder="#FF5733,#33FF57"
               />
-              <ArrayInput 
-                label="Design Type (comma-separated)" 
-                value={designSystemData.designType} 
+              <ArrayInput
+                label="Design Type (comma-separated)"
+                value={designSystemData.designType}
                 onChange={(val) => updateDesignSystem('designType', val)}
                 placeholder="Minimalist, Corporate"
               />
-              <ArrayInput 
-                label="Content Tone (comma-separated)" 
-                value={designSystemData.contentTone} 
+              <ArrayInput
+                label="Content Tone (comma-separated)"
+                value={designSystemData.contentTone}
                 onChange={(val) => updateDesignSystem('contentTone', val)}
                 placeholder="Professional, Friendly"
               />
-              <ArrayInput 
-                label="Theme (comma-separated)" 
-                value={designSystemData.theme} 
+              <ArrayInput
+                label="Theme (comma-separated)"
+                value={designSystemData.theme}
                 onChange={(val) => updateDesignSystem('theme', val)}
                 placeholder="Dark, Light"
               />
-              <ArrayInput 
-                label="Key Pages (comma-separated)" 
-                value={designSystemData.keyPages} 
+              <ArrayInput
+                label="Key Pages (comma-separated)"
+                value={designSystemData.keyPages}
                 onChange={(val) => updateDesignSystem('keyPages', val)}
                 placeholder="Home, About, Contact"
               />
 
               {/* Refactored JSON Inputs */}
-              <JsonInput 
+              <JsonInput
                 label='Fonts (JSON format: {"primary": "Arial"})'
                 value={designSystemData.fonts}
                 onChange={(val) => updateDesignSystem('fonts', val)}
                 placeholder='{"primary": "Inter", "secondary": "Roboto"}'
               />
-              <JsonInput 
+              <JsonInput
                 label='Layout Style (JSON format: {"grid": "12-column"})'
                 value={designSystemData.layoutStyle}
                 onChange={(val) => updateDesignSystem('layoutStyle', val)}
                 placeholder='{"grid": "12-column", "spacing": "8px"}'
               />
-              <JsonInput 
+              <JsonInput
                 label='Visual Guidelines (JSON format: {"shadows": "soft"})'
                 value={designSystemData.visualGuidelines}
                 onChange={(val) => updateDesignSystem('visualGuidelines', val)}
                 placeholder='{"shadows": "subtle", "borderRadius": "8px"}'
               />
-              <JsonInput 
+              <JsonInput
                 label='Uniqueness (JSON format: {"feature": "value"})'
                 value={designSystemData.uniqueness}
                 onChange={(val) => updateDesignSystem('uniqueness', val)}
@@ -497,7 +365,7 @@ const EditModal = ({ showModel, projectData }) => {
       const clientId = clientMember?.user.id;
 
       if (clientId) {
-        const response = await fetch(`/api/client/analytics/design?clientId=${clientId}`);
+        const response = await fetch(`/api/client/analytics/design?clientId=${clientId}&projectId=${projectData.id}`);
         const data = await response.json();
         if (data.success && data.data.technology && Array.isArray(data.data.technology)) {
           setTechStack(data.data.technology);
@@ -1017,7 +885,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
   const [isLeader, setIsLeader] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isEmployee, setEmployee] = useState(false)
-  const [customCategory, setCustomCategory] = useState('');
+  // const [customCategory, setCustomCategory] = useState('');
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [budgetData, setBudgetData] = useState({
     scopeTitle: '',
@@ -1080,7 +948,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
 
           // Fetch budget data to get current values and docs
           try {
-            const budgetResponse = await fetch(`/api/client/analytics/budget?clientId=${clientMember.user.id}`);
+            const budgetResponse = await fetch(`/api/client/analytics/budget?clientId=${clientMember.user.id}&projectId=${project.id}`);
             const budgetResult = await budgetResponse.json();
             if (budgetResult.success) {
               setBudgetData({
@@ -1096,7 +964,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
 
           // Fetch design system info for display
           try {
-            const designResponse = await fetch(`/api/client/analytics/design?clientId=${clientMember.user.id}`);
+            const designResponse = await fetch(`/api/client/analytics/design?clientId=${clientMember.user.id}&projectId=${project.id}`);
             const designResult = await designResponse.json();
             if (designResult.success) {
               setDesignSystemInfo(designResult.data);
@@ -1252,15 +1120,6 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <div className="">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Team Members</h2>
-              {(isAdmin || isDesigner) && (
-                <button
-                  onClick={() => setShowDesignerModal(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                  <Palette size={16} />
-                  Designer
-                </button>
-              )}
             </div>
             {project.members && project.members.length > 0 ? (
               project.members.map((member) => {
@@ -1290,6 +1149,13 @@ export default function OverviewTab({ project }: OverviewTabProps) {
               {
                 isAdmin && (
                   <div className="flex gap-2 justify-center items-center">
+                    {(isAdmin || isDesigner) && (
+                      <button
+                        onClick={() => setShowDesignerModal(true)}
+                        className="text-gray-500 hover:text-blue-400  cursor-pointer "                      >
+                        <Palette size={16} />
+                      </button>
+                    )}
                     <div onClick={() => { setShowBudgetModal(true) }} className="text-gray-500 hover:text-green-400 cursor-pointer" title="Edit Budget">
                       <DollarSign size={18} />
                     </div>
@@ -1391,6 +1257,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
             isOpen={showBudgetModal}
             onClose={() => setShowBudgetModal(false)}
             clientId={clientId}
+            projectId={project.id}
             currentData={budgetData}
             onUpdate={() => {
               // Refresh project data or handle update
@@ -1486,7 +1353,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
           <div className="flex justify-between w-full gap-6">
 
             {/* Design System Card */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-6 border-2 border-blue-200 dark:border-blue-800 relative w-100">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border-2 border-blue-200 dark:border-blue-800 relative w-100">
               <div className="absolute -top-3 right-16">
                 <span className="bg-blue-500 text-white px-4 py-1 rounded-sm text-sm font-medium">
                   Design System
@@ -1532,7 +1399,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.designType && designSystemInfo.designType.length > 0 && designSystemInfo.designType[0] !== 'null' && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Design Type</span>
@@ -1541,7 +1408,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.brandFeel && designSystemInfo.brandFeel !== 'null' && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Brand Feel</span>
@@ -1562,7 +1429,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.theme && designSystemInfo.theme.length > 0 && designSystemInfo.theme[0] !== 'null' && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Theme</span>
@@ -1571,7 +1438,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.keyPages && designSystemInfo.keyPages.length > 0 && designSystemInfo.keyPages[0] !== 'null' && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Key Pages</span>
@@ -1592,7 +1459,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.layoutStyle && Object.keys(designSystemInfo.layoutStyle).length > 0 && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Layout Style</span>
@@ -1601,7 +1468,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                           </span>
                         </div>
                       )}
-                      
+
                       {designSystemInfo.visualGuidelines && Object.keys(designSystemInfo.visualGuidelines).length > 0 && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Visual Guidelines</span>
@@ -1640,7 +1507,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
             </div>
 
             {/* Right Unified Card */}
-            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-2xl border-2 border-gray-300/50 dark:border-gray-700 flex overflow-hidden relative">
+            <div className="w-full bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-300/50 dark:border-gray-700 flex overflow-hidden relative">
 
               {/* Current Phase */}
               <div className="flex-1 p-6 relative overflow-hidden min-w-0">
@@ -1671,7 +1538,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                 </div>
 
                 {/* Bottom Inner Shadow */}
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-gray-300/60 dark:from-gray-700/40 to-transparent"></div>
+                {/* <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-gray-300/60 dark:from-gray-700/40 to-transparent"></div> */}
               </div>
 
               {/* Divider */}
@@ -1708,7 +1575,7 @@ export default function OverviewTab({ project }: OverviewTabProps) {
                 )}
 
                 {/* Bottom Inner Shadow */}
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-30 bg-gradient-to-t from-gray-300/60 dark:from-gray-700/40 to-transparent"></div>
+                {/* <div className="pointer-events-none absolute inset-x-0 bottom-0 h-30 bg-gradient-to-t from-gray-300/60 dark:from-gray-700/40 to-transparent"></div> */}
               </div>
             </div>
           </div>

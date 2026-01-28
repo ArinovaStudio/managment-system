@@ -46,6 +46,22 @@ export default function ProjectsPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchUser, setSearchUser] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [techStack, setTechStack] = useState([]);
+  const [newTech, setNewTech] = useState({ key: '', value: '' });
+  const [currentPhase, setCurrentPhase] = useState('');
+  const [customCategory, setCustomCategory] = useState('');
+
+  const predefinedTech = [
+    { key: 'Design', options: ['Figma', 'Adobe XD', 'Sketch', 'Canva'] },
+    { key: 'Frontend', options: ['React', 'Next.js', 'Vue.js', 'Angular'] },
+    { key: 'Backend', options: ['Node.js', 'Python', 'Java', 'PHP'] },
+    { key: 'Database', options: ['PostgreSQL', 'MongoDB', 'MySQL', 'Redis'] },
+    { key: 'Hosting', options: ['Vercel', 'AWS', 'Netlify', 'Heroku'] }
+  ];
+
+  const removeTech = (index) => {
+    setTechStack(techStack.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     fetchUserProjects();
@@ -112,10 +128,21 @@ export default function ProjectsPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Update technology stack if provided
+        if (techStack.length > 0) {
+          await fetch('/api/project/technology', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: data.project.id, tech: techStack })
+          });
+        }
+
         toast.success('Project created successfully');
         setShowCreateModal(false);
         setFormData({ name: '', summary: '', priority: 'MEDIUM', basicDetails: '', budget: '', projectType: '', startDate: '', deadline: '', supervisorAdmin: '', client: '', repository: '' });
         setSelectedMembers([]);
+        setTechStack([]);
+        setCurrentPhase('');
         fetchUserProjects();
       } else {
         toast.error(data.message || 'Failed to create project');
@@ -408,7 +435,6 @@ export default function ProjectsPage() {
                     <input
                       type="date"
                       value={formData.startDate}
-                      min={new Date().toISOString().split("T")[0]}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       required
@@ -460,6 +486,123 @@ export default function ProjectsPage() {
                       // required
                     />
                   </div>
+                </div>
+
+                {/* Technology Stack Section */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">
+                    Technology Stack
+                  </label>
+                  <div className="mb-4">
+                    {techStack.length > 0 ? (
+                      <div className="space-y-2 mb-4">
+                        {techStack.map((tech, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                            <span className="text-sm dark:text-white">
+                              <strong>{tech.key}:</strong> {tech.value}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeTech(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        No technology stack configured yet
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <select
+                      value={newTech.key}
+                      onChange={(e) => setNewTech({ ...newTech, key: e.target.value, value: '' })}
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                    >
+                      <option value="">Select category</option>
+                      {predefinedTech.map((cat) => (
+                        <option key={cat.key} value={cat.key}>{cat.key}</option>
+                      ))}
+                      <option value="custom">Custom</option>
+                    </select>
+                    {newTech.key === 'custom' ? (
+                      <input
+                        type="text"
+                        placeholder="Enter custom category"
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                      />
+                    ) : newTech.key && predefinedTech.find(cat => cat.key === newTech.key) ? (
+                      <select
+                        value={newTech.value}
+                        onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                      >
+                        <option value="">Select technology</option>
+                        {predefinedTech.find(cat => cat.key === newTech.key)?.options.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                        <option value="other">Other</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter technology"
+                        value={newTech.value}
+                        onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                      />
+                    )}
+                    {newTech.key === 'custom' && (
+                      <input
+                        type="text"
+                        placeholder="Enter technology"
+                        value={newTech.value}
+                        onChange={(e) => setNewTech({ ...newTech, value: e.target.value })}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newTech.key === 'custom' && customCategory && newTech.value) {
+                          setTechStack([...techStack, { key: customCategory, value: newTech.value }]);
+                          setNewTech({ key: '', value: '' });
+                          setCustomCategory('');
+                        } else if (newTech.key && newTech.value) {
+                          setTechStack([...techStack, newTech]);
+                          setNewTech({ key: '', value: '' });
+                        }
+                      }}
+                      disabled={newTech.key === 'custom' ? (!customCategory || !newTech.value) : (!newTech.key || !newTech.value)}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Current Phase Section */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 dark:text-white">
+                    Current Project Phase
+                  </label>
+                  <select
+                    value={currentPhase}
+                    onChange={(e) => setCurrentPhase(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="">Select current phase</option>
+                    <option value="Design">Design</option>
+                    <option value="Code">Code</option>
+                    <option value="Testing">Testing</option>
+                    <option value="Deployment">Deployment</option>
+                  </select>
                 </div>
 
                 <div>

@@ -7,6 +7,7 @@ interface BudgetModalProps {
   isOpen: boolean;
   onClose: () => void;
   clientId: string;
+  projectId: string;
   currentData: {
     scopeTitle: string;
     paidAmount: number;
@@ -16,7 +17,7 @@ interface BudgetModalProps {
   onUpdate: () => void;
 }
 
-const BudgetModal = ({ isOpen, onClose, clientId, currentData, onUpdate }: BudgetModalProps) => {
+const BudgetModal = ({ isOpen, onClose, clientId, projectId, currentData, onUpdate }: BudgetModalProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     paidAmount: currentData.paidAmount || 0,
@@ -53,6 +54,7 @@ const BudgetModal = ({ isOpen, onClose, clientId, currentData, onUpdate }: Budge
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('clientId', clientId);
+      formDataToSend.append('projectId', projectId);
       formDataToSend.append('paidAmount', formData.paidAmount.toString());
       formDataToSend.append('totalBudget', formData.totalBudget.toString());
 

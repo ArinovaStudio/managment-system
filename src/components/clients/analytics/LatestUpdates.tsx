@@ -1,7 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
-
 const LatestUpdates = ({ updates }: { updates: any[] }) => {
   return (
     <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 p-6 shadow-md relative">
@@ -10,7 +8,7 @@ const LatestUpdates = ({ updates }: { updates: any[] }) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-semibold text-gray-900 dark:text-white">Latest Updates</h2>
         <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-          {updates[0].data}
+          {updates.data}
         </span>
       </div>
 

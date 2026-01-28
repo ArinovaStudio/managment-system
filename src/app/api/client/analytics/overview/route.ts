@@ -5,18 +5,20 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
+    const projectId = searchParams.get('projectId');
 
-    if (!clientId) {
+    if (!clientId || !projectId) {
       return NextResponse.json(
-        { error: 'Client ID is required' },
+        { error: 'Client ID and Project ID are required' },
         { status: 400 }
       );
     }
 
-    // Get client's project with all related data
-    const clientProjects = await db.projectMember.findMany({
+    // Get specific project with all related data
+    const projectMember = await db.projectMember.findFirst({
       where: {
-        userId: clientId
+        userId: clientId,
+        projectId: projectId
       },
       include: {
         project: {
@@ -44,15 +46,14 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    if (!clientProjects.length) {
+    if (!projectMember) {
       return NextResponse.json(
-        { error: 'No projects found for this client' },
+        { error: 'Project not found for this client' },
         { status: 404 }
       );
     }
 
-    // Get the first project (assuming client has one main project)
-    const project = clientProjects[0].project;
+    const project = projectMember.project;
     const projectInfo = project.projectInfo;
 
     // Get project manager from supervisorAdmin or fallback to team leader

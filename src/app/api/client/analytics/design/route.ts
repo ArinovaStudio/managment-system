@@ -5,15 +5,20 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const clientId = searchParams.get('clientId');
+        const projectId = searchParams.get('projectId');
 
-        if (!clientId) {
+        if (!clientId || !projectId) {
             return NextResponse.json(
-                { error: 'Client ID is required' },
+                { error: 'Client ID and Project ID are required' },
                 { status: 400 });
         }
-        // Get client's project with design system data
-        const clientProjects = await db.projectMember.findMany({
-            where: { userId: clientId },
+        
+        // Get specific project with design system data
+        const projectMember = await db.projectMember.findFirst({
+            where: { 
+                userId: clientId,
+                projectId: projectId
+            },
             include: {
                 project: {
                     include: {
@@ -28,14 +33,14 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        if (!clientProjects.length) {
+        if (!projectMember) {
             return NextResponse.json(
-                { error: 'No projects found for this client' },
+                { error: 'Project not found for this client' },
                 { status: 404 }
             );
         }
 
-        const project = clientProjects[0].project;
+        const project = projectMember.project;
         const designSystem = project.designSystem;
         const projectTechnology = project.projectTechnology;
         const projectInfo = project.projectInfo;

@@ -12,17 +12,21 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const clientId = searchParams.get("clientId");
+    const projectId = searchParams.get("projectId");
 
-    if (!clientId) {
+    if (!clientId || !projectId) {
       return NextResponse.json(
-        { success: false, message: "clientId is required" },
+        { success: false, message: "clientId and projectId are required" },
         { status: 400 }
       );
     }
 
-    // 1️⃣ Get client project
+    // Get specific project with assets
     const projectMember = await db.projectMember.findFirst({
-      where: { userId: clientId },
+      where: { 
+        userId: clientId,
+        projectId: projectId
+      },
       include: {
         project: {
           include: {
